@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --radius: 0.625rem;
-  --card: #ffffff;
-  --card-foreground: #171717;
-  --popover: #ffffff;
-  --popover-foreground: #171717;
-  --primary: #171717;
-  --primary-foreground: #fafafa;
-  --secondary: #f5f5f5;
-  --secondary-foreground: #171717;
-  --muted: #f5f5f5;
-  --muted-foreground: #737373;
-  --accent: #f5f5f5;
-  --accent-foreground: #171717;
-  --destructive: #dc2626;
-  --border: #e5e5e5;
-  --input: #e5e5e5;
-  --ring: #a3a3a3;
+  --background: oklch(97.5% 0.009 100);
+  --foreground: oklch(22% 0.018 155);
+  --radius: 4px;
+  --card: oklch(99% 0.004 110);
+  --card-foreground: oklch(22% 0.018 155);
+  --popover: oklch(98.5% 0.006 115);
+  --popover-foreground: oklch(22% 0.018 155);
+  --primary: oklch(37% 0.075 155);
+  --primary-foreground: oklch(99% 0.004 100);
+  --secondary: oklch(96.5% 0.009 120);
+  --secondary-foreground: oklch(22% 0.018 155);
+  --muted: oklch(95% 0.012 110);
+  --muted-foreground: oklch(50% 0.014 150);
+  --accent: oklch(95.5% 0.018 145);
+  --accent-foreground: oklch(22% 0.018 155);
+  --destructive: oklch(46% 0.16 28);
+  --border: oklch(82% 0.012 145);
+  --input: oklch(64% 0.018 145);
+  --ring: oklch(51% 0.09 155);
 }
 
 @theme inline {
@@ -45,35 +45,12 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --card: #171717;
-    --card-foreground: #ededed;
-    --popover: #171717;
-    --popover-foreground: #ededed;
-    --primary: #ededed;
-    --primary-foreground: #171717;
-    --secondary: #262626;
-    --secondary-foreground: #ededed;
-    --muted: #262626;
-    --muted-foreground: #a3a3a3;
-    --accent: #262626;
-    --accent-foreground: #ededed;
-    --destructive: #ef4444;
-    --border: #262626;
-    --input: #262626;
-    --ring: #737373;
-  }
+  --font-sans: var(--font-readex-pro);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-readex-pro), "Noto Sans Arabic", Tahoma, Arial, sans-serif;
 }

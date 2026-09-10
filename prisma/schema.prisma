@@ -6,3 +6,708 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MediaType {
+  IMAGE
+  FILE
+}
+
+enum ArticleType {
+  GUIDE
+  PRICING
+  COMPARISON
+  MAINTENANCE
+  GENERAL
+}
+
+enum PageKey {
+  HOME
+  ABOUT
+  CONTACT
+  PRICES
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Media {
+  id               String    @id @default(cuid())
+  type             MediaType
+  url              String
+  storagePath      String
+  originalFilename String
+  storedFilename   String
+  mimeType         String
+  sizeBytes        Int
+  width            Int?
+  height           Int?
+  altText          String?
+  caption          String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  serviceHeroVersions  ServiceVersion[]        @relation("ServiceVersionHeroMedia")
+  solutionHeroVersions SolutionVersion[]       @relation("SolutionVersionHeroMedia")
+  materialHeroVersions MaterialVersion[]       @relation("MaterialVersionHeroMedia")
+  projectCoverVersions ProjectVersion[]        @relation("ProjectVersionCoverMedia")
+  articleHeroVersions  ArticleVersion[]        @relation("ArticleVersionHeroMedia")
+  serviceOgVersions    ServiceVersion[]        @relation("ServiceVersionOpenGraphImage")
+  solutionOgVersions   SolutionVersion[]       @relation("SolutionVersionOpenGraphImage")
+  materialOgVersions   MaterialVersion[]       @relation("MaterialVersionOpenGraphImage")
+  projectOgVersions    ProjectVersion[]        @relation("ProjectVersionOpenGraphImage")
+  articleOgVersions    ArticleVersion[]        @relation("ArticleVersionOpenGraphImage")
+  pageOgVersions       PageVersion[]           @relation("PageVersionOpenGraphImage")
+  siteLogos            SiteSettings[]          @relation("SiteSettingsLogo")
+  siteOgImages         SiteSettings[]          @relation("SiteSettingsOpenGraphImage")
+  galleryItems         ProjectVersionGallery[]
+
+  @@index([storedFilename])
+  @@index([mimeType])
+  @@index([createdAt])
+}
+
+model Service {
+  id                 String                   @id @default(cuid())
+  status             ContentStatus            @default(DRAFT)
+  publishedVersionId String?                  @unique
+  draftVersionId     String?                  @unique
+  publishedAt        DateTime?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  versions           ServiceVersion[]
+  publishedVersion   ServiceVersion?          @relation("ServicePublishedVersion", fields: [publishedVersionId], references: [id], onDelete: SetNull)
+  draftVersion       ServiceVersion?          @relation("ServiceDraftVersion", fields: [draftVersionId], references: [id], onDelete: SetNull)
+  solutionRelations  SolutionVersionService[]
+  materialRelations  MaterialVersionService[]
+  projectRelations   ProjectVersionService[]
+  articleRelations   ArticleVersionService[]
+
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model ServiceVersion {
+  id                   String                   @id @default(cuid())
+  serviceId            String
+  title                String?
+  slug                 String?
+  shortDescription     String?
+  content              String?
+  heroMediaId          String?
+  seoTitle             String?
+  seoDescription       String?
+  canonicalUrl         String?
+  noIndex              Boolean                  @default(false)
+  openGraphTitle       String?
+  openGraphDescription String?
+  openGraphImageId     String?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  service              Service                  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  publishedFor         Service?                 @relation("ServicePublishedVersion")
+  draftFor             Service?                 @relation("ServiceDraftVersion")
+  heroMedia            Media?                   @relation("ServiceVersionHeroMedia", fields: [heroMediaId], references: [id], onDelete: Restrict)
+  openGraphImage       Media?                   @relation("ServiceVersionOpenGraphImage", fields: [openGraphImageId], references: [id], onDelete: Restrict)
+  solutions            ServiceVersionSolution[]
+  materials            ServiceVersionMaterial[]
+  projects             ServiceVersionProject[]
+  articles             ServiceVersionArticle[]
+  faqs                 ServiceVersionFAQ[]
+
+  @@index([serviceId])
+  @@index([slug])
+}
+
+model Solution {
+  id                 String                    @id @default(cuid())
+  status             ContentStatus             @default(DRAFT)
+  publishedVersionId String?                   @unique
+  draftVersionId     String?                   @unique
+  publishedAt        DateTime?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  versions           SolutionVersion[]
+  publishedVersion   SolutionVersion?          @relation("SolutionPublishedVersion", fields: [publishedVersionId], references: [id], onDelete: SetNull)
+  draftVersion       SolutionVersion?          @relation("SolutionDraftVersion", fields: [draftVersionId], references: [id], onDelete: SetNull)
+  serviceRelations   ServiceVersionSolution[]
+  materialRelations  MaterialVersionSolution[]
+  projectRelations   ProjectVersionSolution[]
+  articleRelations   ArticleVersionSolution[]
+
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model SolutionVersion {
+  id                   String                    @id @default(cuid())
+  solutionId           String
+  title                String?
+  slug                 String?
+  shortDescription     String?
+  content              String?
+  heroMediaId          String?
+  seoTitle             String?
+  seoDescription       String?
+  canonicalUrl         String?
+  noIndex              Boolean                   @default(false)
+  openGraphTitle       String?
+  openGraphDescription String?
+  openGraphImageId     String?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  solution             Solution                  @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  publishedFor         Solution?                 @relation("SolutionPublishedVersion")
+  draftFor             Solution?                 @relation("SolutionDraftVersion")
+  heroMedia            Media?                    @relation("SolutionVersionHeroMedia", fields: [heroMediaId], references: [id], onDelete: Restrict)
+  openGraphImage       Media?                    @relation("SolutionVersionOpenGraphImage", fields: [openGraphImageId], references: [id], onDelete: Restrict)
+  services             SolutionVersionService[]
+  materials            SolutionVersionMaterial[]
+  projects             SolutionVersionProject[]
+  articles             SolutionVersionArticle[]
+  faqs                 SolutionVersionFAQ[]
+
+  @@index([solutionId])
+  @@index([slug])
+}
+
+model Material {
+  id                 String                    @id @default(cuid())
+  status             ContentStatus             @default(DRAFT)
+  publishedVersionId String?                   @unique
+  draftVersionId     String?                   @unique
+  publishedAt        DateTime?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  versions           MaterialVersion[]
+  publishedVersion   MaterialVersion?          @relation("MaterialPublishedVersion", fields: [publishedVersionId], references: [id], onDelete: SetNull)
+  draftVersion       MaterialVersion?          @relation("MaterialDraftVersion", fields: [draftVersionId], references: [id], onDelete: SetNull)
+  serviceRelations   ServiceVersionMaterial[]
+  solutionRelations  SolutionVersionMaterial[]
+  projectRelations   ProjectVersionMaterial[]
+  articleRelations   ArticleVersionMaterial[]
+
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model MaterialVersion {
+  id                   String                    @id @default(cuid())
+  materialId           String
+  name                 String?
+  slug                 String?
+  shortDescription     String?
+  content              String?
+  advantages           Json?
+  limitations          Json?
+  maintenanceNotes     String?
+  recommendedUses      Json?
+  heroMediaId          String?
+  seoTitle             String?
+  seoDescription       String?
+  canonicalUrl         String?
+  noIndex              Boolean                   @default(false)
+  openGraphTitle       String?
+  openGraphDescription String?
+  openGraphImageId     String?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  material             Material                  @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  publishedFor         Material?                 @relation("MaterialPublishedVersion")
+  draftFor             Material?                 @relation("MaterialDraftVersion")
+  heroMedia            Media?                    @relation("MaterialVersionHeroMedia", fields: [heroMediaId], references: [id], onDelete: Restrict)
+  openGraphImage       Media?                    @relation("MaterialVersionOpenGraphImage", fields: [openGraphImageId], references: [id], onDelete: Restrict)
+  services             MaterialVersionService[]
+  solutions            MaterialVersionSolution[]
+  projects             MaterialVersionProject[]
+  articles             MaterialVersionArticle[]
+  faqs                 MaterialVersionFAQ[]
+
+  @@index([materialId])
+  @@index([slug])
+}
+
+model Project {
+  id                 String                   @id @default(cuid())
+  status             ContentStatus            @default(DRAFT)
+  publishedVersionId String?                  @unique
+  draftVersionId     String?                  @unique
+  publishedAt        DateTime?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  versions           ProjectVersion[]
+  publishedVersion   ProjectVersion?          @relation("ProjectPublishedVersion", fields: [publishedVersionId], references: [id], onDelete: SetNull)
+  draftVersion       ProjectVersion?          @relation("ProjectDraftVersion", fields: [draftVersionId], references: [id], onDelete: SetNull)
+  serviceRelations   ServiceVersionProject[]
+  solutionRelations  SolutionVersionProject[]
+  materialRelations  MaterialVersionProject[]
+  articleRelations   ArticleVersionProject[]
+
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model ProjectVersion {
+  id                   String                   @id @default(cuid())
+  projectId            String
+  title                String?
+  slug                 String?
+  shortDescription     String?
+  content              String?
+  challenge            String?
+  solutionSummary      String?
+  technicalDetails     String?
+  completedAt          DateTime?
+  city                 String?
+  district             String?
+  coverMediaId         String?
+  seoTitle             String?
+  seoDescription       String?
+  canonicalUrl         String?
+  noIndex              Boolean                  @default(false)
+  openGraphTitle       String?
+  openGraphDescription String?
+  openGraphImageId     String?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  project              Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  publishedFor         Project?                 @relation("ProjectPublishedVersion")
+  draftFor             Project?                 @relation("ProjectDraftVersion")
+  coverMedia           Media?                   @relation("ProjectVersionCoverMedia", fields: [coverMediaId], references: [id], onDelete: Restrict)
+  openGraphImage       Media?                   @relation("ProjectVersionOpenGraphImage", fields: [openGraphImageId], references: [id], onDelete: Restrict)
+  gallery              ProjectVersionGallery[]
+  services             ProjectVersionService[]
+  solutions            ProjectVersionSolution[]
+  materials            ProjectVersionMaterial[]
+  articles             ProjectVersionArticle[]
+
+  @@index([projectId])
+  @@index([slug])
+  @@index([city])
+  @@index([district])
+}
+
+model Article {
+  id                 String                   @id @default(cuid())
+  status             ContentStatus            @default(DRAFT)
+  publishedVersionId String?                  @unique
+  draftVersionId     String?                  @unique
+  publishedAt        DateTime?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  versions           ArticleVersion[]
+  publishedVersion   ArticleVersion?          @relation("ArticlePublishedVersion", fields: [publishedVersionId], references: [id], onDelete: SetNull)
+  draftVersion       ArticleVersion?          @relation("ArticleDraftVersion", fields: [draftVersionId], references: [id], onDelete: SetNull)
+  serviceRelations   ServiceVersionArticle[]
+  solutionRelations  SolutionVersionArticle[]
+  materialRelations  MaterialVersionArticle[]
+  projectRelations   ProjectVersionArticle[]
+
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model ArticleVersion {
+  id                   String                   @id @default(cuid())
+  articleId            String
+  title                String?
+  slug                 String?
+  excerpt              String?
+  content              Json?
+  heroMediaId          String?
+  articleType          ArticleType?
+  seoTitle             String?
+  seoDescription       String?
+  canonicalUrl         String?
+  noIndex              Boolean                  @default(false)
+  openGraphTitle       String?
+  openGraphDescription String?
+  openGraphImageId     String?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  article              Article                  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  publishedFor         Article?                 @relation("ArticlePublishedVersion")
+  draftFor             Article?                 @relation("ArticleDraftVersion")
+  heroMedia            Media?                   @relation("ArticleVersionHeroMedia", fields: [heroMediaId], references: [id], onDelete: Restrict)
+  openGraphImage       Media?                   @relation("ArticleVersionOpenGraphImage", fields: [openGraphImageId], references: [id], onDelete: Restrict)
+  services             ArticleVersionService[]
+  solutions            ArticleVersionSolution[]
+  materials            ArticleVersionMaterial[]
+  projects             ArticleVersionProject[]
+  faqs                 ArticleVersionFAQ[]
+
+  @@index([articleId])
+  @@index([slug])
+  @@index([articleType])
+}
+
+model FAQ {
+  id                 String               @id @default(cuid())
+  status             ContentStatus        @default(DRAFT)
+  publishedVersionId String?              @unique
+  draftVersionId     String?              @unique
+  publishedAt        DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  versions           FAQVersion[]
+  publishedVersion   FAQVersion?          @relation("FAQPublishedVersion", fields: [publishedVersionId], references: [id], onDelete: SetNull)
+  draftVersion       FAQVersion?          @relation("FAQDraftVersion", fields: [draftVersionId], references: [id], onDelete: SetNull)
+  serviceRelations   ServiceVersionFAQ[]
+  solutionRelations  SolutionVersionFAQ[]
+  materialRelations  MaterialVersionFAQ[]
+  articleRelations   ArticleVersionFAQ[]
+
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model FAQVersion {
+  id           String   @id @default(cuid())
+  faqId        String
+  question     String?
+  answer       String?
+  sortOrder    Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  faq          FAQ      @relation(fields: [faqId], references: [id], onDelete: Cascade)
+  publishedFor FAQ?     @relation("FAQPublishedVersion")
+  draftFor     FAQ?     @relation("FAQDraftVersion")
+
+  @@index([faqId])
+}
+
+model Page {
+  id                 String        @id @default(cuid())
+  key                PageKey       @unique
+  status             ContentStatus @default(DRAFT)
+  publishedVersionId String?       @unique
+  draftVersionId     String?       @unique
+  publishedAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  versions           PageVersion[]
+  publishedVersion   PageVersion?  @relation("PagePublishedVersion", fields: [publishedVersionId], references: [id], onDelete: SetNull)
+  draftVersion       PageVersion?  @relation("PageDraftVersion", fields: [draftVersionId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([publishedAt])
+}
+
+model PageVersion {
+  id                   String   @id @default(cuid())
+  pageId               String
+  data                 Json?
+  seoTitle             String?
+  seoDescription       String?
+  canonicalUrl         String?
+  noIndex              Boolean  @default(false)
+  openGraphTitle       String?
+  openGraphDescription String?
+  openGraphImageId     String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  page                 Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  publishedFor         Page?    @relation("PagePublishedVersion")
+  draftFor             Page?    @relation("PageDraftVersion")
+  openGraphImage       Media?   @relation("PageVersionOpenGraphImage", fields: [openGraphImageId], references: [id], onDelete: Restrict)
+
+  @@index([pageId])
+}
+
+model ProjectVersionGallery {
+  id               String         @id @default(cuid())
+  projectVersionId String
+  mediaId          String
+  sortOrder        Int
+  caption          String?
+  projectVersion   ProjectVersion @relation(fields: [projectVersionId], references: [id], onDelete: Cascade)
+  media            Media          @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@unique([projectVersionId, mediaId])
+  @@index([projectVersionId])
+  @@index([mediaId])
+}
+
+model SiteSettings {
+  id                      String   @id @default(cuid())
+  companyName             String
+  companyDescription      String?
+  logoMediaId             String?
+  primaryPhone            String
+  secondaryPhone          String?
+  whatsappNumber          String
+  email                   String?
+  address                 String?
+  businessHours           String?
+  socialLinks             Json?
+  defaultSeoTitle         String?
+  defaultSeoDescription   String?
+  defaultOpenGraphImageId String?
+  defaultCtaText          String?
+  defaultWhatsappText     String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  logoMedia               Media?   @relation("SiteSettingsLogo", fields: [logoMediaId], references: [id], onDelete: Restrict)
+  defaultOpenGraphImage   Media?   @relation("SiteSettingsOpenGraphImage", fields: [defaultOpenGraphImageId], references: [id], onDelete: Restrict)
+}
+
+model Redirect {
+  id              String   @id @default(cuid())
+  sourcePath      String   @unique
+  destinationPath String
+  statusCode      Int      @default(301)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ServiceVersionSolution {
+  serviceVersionId String
+  solutionId       String
+  serviceVersion   ServiceVersion @relation(fields: [serviceVersionId], references: [id], onDelete: Cascade)
+  solution         Solution       @relation(fields: [solutionId], references: [id], onDelete: Restrict)
+
+  @@id([serviceVersionId, solutionId])
+  @@index([solutionId])
+}
+
+model ServiceVersionMaterial {
+  serviceVersionId String
+  materialId       String
+  serviceVersion   ServiceVersion @relation(fields: [serviceVersionId], references: [id], onDelete: Cascade)
+  material         Material       @relation(fields: [materialId], references: [id], onDelete: Restrict)
+
+  @@id([serviceVersionId, materialId])
+  @@index([materialId])
+}
+
+model ServiceVersionProject {
+  serviceVersionId String
+  projectId        String
+  serviceVersion   ServiceVersion @relation(fields: [serviceVersionId], references: [id], onDelete: Cascade)
+  project          Project        @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  @@id([serviceVersionId, projectId])
+  @@index([projectId])
+}
+
+model ServiceVersionArticle {
+  serviceVersionId String
+  articleId        String
+  serviceVersion   ServiceVersion @relation(fields: [serviceVersionId], references: [id], onDelete: Cascade)
+  article          Article        @relation(fields: [articleId], references: [id], onDelete: Restrict)
+
+  @@id([serviceVersionId, articleId])
+  @@index([articleId])
+}
+
+model ServiceVersionFAQ {
+  serviceVersionId String
+  faqId            String
+  serviceVersion   ServiceVersion @relation(fields: [serviceVersionId], references: [id], onDelete: Cascade)
+  faq              FAQ            @relation(fields: [faqId], references: [id], onDelete: Restrict)
+
+  @@id([serviceVersionId, faqId])
+  @@index([faqId])
+}
+
+model SolutionVersionService {
+  solutionVersionId String
+  serviceId         String
+  solutionVersion   SolutionVersion @relation(fields: [solutionVersionId], references: [id], onDelete: Cascade)
+  service           Service         @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@id([solutionVersionId, serviceId])
+  @@index([serviceId])
+}
+
+model SolutionVersionMaterial {
+  solutionVersionId String
+  materialId        String
+  solutionVersion   SolutionVersion @relation(fields: [solutionVersionId], references: [id], onDelete: Cascade)
+  material          Material        @relation(fields: [materialId], references: [id], onDelete: Restrict)
+
+  @@id([solutionVersionId, materialId])
+  @@index([materialId])
+}
+
+model SolutionVersionProject {
+  solutionVersionId String
+  projectId         String
+  solutionVersion   SolutionVersion @relation(fields: [solutionVersionId], references: [id], onDelete: Cascade)
+  project           Project         @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  @@id([solutionVersionId, projectId])
+  @@index([projectId])
+}
+
+model SolutionVersionArticle {
+  solutionVersionId String
+  articleId         String
+  solutionVersion   SolutionVersion @relation(fields: [solutionVersionId], references: [id], onDelete: Cascade)
+  article           Article         @relation(fields: [articleId], references: [id], onDelete: Restrict)
+
+  @@id([solutionVersionId, articleId])
+  @@index([articleId])
+}
+
+model SolutionVersionFAQ {
+  solutionVersionId String
+  faqId             String
+  solutionVersion   SolutionVersion @relation(fields: [solutionVersionId], references: [id], onDelete: Cascade)
+  faq               FAQ             @relation(fields: [faqId], references: [id], onDelete: Restrict)
+
+  @@id([solutionVersionId, faqId])
+  @@index([faqId])
+}
+
+model MaterialVersionService {
+  materialVersionId String
+  serviceId         String
+  materialVersion   MaterialVersion @relation(fields: [materialVersionId], references: [id], onDelete: Cascade)
+  service           Service         @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@id([materialVersionId, serviceId])
+  @@index([serviceId])
+}
+
+model MaterialVersionSolution {
+  materialVersionId String
+  solutionId        String
+  materialVersion   MaterialVersion @relation(fields: [materialVersionId], references: [id], onDelete: Cascade)
+  solution          Solution        @relation(fields: [solutionId], references: [id], onDelete: Restrict)
+
+  @@id([materialVersionId, solutionId])
+  @@index([solutionId])
+}
+
+model MaterialVersionProject {
+  materialVersionId String
+  projectId         String
+  materialVersion   MaterialVersion @relation(fields: [materialVersionId], references: [id], onDelete: Cascade)
+  project           Project         @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  @@id([materialVersionId, projectId])
+  @@index([projectId])
+}
+
+model MaterialVersionArticle {
+  materialVersionId String
+  articleId         String
+  materialVersion   MaterialVersion @relation(fields: [materialVersionId], references: [id], onDelete: Cascade)
+  article           Article         @relation(fields: [articleId], references: [id], onDelete: Restrict)
+
+  @@id([materialVersionId, articleId])
+  @@index([articleId])
+}
+
+model MaterialVersionFAQ {
+  materialVersionId String
+  faqId             String
+  materialVersion   MaterialVersion @relation(fields: [materialVersionId], references: [id], onDelete: Cascade)
+  faq               FAQ             @relation(fields: [faqId], references: [id], onDelete: Restrict)
+
+  @@id([materialVersionId, faqId])
+  @@index([faqId])
+}
+
+model ProjectVersionService {
+  projectVersionId String
+  serviceId        String
+  projectVersion   ProjectVersion @relation(fields: [projectVersionId], references: [id], onDelete: Cascade)
+  service          Service        @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@id([projectVersionId, serviceId])
+  @@index([serviceId])
+}
+
+model ProjectVersionSolution {
+  projectVersionId String
+  solutionId       String
+  projectVersion   ProjectVersion @relation(fields: [projectVersionId], references: [id], onDelete: Cascade)
+  solution         Solution       @relation(fields: [solutionId], references: [id], onDelete: Restrict)
+
+  @@id([projectVersionId, solutionId])
+  @@index([solutionId])
+}
+
+model ProjectVersionMaterial {
+  projectVersionId String
+  materialId       String
+  projectVersion   ProjectVersion @relation(fields: [projectVersionId], references: [id], onDelete: Cascade)
+  material         Material       @relation(fields: [materialId], references: [id], onDelete: Restrict)
+
+  @@id([projectVersionId, materialId])
+  @@index([materialId])
+}
+
+model ProjectVersionArticle {
+  projectVersionId String
+  articleId        String
+  projectVersion   ProjectVersion @relation(fields: [projectVersionId], references: [id], onDelete: Cascade)
+  article          Article        @relation(fields: [articleId], references: [id], onDelete: Restrict)
+
+  @@id([projectVersionId, articleId])
+  @@index([articleId])
+}
+
+model ArticleVersionService {
+  articleVersionId String
+  serviceId        String
+  articleVersion   ArticleVersion @relation(fields: [articleVersionId], references: [id], onDelete: Cascade)
+  service          Service        @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@id([articleVersionId, serviceId])
+  @@index([serviceId])
+}
+
+model ArticleVersionSolution {
+  articleVersionId String
+  solutionId       String
+  articleVersion   ArticleVersion @relation(fields: [articleVersionId], references: [id], onDelete: Cascade)
+  solution         Solution       @relation(fields: [solutionId], references: [id], onDelete: Restrict)
+
+  @@id([articleVersionId, solutionId])
+  @@index([solutionId])
+}
+
+model ArticleVersionMaterial {
+  articleVersionId String
+  materialId       String
+  articleVersion   ArticleVersion @relation(fields: [articleVersionId], references: [id], onDelete: Cascade)
+  material         Material       @relation(fields: [materialId], references: [id], onDelete: Restrict)
+
+  @@id([articleVersionId, materialId])
+  @@index([materialId])
+}
+
+model ArticleVersionProject {
+  articleVersionId String
+  projectId        String
+  articleVersion   ArticleVersion @relation(fields: [articleVersionId], references: [id], onDelete: Cascade)
+  project          Project        @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  @@id([articleVersionId, projectId])
+  @@index([projectId])
+}
+
+model ArticleVersionFAQ {
+  articleVersionId String
+  faqId            String
+  articleVersion   ArticleVersion @relation(fields: [articleVersionId], references: [id], onDelete: Cascade)
+  faq              FAQ            @relation(fields: [faqId], references: [id], onDelete: Restrict)
+
+  @@id([articleVersionId, faqId])
+  @@index([faqId])
+}
