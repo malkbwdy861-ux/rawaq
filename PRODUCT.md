@@ -24,6 +24,8 @@ Architectural, grounded, exact, durable, locally rooted, and quietly premium. Th
 
 Named anchors are Al-Balad wooden roshan screens, Red Sea limestone, and precise architectural drawings. These references should inform proportion, shade, texture, rhythm, and attention to construction detail without becoming decorative pastiche.
 
+The final logo asset is pending. The design system may reserve flexible Arabic wordmark and compact-mark zones, but it must not invent a company name, monogram, seal, or logo artwork.
+
 ## Anti-references
 
 - Generic contractor templates with stock roofs, yellow-and-black construction clichés, crowded service tiles, and bargain-led messaging.
