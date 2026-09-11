@@ -5,5 +5,5 @@ import { staticPageMetadata } from "@/modules/pages/metadata";
 import { getPublishedPage } from "@/modules/pages/queries";
 
 export const dynamic = "force-dynamic";
-export async function generateMetadata(): Promise<Metadata> { const result = await getPublishedPage("CONTACT"); return staticPageMetadata(result.version, result.data); }
+export async function generateMetadata(): Promise<Metadata> { const result = await getPublishedPage("CONTACT"); return staticPageMetadata(result.version, result.data, result.resolved.settings); }
 export default async function ContactPage() { const result = await getPublishedPage("CONTACT"); return <PublicPage pageKey="CONTACT" data={result.data} resolved={result.resolved} />; }
