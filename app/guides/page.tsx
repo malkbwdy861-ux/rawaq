@@ -3,8 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { getPublishedArticles } from "@/modules/articles/queries";
+import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
+import { listingMetadata } from "@/modules/seo/metadata";
 
-export const metadata: Metadata = { title: "الأدلة | Jeddah Shading", description: "أدلة عملية منشورة حول التظليل والمواد والأسعار والصيانة." };
+export const metadata: Metadata = listingMetadata("الأدلة", "أدلة عملية منشورة حول التظليل والمواد والأسعار والصيانة.", "/guides");
 export const dynamic = "force-dynamic";
 
 const typeLabels = { GUIDE: "دليل", PRICING: "دليل أسعار", COMPARISON: "مقارنة", MAINTENANCE: "صيانة", GENERAL: "مقال" } as const;
@@ -13,7 +15,7 @@ export default async function GuidesIndexPage() {
   const articles = await getPublishedArticles();
   return <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-16 md:px-8 md:py-20 lg:py-24">
     <div className="mx-auto max-w-7xl space-y-12">
-      <nav aria-label="مسار التنقل" className="text-sm text-[oklch(42%_0.018_150)]"><Link className="font-semibold underline" href="/">الرئيسية</Link><span aria-hidden="true"> / </span><span aria-current="page">الأدلة</span></nav>
+      <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الأدلة", href: "/guides" }]} />
       <header className="max-w-3xl space-y-4"><p className="text-sm font-semibold text-[oklch(58%_0.11_45)]">معرفة عملية</p><h1 className="text-4xl font-bold leading-[1.24] md:text-6xl">أدلة تساعدك على اتخاذ قرار واضح</h1><p className="max-w-[62ch] text-lg leading-[1.78] text-[oklch(42%_0.018_150)]">معلومات منشورة عن الخيارات والمواد وعوامل الأسعار والصيانة، منظمة للقراءة والرجوع إليها.</p></header>
       {articles.length === 0 ? <section className="border-y border-[oklch(82%_0.012_145)] py-10"><h2 className="text-2xl font-semibold">لا توجد أدلة منشورة بعد</h2><p className="mt-2 text-[oklch(42%_0.018_150)]">ستظهر الأدلة هنا بعد نشرها من لوحة التحكم.</p></section> : <section aria-label="قائمة الأدلة" className="divide-y divide-[oklch(82%_0.012_145)] border-y border-[oklch(82%_0.012_145)]">
         {articles.map((article, index) => { const version = article.publishedVersion; if (!version) return null; return <article className="grid gap-6 py-8 md:grid-cols-[minmax(0,1fr)_minmax(220px,360px)] md:items-center md:py-10" key={article.id}>

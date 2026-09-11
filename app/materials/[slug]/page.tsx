@@ -4,6 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getPublishedMaterialBySlug, jsonStringArray } from "@/modules/materials/queries";
+import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
+import { contentMetadata } from "@/modules/seo/metadata";
 
 type MaterialPageProps = {
   params: Promise<{ slug: string }>;
@@ -17,17 +19,7 @@ export async function generateMetadata({ params }: MaterialPageProps): Promise<M
   const version = material.publishedVersion;
   if (!version) notFound();
 
-  return {
-    title: version.seoTitle ?? version.name ?? "مادة",
-    description: version.seoDescription ?? version.shortDescription ?? undefined,
-    alternates: version.canonicalUrl ? { canonical: version.canonicalUrl } : undefined,
-    robots: version.noIndex ? { index: false, follow: false } : undefined,
-    openGraph: {
-      title: version.openGraphTitle ?? version.seoTitle ?? version.name ?? undefined,
-      description: version.openGraphDescription ?? version.seoDescription ?? version.shortDescription ?? undefined,
-      images: version.openGraphImage?.url ? [version.openGraphImage.url] : undefined,
-    },
-  };
+  return contentMetadata({ version, path: `/materials/${slug}`, title: version.name ?? "مادة", description: version.shortDescription, image: version.heroMedia?.url });
 }
 
 export default async function MaterialDetailPage({ params }: MaterialPageProps) {
@@ -39,7 +31,7 @@ export default async function MaterialDetailPage({ params }: MaterialPageProps) 
   return (
     <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-12 md:px-8">
       <article className="mx-auto max-w-5xl space-y-10">
-        <Link className="inline-flex text-sm font-semibold text-[oklch(37%_0.075_155)]" href="/materials">العودة إلى المواد</Link>
+        <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "المواد", href: "/materials" }, { label: version.name ?? "مادة", href: `/materials/${slug}` }]} />
         <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
           <div className="space-y-4">
             <p className="text-sm font-semibold text-[oklch(37%_0.075_155)]">مادة</p>
@@ -57,18 +49,18 @@ export default async function MaterialDetailPage({ params }: MaterialPageProps) 
         <FactList title="القيود" items={jsonStringArray(version.limitations)} />
         <FactList title="الاستخدامات الموصى بها" items={jsonStringArray(version.recommendedUses)} />
         {version.maintenanceNotes ? <section className="rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] p-5"><h2 className="text-xl font-semibold">ملاحظات الصيانة</h2><p className="mt-3 whitespace-pre-line leading-[1.9]">{version.maintenanceNotes}</p></section> : null}
-        <RelatedContent title="خدمات مرتبطة" items={version.services.map((item) => item.service.publishedVersion?.title).filter(isPresent)} />
-        <RelatedContent title="حلول مرتبطة" items={version.solutions.map((item) => item.solution.publishedVersion?.title).filter(isPresent)} />
-        <RelatedContent title="مشاريع مرتبطة" items={version.projects.map((item) => item.project.publishedVersion?.title).filter(isPresent)} />
-        <RelatedContent title="مقالات مرتبطة" items={version.articles.map((item) => item.article.publishedVersion?.title).filter(isPresent)} />
-        <RelatedContent title="أسئلة شائعة" items={version.faqs.map((item) => item.faq.publishedVersion?.question).filter(isPresent)} />
+        <RelatedContent title="خدمات مرتبطة" items={version.services.map((item) => ({ label: item.service.publishedVersion?.title, href: `/services/${item.service.publishedVersion?.slug}` })).filter(isRelated)} />
+        <RelatedContent title="حلول مرتبطة" items={version.solutions.map((item) => ({ label: item.solution.publishedVersion?.title, href: `/solutions/${item.solution.publishedVersion?.slug}` })).filter(isRelated)} />
+        <RelatedContent title="مشاريع مرتبطة" items={version.projects.map((item) => ({ label: item.project.publishedVersion?.title, href: `/projects/${item.project.publishedVersion?.slug}` })).filter(isRelated)} />
+        <RelatedContent title="أدلة مرتبطة" items={version.articles.map((item) => ({ label: item.article.publishedVersion?.title, href: `/guides/${item.article.publishedVersion?.slug}` })).filter(isRelated)} />
+        <RelatedContent title="أسئلة شائعة" items={version.faqs.map((item) => ({ label: item.faq.publishedVersion?.question, href: "" })).filter((item): item is { label: string; href: string } => Boolean(item.label))} />
       </article>
     </main>
   );
 }
 
-function isPresent(value: string | null | undefined): value is string {
-  return Boolean(value);
+function isRelated(item: { label: string | null | undefined; href: string }): item is { label: string; href: string } {
+  return Boolean(item.label && !item.href.endsWith("undefined"));
 }
 
 function FactList({ title, items }: { title: string; items: string[] }) {
@@ -76,7 +68,7 @@ function FactList({ title, items }: { title: string; items: string[] }) {
   return <section className="rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] p-5"><h2 className="text-xl font-semibold">{title}</h2><ul className="mt-3 grid gap-2 text-[oklch(42%_0.018_150)]">{items.map((item) => <li key={item}>{item}</li>)}</ul></section>;
 }
 
-function RelatedContent({ title, items }: { title: string; items: string[] }) {
+function RelatedContent({ title, items }: { title: string; items: { label: string; href: string }[] }) {
   if (!items.length) return null;
-  return <section className="rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] p-5"><h2 className="text-xl font-semibold">{title}</h2><ul className="mt-3 grid gap-2 text-[oklch(42%_0.018_150)]">{items.map((item) => <li key={item}>{item}</li>)}</ul></section>;
+  return <section className="rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] p-5"><h2 className="text-xl font-semibold">{title}</h2><ul className="mt-3 grid gap-2 text-[oklch(42%_0.018_150)]">{items.map((item) => <li key={`${item.href}-${item.label}`}>{item.href ? <Link className="inline-flex min-h-11 items-center font-semibold text-[oklch(37%_0.075_155)] underline" href={item.href}>{item.label}</Link> : item.label}</li>)}</ul></section>;
 }

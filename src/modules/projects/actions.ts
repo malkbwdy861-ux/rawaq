@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { readStringArray } from "@/modules/cms/validation";
+import { savePublishedSlugRedirect } from "@/modules/redirects/service";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
 
@@ -40,12 +41,12 @@ export async function publishProjectAction(formData: FormData) {
   }
   try {
     await saveDraft(parsed.data.projectId, parsed.data);
-    await publishProject(parsed.data.projectId, parsed.data);
+    const oldPath = await publishProject(parsed.data.projectId, parsed.data);
+    revalidateProjectPaths(parsed.data.projectId, parsed.data.slug, oldPath);
   } catch (error) {
     const message = error instanceof Error ? error.message : "فشل نشر المشروع. بقيت النسخة المنشورة الحالية كما هي.";
     redirectWithMessage(parsed.data.projectId, "error", message);
   }
-  revalidateProjectPaths(parsed.data.projectId, parsed.data.slug);
   redirectWithMessage(parsed.data.projectId, "success", "تم نشر المشروع وتحديث الصفحة العامة.");
 }
 
@@ -108,20 +109,16 @@ async function saveDraft(projectId: string, input: ProjectDraftInput) {
 }
 
 async function publishProject(projectId: string, input: ProjectPublishInput) {
-  await prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx) => {
     const project = await tx.project.findUnique({ where: { id: projectId }, include: { publishedVersion: { select: { slug: true } } } });
     if (!project?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
     await assertSlugAvailable(tx, projectId, input.slug);
     const published = await tx.projectVersion.create({ data: { projectId, ...toVersionData(input) } });
     await replaceVersionCollections(tx, published.id, input);
-    if (project.publishedVersion?.slug && project.publishedVersion.slug !== input.slug) {
-      await tx.redirect.upsert({
-        where: { sourcePath: `/projects/${project.publishedVersion.slug}` },
-        update: { destinationPath: `/projects/${input.slug}`, statusCode: 301 },
-        create: { sourcePath: `/projects/${project.publishedVersion.slug}`, destinationPath: `/projects/${input.slug}`, statusCode: 301 },
-      });
-    }
+    const oldPath = project.publishedVersion?.slug ? `/projects/${project.publishedVersion.slug}` : undefined;
+    if (oldPath && project.publishedVersion?.slug !== input.slug) await savePublishedSlugRedirect(tx, oldPath, `/projects/${input.slug}`);
     await tx.project.update({ where: { id: projectId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
+    return oldPath;
   });
 }
 
@@ -173,11 +170,13 @@ async function replaceVersionCollections(tx: Prisma.TransactionClient, projectVe
   ]);
 }
 
-function revalidateProjectPaths(projectId: string, slug?: string) {
+function revalidateProjectPaths(projectId: string, slug?: string, oldPath?: string) {
   revalidatePath("/dashboard/projects");
   revalidatePath(`/dashboard/projects/${projectId}`);
   revalidatePath("/projects");
   if (slug) revalidatePath(`/projects/${slug}`);
+  if (oldPath) revalidatePath(oldPath);
+  revalidatePath("/sitemap.xml");
 }
 
 function redirectWithMessage(projectId: string | undefined, type: "success" | "error", message: string): never {

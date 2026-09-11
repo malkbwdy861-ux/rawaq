@@ -4,6 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getPublishedSolutionBySlug } from "@/modules/solutions/queries";
+import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
+import { contentMetadata } from "@/modules/seo/metadata";
 
 type SolutionPageProps = {
   params: Promise<{ slug: string }>;
@@ -17,17 +19,7 @@ export async function generateMetadata({ params }: SolutionPageProps): Promise<M
   const version = solution.publishedVersion;
   if (!version) notFound();
 
-  return {
-    title: version.seoTitle ?? version.title ?? "حل",
-    description: version.seoDescription ?? version.shortDescription ?? undefined,
-    alternates: version.canonicalUrl ? { canonical: version.canonicalUrl } : undefined,
-    robots: version.noIndex ? { index: false, follow: false } : undefined,
-    openGraph: {
-      title: version.openGraphTitle ?? version.seoTitle ?? version.title ?? undefined,
-      description: version.openGraphDescription ?? version.seoDescription ?? version.shortDescription ?? undefined,
-      images: version.openGraphImage?.url ? [version.openGraphImage.url] : undefined,
-    },
-  };
+  return contentMetadata({ version, path: `/solutions/${slug}`, title: version.title ?? "حل", description: version.shortDescription, image: version.heroMedia?.url });
 }
 
 export default async function SolutionDetailPage({ params }: SolutionPageProps) {
@@ -39,7 +31,7 @@ export default async function SolutionDetailPage({ params }: SolutionPageProps) 
   return (
     <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-12 md:px-8">
       <article className="mx-auto max-w-5xl space-y-10">
-        <Link className="inline-flex text-sm font-semibold text-[oklch(37%_0.075_155)]" href="/solutions">العودة إلى الحلول</Link>
+        <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الحلول", href: "/solutions" }, { label: version.title ?? "حل", href: `/solutions/${slug}` }]} />
         <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
           <div className="space-y-4">
             <p className="text-sm font-semibold text-[oklch(37%_0.075_155)]">حل</p>
@@ -53,11 +45,11 @@ export default async function SolutionDetailPage({ params }: SolutionPageProps) 
           ) : null}
         </header>
         <section className="rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] p-6 text-base leading-[1.9] text-[oklch(22%_0.018_155)] whitespace-pre-line">{version.content}</section>
-        <RelatedContent title="خدمات مرتبطة" items={version.services.map((item) => item.service.publishedVersion?.title).filter(isPresent)} />
-        <RelatedContent title="مواد مرتبطة" items={version.materials.map((item) => item.material.publishedVersion?.name).filter(isPresent)} />
-        <RelatedContent title="مشاريع مرتبطة" items={version.projects.map((item) => item.project.publishedVersion?.title).filter(isPresent)} />
-        <RelatedContent title="مقالات مرتبطة" items={version.articles.map((item) => item.article.publishedVersion?.title).filter(isPresent)} />
-        <RelatedContent title="أسئلة شائعة" items={version.faqs.map((item) => item.faq.publishedVersion?.question).filter(isPresent)} />
+        <RelatedContent title="خدمات مرتبطة" items={version.services.map((item) => ({ label: item.service.publishedVersion?.title, href: `/services/${item.service.publishedVersion?.slug}` })).filter(isRelated)} />
+        <RelatedContent title="مواد مرتبطة" items={version.materials.map((item) => ({ label: item.material.publishedVersion?.name, href: `/materials/${item.material.publishedVersion?.slug}` })).filter(isRelated)} />
+        <RelatedContent title="مشاريع مرتبطة" items={version.projects.map((item) => ({ label: item.project.publishedVersion?.title, href: `/projects/${item.project.publishedVersion?.slug}` })).filter(isRelated)} />
+        <RelatedContent title="أدلة مرتبطة" items={version.articles.map((item) => ({ label: item.article.publishedVersion?.title, href: `/guides/${item.article.publishedVersion?.slug}` })).filter(isRelated)} />
+        <RelatedContent title="أسئلة شائعة" items={version.faqs.map((item) => ({ label: item.faq.publishedVersion?.question, href: "" })).filter((item): item is { label: string; href: string } => Boolean(item.label))} />
         <section className="rounded-[8px] bg-[oklch(37%_0.075_155)] p-6 text-[oklch(99%_0.004_100)]">
           <h2 className="text-2xl font-bold">هل يناسبك هذا الحل؟</h2>
           <p className="mt-2 leading-[1.8]">تواصل معنا عبر واتساب أو الهاتف لمناقشة تفاصيل الموقع والاحتياج.</p>
@@ -68,11 +60,11 @@ export default async function SolutionDetailPage({ params }: SolutionPageProps) 
   );
 }
 
-function isPresent(value: string | null | undefined): value is string {
-  return Boolean(value);
+function isRelated(item: { label: string | null | undefined; href: string }): item is { label: string; href: string } {
+  return Boolean(item.label && !item.href.endsWith("undefined"));
 }
 
-function RelatedContent({ title, items }: { title: string; items: string[] }) {
+function RelatedContent({ title, items }: { title: string; items: { label: string; href: string }[] }) {
   if (!items.length) return null;
-  return <section className="rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] p-5"><h2 className="text-xl font-semibold">{title}</h2><ul className="mt-3 grid gap-2 text-[oklch(42%_0.018_150)]">{items.map((item) => <li key={item}>{item}</li>)}</ul></section>;
+  return <section className="rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] p-5"><h2 className="text-xl font-semibold">{title}</h2><ul className="mt-3 grid gap-2 text-[oklch(42%_0.018_150)]">{items.map((item) => <li key={`${item.href}-${item.label}`}>{item.href ? <Link className="inline-flex min-h-11 items-center font-semibold text-[oklch(37%_0.075_155)] underline" href={item.href}>{item.label}</Link> : item.label}</li>)}</ul></section>;
 }

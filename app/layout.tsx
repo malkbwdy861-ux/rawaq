@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Readex_Pro } from "next/font/google";
 import type { ReactNode } from "react";
+import { JsonLd } from "@/modules/seo/components/json-ld";
+import { getSiteUrl } from "@/modules/seo/site-url";
+import { getSiteSettings } from "@/modules/settings/queries";
 import "./globals.css";
 
 const readexPro = Readex_Pro({
@@ -8,10 +11,21 @@ const readexPro = Readex_Pro({
   subsets: ["arabic", "latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Jeddah Shading",
-  description: "Custom shading solutions in Jeddah.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  const siteName = settings?.companyName || "Jeddah Shading";
+  return {
+    metadataBase: getSiteUrl(),
+    title: { default: settings?.defaultSeoTitle || siteName, template: `%s | ${siteName}` },
+    description: settings?.defaultSeoDescription ?? settings?.companyDescription ?? undefined,
+    openGraph: {
+      type: "website",
+      locale: "ar_SA",
+      siteName,
+      images: settings?.defaultOpenGraphImage?.url ? [settings.defaultOpenGraphImage.url] : undefined,
+    },
+  };
+}
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -20,7 +34,25 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       dir="rtl"
       className={`${readexPro.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col"><OrganizationData />{children}</body>
     </html>
   );
+}
+
+async function OrganizationData() {
+  const settings = await getSiteSettings();
+  if (!settings?.companyName) return null;
+  return <JsonLd data={{
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: settings.companyName,
+    description: settings.companyDescription || undefined,
+    url: getSiteUrl().toString(),
+    telephone: settings.primaryPhone || undefined,
+    email: settings.email || undefined,
+    address: settings.address || undefined,
+    openingHours: settings.businessHours || undefined,
+    logo: settings.logoMedia?.url || undefined,
+    sameAs: Object.values(settings.socialLinks).filter(Boolean),
+  }} />;
 }

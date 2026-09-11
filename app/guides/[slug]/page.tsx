@@ -6,6 +6,10 @@ import { notFound } from "next/navigation";
 import { isTipTapDocument } from "@/modules/articles/content";
 import { RichTextRenderer } from "@/modules/articles/components/rich-text-renderer";
 import { getPublishedArticleBySlug } from "@/modules/articles/queries";
+import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
+import { JsonLd } from "@/modules/seo/components/json-ld";
+import { contentMetadata } from "@/modules/seo/metadata";
+import { absoluteUrl } from "@/modules/seo/site-url";
 
 type GuidePageProps = { params: Promise<{ slug: string }> };
 export const dynamic = "force-dynamic";
@@ -16,7 +20,7 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
   const article = await getPublishedArticleBySlug(slug);
   const version = article.publishedVersion;
   if (!version) notFound();
-  return { title: version.seoTitle ?? version.title ?? "دليل", description: version.seoDescription ?? version.excerpt ?? undefined, alternates: version.canonicalUrl ? { canonical: version.canonicalUrl } : undefined, robots: version.noIndex ? { index: false, follow: false } : undefined, openGraph: { title: version.openGraphTitle ?? version.seoTitle ?? version.title ?? undefined, description: version.openGraphDescription ?? version.seoDescription ?? version.excerpt ?? undefined, images: version.openGraphImage?.url ? [version.openGraphImage.url] : undefined } };
+  return contentMetadata({ version, path: `/guides/${slug}`, title: version.title ?? "دليل", description: version.excerpt, image: version.heroMedia?.url, type: "article" });
 }
 
 export default async function GuideDetailPage({ params }: GuidePageProps) {
@@ -26,7 +30,9 @@ export default async function GuideDetailPage({ params }: GuidePageProps) {
   if (!version || !isTipTapDocument(version.content)) notFound();
   return <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-12 md:px-8 md:py-20">
     <article className="mx-auto max-w-7xl space-y-14">
-      <nav aria-label="مسار التنقل" className="text-sm text-[oklch(42%_0.018_150)]"><Link className="font-semibold underline" href="/">الرئيسية</Link><span aria-hidden="true"> / </span><Link className="font-semibold underline" href="/guides">الأدلة</Link><span aria-hidden="true"> / </span><span aria-current="page">{version.title}</span></nav>
+      <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الأدلة", href: "/guides" }, { label: version.title ?? "دليل", href: `/guides/${slug}` }]} />
+      <JsonLd data={{ "@context": "https://schema.org", "@type": "Article", headline: version.title, description: version.excerpt, url: absoluteUrl(`/guides/${slug}`), image: version.heroMedia?.url || undefined, datePublished: article.publishedAt?.toISOString(), dateModified: version.updatedAt.toISOString() }} />
+      {version.faqs.length ? <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: version.faqs.flatMap((item) => item.faq.publishedVersion ? [{ "@type": "Question", name: item.faq.publishedVersion.question, acceptedAnswer: { "@type": "Answer", text: item.faq.publishedVersion.answer } }] : []) }} /> : null}
       <header className="max-w-4xl space-y-5"><p className="text-sm font-semibold text-[oklch(58%_0.11_45)]">{version.articleType ? typeLabels[version.articleType] : "دليل"}</p><h1 className="text-4xl font-bold leading-[1.24] md:text-6xl">{version.title}</h1><p className="max-w-[62ch] text-xl leading-[1.7] text-[oklch(42%_0.018_150)] md:text-2xl">{version.excerpt}</p></header>
       {version.heroMedia ? <figure className="max-w-6xl"><div className="relative aspect-video overflow-hidden rounded-[2px] bg-[oklch(95%_0.012_110)]"><Image alt={version.heroMedia.altText ?? version.title ?? ""} className="object-cover" fill priority sizes="(min-width: 1280px) 1152px, 100vw" src={version.heroMedia.url} /></div>{version.heroMedia.caption ? <figcaption className="mt-3 text-sm leading-[1.7] text-[oklch(42%_0.018_150)]">{version.heroMedia.caption}</figcaption> : null}</figure> : null}
       <RichTextRenderer content={version.content} />

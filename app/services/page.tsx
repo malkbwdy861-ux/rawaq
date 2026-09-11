@@ -3,11 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { getPublishedServices } from "@/modules/services/queries";
+import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
+import { listingMetadata } from "@/modules/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "الخدمات | Jeddah Shading",
-  description: "تصفح خدمات جده شيدنج المنشورة في التظليل والإنشاءات الخارجية.",
-};
+export const metadata: Metadata = listingMetadata("الخدمات", "تصفح خدمات جده شيدنج المنشورة في التظليل والإنشاءات الخارجية.", "/services");
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +16,7 @@ export default async function ServicesIndexPage() {
   return (
     <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-12 md:px-8">
       <div className="mx-auto max-w-6xl space-y-10">
+        <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الخدمات", href: "/services" }]} />
         <header className="space-y-4">
           <p className="text-sm font-semibold text-[oklch(37%_0.075_155)]">الخدمات</p>
           <h1 className="max-w-3xl text-3xl font-bold leading-[1.35] md:text-5xl">خدمات قابلة للتحديث حسب عروض الشركة المنشورة</h1>

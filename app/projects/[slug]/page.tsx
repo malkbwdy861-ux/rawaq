@@ -4,6 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getPublishedProjectBySlug } from "@/modules/projects/queries";
+import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
+import { contentMetadata } from "@/modules/seo/metadata";
 
 type ProjectPageProps = { params: Promise<{ slug: string }> };
 export const dynamic = "force-dynamic";
@@ -13,7 +15,7 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
   const project = await getPublishedProjectBySlug(slug);
   const version = project.publishedVersion;
   if (!version) notFound();
-  return { title: version.seoTitle ?? version.title ?? "مشروع", description: version.seoDescription ?? version.shortDescription ?? undefined, alternates: version.canonicalUrl ? { canonical: version.canonicalUrl } : undefined, robots: version.noIndex ? { index: false, follow: false } : undefined, openGraph: { title: version.openGraphTitle ?? version.seoTitle ?? version.title ?? undefined, description: version.openGraphDescription ?? version.seoDescription ?? version.shortDescription ?? undefined, images: version.openGraphImage?.url ? [version.openGraphImage.url] : undefined } };
+  return contentMetadata({ version, path: `/projects/${slug}`, title: version.title ?? "مشروع", description: version.shortDescription, image: version.coverMedia?.url });
 }
 
 export default async function ProjectDetailPage({ params }: ProjectPageProps) {
@@ -24,7 +26,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
   const location = [version.city, version.district].filter(Boolean).join("، ");
   return <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-12 md:px-8 md:py-20">
     <article className="mx-auto max-w-7xl space-y-16">
-      <nav aria-label="مسار التنقل" className="text-sm text-[oklch(42%_0.018_150)]"><Link className="font-semibold underline" href="/">الرئيسية</Link><span aria-hidden="true"> / </span><Link className="font-semibold underline" href="/projects">المشاريع</Link><span aria-hidden="true"> / </span><span aria-current="page">{version.title}</span></nav>
+      <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "المشاريع", href: "/projects" }, { label: version.title ?? "مشروع", href: `/projects/${slug}` }]} />
       <header className="grid gap-8 lg:grid-cols-12 lg:items-end"><div className="space-y-5 lg:col-span-7"><p className="text-sm font-semibold text-[oklch(58%_0.11_45)]">دراسة حالة</p><h1 className="text-4xl font-bold leading-[1.24] md:text-6xl">{version.title}</h1><p className="max-w-[62ch] text-lg leading-[1.78] text-[oklch(42%_0.018_150)]">{version.shortDescription}</p></div>{location || version.completedAt ? <dl className="grid gap-4 border-y border-[oklch(82%_0.012_145)] py-5 lg:col-span-4 lg:col-start-9">{location ? <div><dt className="text-sm font-semibold text-[oklch(34%_0.065_42)]">الموقع</dt><dd className="mt-1 text-lg">{location}</dd></div> : null}{version.completedAt ? <div><dt className="text-sm font-semibold text-[oklch(34%_0.065_42)]">الإنجاز</dt><dd className="mt-1 text-lg tabular-nums">{version.completedAt.toLocaleDateString("ar-SA", { year: "numeric", month: "long" })}</dd></div> : null}</dl> : null}</header>
       {version.coverMedia ? <figure><div className="relative aspect-[3/2] overflow-hidden rounded-[2px] bg-[oklch(95%_0.012_110)]"><Image alt={version.coverMedia.altText ?? version.title ?? ""} className="object-cover" fill priority sizes="(min-width: 1440px) 1280px, 100vw" src={version.coverMedia.url} /></div>{version.coverMedia.caption ? <figcaption className="mt-3 text-sm leading-[1.7] text-[oklch(42%_0.018_150)]">{version.coverMedia.caption}</figcaption> : null}</figure> : null}
       {version.content ? <ContentSection title="تفاصيل المشروع" content={version.content} /> : null}

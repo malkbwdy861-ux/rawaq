@@ -3,11 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { getPublishedMaterials } from "@/modules/materials/queries";
+import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
+import { listingMetadata } from "@/modules/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "المواد | Jeddah Shading",
-  description: "تصفح المواد والخيارات المنشورة والمدعومة في أعمال جده شيدنج.",
-};
+export const metadata: Metadata = listingMetadata("المواد", "تصفح المواد والخيارات المنشورة والمدعومة في أعمال جده شيدنج.", "/materials");
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +16,7 @@ export default async function MaterialsIndexPage() {
   return (
     <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-12 md:px-8">
       <div className="mx-auto max-w-6xl space-y-10">
+        <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "المواد", href: "/materials" }]} />
         <header className="space-y-4">
           <p className="text-sm font-semibold text-[oklch(37%_0.075_155)]">المواد</p>
           <h1 className="max-w-3xl text-3xl font-bold leading-[1.35] md:text-5xl">مواد وخيارات منشورة ومدعومة فعليًا</h1>

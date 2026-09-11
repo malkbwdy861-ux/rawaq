@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { readStringArray } from "@/modules/cms/validation";
+import { savePublishedSlugRedirect } from "@/modules/redirects/service";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
 
@@ -53,13 +54,13 @@ export async function publishSolutionAction(formData: FormData) {
 
   try {
     await saveDraft(parsed.data.solutionId, parsed.data);
-    await publishSolution(parsed.data.solutionId, parsed.data);
+    const oldPath = await publishSolution(parsed.data.solutionId, parsed.data);
+    revalidateSolutionPaths(parsed.data.solutionId, parsed.data.slug, oldPath);
   } catch (error) {
     const message = error instanceof Error ? error.message : "فشل نشر الحل. بقيت النسخة المنشورة الحالية كما هي.";
     redirectWithMessage(parsed.data.solutionId, "error", message);
   }
 
-  revalidateSolutionPaths(parsed.data.solutionId, parsed.data.slug);
   redirectWithMessage(parsed.data.solutionId, "success", "تم نشر الحل وتحديث الصفحة العامة.");
 }
 
@@ -117,7 +118,7 @@ async function saveDraft(solutionId: string, input: SolutionDraftInput) {
 }
 
 async function publishSolution(solutionId: string, input: SolutionPublishInput) {
-  await prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx) => {
     const solution = await tx.solution.findUnique({ where: { id: solutionId }, include: { publishedVersion: { select: { slug: true } } } });
     if (!solution?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
 
@@ -125,15 +126,11 @@ async function publishSolution(solutionId: string, input: SolutionPublishInput) 
     const published = await tx.solutionVersion.create({ data: { solutionId, ...toVersionData(input) } });
     await replaceRelations(tx, published.id, input);
 
-    if (solution.publishedVersion?.slug && solution.publishedVersion.slug !== input.slug) {
-      await tx.redirect.upsert({
-        where: { sourcePath: `/solutions/${solution.publishedVersion.slug}` },
-        update: { destinationPath: `/solutions/${input.slug}`, statusCode: 301 },
-        create: { sourcePath: `/solutions/${solution.publishedVersion.slug}`, destinationPath: `/solutions/${input.slug}`, statusCode: 301 },
-      });
-    }
+    const oldPath = solution.publishedVersion?.slug ? `/solutions/${solution.publishedVersion.slug}` : undefined;
+    if (oldPath && solution.publishedVersion?.slug !== input.slug) await savePublishedSlugRedirect(tx, oldPath, `/solutions/${input.slug}`);
 
     await tx.solution.update({ where: { id: solutionId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
+    return oldPath;
   });
 }
 
@@ -181,11 +178,13 @@ async function replaceRelations(tx: Prisma.TransactionClient | typeof prisma, so
   ]);
 }
 
-function revalidateSolutionPaths(solutionId: string, slug?: string) {
+function revalidateSolutionPaths(solutionId: string, slug?: string, oldPath?: string) {
   revalidatePath("/dashboard/solutions");
   revalidatePath(`/dashboard/solutions/${solutionId}`);
   revalidatePath("/solutions");
   if (slug) revalidatePath(`/solutions/${slug}`);
+  if (oldPath) revalidatePath(oldPath);
+  revalidatePath("/sitemap.xml");
 }
 
 function redirectWithMessage(solutionId: string | undefined, type: "success" | "error", message: string): never {

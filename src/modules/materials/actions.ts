@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { readStringArray } from "@/modules/cms/validation";
+import { savePublishedSlugRedirect } from "@/modules/redirects/service";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
 
@@ -47,13 +48,13 @@ export async function publishMaterialAction(formData: FormData) {
 
   try {
     await saveDraft(parsed.data.materialId, parsed.data);
-    await publishMaterial(parsed.data.materialId, parsed.data);
+    const oldPath = await publishMaterial(parsed.data.materialId, parsed.data);
+    revalidateMaterialPaths(parsed.data.materialId, parsed.data.slug, oldPath);
   } catch (error) {
     const message = error instanceof Error ? error.message : "فشل نشر المادة. بقيت النسخة المنشورة الحالية كما هي.";
     redirectWithMessage(parsed.data.materialId, "error", message);
   }
 
-  revalidateMaterialPaths(parsed.data.materialId, parsed.data.slug);
   redirectWithMessage(parsed.data.materialId, "success", "تم نشر المادة وتحديث الصفحة العامة.");
 }
 
@@ -112,7 +113,7 @@ async function saveDraft(materialId: string, input: MaterialDraftInput) {
 }
 
 async function publishMaterial(materialId: string, input: MaterialPublishInput) {
-  await prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx) => {
     const material = await tx.material.findUnique({ where: { id: materialId }, include: { publishedVersion: { select: { slug: true } } } });
     if (!material?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
 
@@ -120,15 +121,11 @@ async function publishMaterial(materialId: string, input: MaterialPublishInput) 
     const published = await tx.materialVersion.create({ data: { materialId, ...toVersionData(input) } });
     await replaceRelations(tx, published.id, input);
 
-    if (material.publishedVersion?.slug && material.publishedVersion.slug !== input.slug) {
-      await tx.redirect.upsert({
-        where: { sourcePath: `/materials/${material.publishedVersion.slug}` },
-        update: { destinationPath: `/materials/${input.slug}`, statusCode: 301 },
-        create: { sourcePath: `/materials/${material.publishedVersion.slug}`, destinationPath: `/materials/${input.slug}`, statusCode: 301 },
-      });
-    }
+    const oldPath = material.publishedVersion?.slug ? `/materials/${material.publishedVersion.slug}` : undefined;
+    if (oldPath && material.publishedVersion?.slug !== input.slug) await savePublishedSlugRedirect(tx, oldPath, `/materials/${input.slug}`);
 
     await tx.material.update({ where: { id: materialId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
+    return oldPath;
   });
 }
 
@@ -184,11 +181,13 @@ function readLines(value: FormDataEntryValue | null) {
   return String(value ?? "").split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
 }
 
-function revalidateMaterialPaths(materialId: string, slug?: string) {
+function revalidateMaterialPaths(materialId: string, slug?: string, oldPath?: string) {
   revalidatePath("/dashboard/materials");
   revalidatePath(`/dashboard/materials/${materialId}`);
   revalidatePath("/materials");
   if (slug) revalidatePath(`/materials/${slug}`);
+  if (oldPath) revalidatePath(oldPath);
+  revalidatePath("/sitemap.xml");
 }
 
 function redirectWithMessage(materialId: string | undefined, type: "success" | "error", message: string): never {

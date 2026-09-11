@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { readStringArray } from "@/modules/cms/validation";
+import { savePublishedSlugRedirect } from "@/modules/redirects/service";
 import { prisma } from "@/server/db/prisma";
 import { requireAdmin } from "@/server/auth";
 
@@ -53,13 +54,13 @@ export async function publishServiceAction(formData: FormData) {
 
   try {
     await saveDraft(parsed.data.serviceId, parsed.data);
-    await publishService(parsed.data.serviceId, parsed.data);
+    const oldPath = await publishService(parsed.data.serviceId, parsed.data);
+    revalidateServicePaths(parsed.data.serviceId, parsed.data.slug, oldPath);
   } catch (error) {
     const message = error instanceof Error ? error.message : "فشل نشر الخدمة. بقيت النسخة المنشورة الحالية كما هي.";
     redirectWithMessage(parsed.data.serviceId, "error", message);
   }
 
-  revalidateServicePaths(parsed.data.serviceId, parsed.data.slug);
   redirectWithMessage(parsed.data.serviceId, "success", "تم نشر الخدمة وتحديث الصفحة العامة.");
 }
 
@@ -121,7 +122,7 @@ async function saveDraft(serviceId: string, input: ServiceDraftInput) {
 }
 
 async function publishService(serviceId: string, input: ServicePublishInput) {
-  await prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx) => {
     const service = await tx.service.findUnique({
       where: { id: serviceId },
       include: { publishedVersion: { select: { slug: true } } },
@@ -134,13 +135,8 @@ async function publishService(serviceId: string, input: ServicePublishInput) {
     const published = await tx.serviceVersion.create({ data: { serviceId, ...toVersionData(input) } });
     await replaceRelations(tx, published.id, input);
 
-    if (service.publishedVersion?.slug && service.publishedVersion.slug !== input.slug) {
-      await tx.redirect.upsert({
-        where: { sourcePath: `/services/${service.publishedVersion.slug}` },
-        update: { destinationPath: `/services/${input.slug}`, statusCode: 301 },
-        create: { sourcePath: `/services/${service.publishedVersion.slug}`, destinationPath: `/services/${input.slug}`, statusCode: 301 },
-      });
-    }
+    const oldPath = service.publishedVersion?.slug ? `/services/${service.publishedVersion.slug}` : undefined;
+    if (oldPath && service.publishedVersion?.slug !== input.slug) await savePublishedSlugRedirect(tx, oldPath, `/services/${input.slug}`);
 
     await tx.service.update({
       where: { id: serviceId },
@@ -150,6 +146,7 @@ async function publishService(serviceId: string, input: ServicePublishInput) {
         publishedAt: new Date(),
       },
     });
+    return oldPath;
   });
 }
 
@@ -203,11 +200,13 @@ async function replaceRelations(tx: Prisma.TransactionClient | typeof prisma, se
   ]);
 }
 
-function revalidateServicePaths(serviceId: string, slug?: string) {
+function revalidateServicePaths(serviceId: string, slug?: string, oldPath?: string) {
   revalidatePath("/dashboard/services");
   revalidatePath(`/dashboard/services/${serviceId}`);
   revalidatePath("/services");
   if (slug) revalidatePath(`/services/${slug}`);
+  if (oldPath) revalidatePath(oldPath);
+  revalidatePath("/sitemap.xml");
 }
 
 function redirectWithMessage(serviceId: string | undefined, type: "success" | "error", message: string): never {
