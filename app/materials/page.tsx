@@ -1,0 +1,44 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+
+import { getPublishedMaterials } from "@/modules/materials/queries";
+
+export const metadata: Metadata = {
+  title: "المواد | Jeddah Shading",
+  description: "تصفح المواد والخيارات المنشورة والمدعومة في أعمال جده شيدنج.",
+};
+
+export const dynamic = "force-dynamic";
+
+export default async function MaterialsIndexPage() {
+  const materials = await getPublishedMaterials();
+
+  return (
+    <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-12 md:px-8">
+      <div className="mx-auto max-w-6xl space-y-10">
+        <header className="space-y-4">
+          <p className="text-sm font-semibold text-[oklch(37%_0.075_155)]">المواد</p>
+          <h1 className="max-w-3xl text-3xl font-bold leading-[1.35] md:text-5xl">مواد وخيارات منشورة ومدعومة فعليًا</h1>
+          <p className="max-w-2xl text-base leading-[1.8] text-[oklch(42%_0.018_150)]">تعرض هذه الصفحة المواد المنشورة فقط، دون توليد مزايا أو ادعاءات غير مدخلة في لوحة التحكم.</p>
+        </header>
+        {materials.length === 0 ? (
+          <section className="rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] p-6"><h2 className="text-xl font-semibold">لا توجد مواد منشورة بعد</h2><p className="mt-2 text-[oklch(42%_0.018_150)]">ستظهر المواد هنا بعد نشرها من لوحة التحكم.</p></section>
+        ) : (
+          <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" aria-label="قائمة المواد">
+            {materials.map((material) => {
+              const version = material.publishedVersion;
+              if (!version) return null;
+              return (
+                <Link className="group overflow-hidden rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] transition-colors hover:border-[oklch(37%_0.075_155)]" href={`/materials/${version.slug}`} key={material.id}>
+                  {version.heroMedia ? <div className="relative aspect-[4/3] bg-[oklch(95%_0.012_110)]"><Image alt={version.heroMedia.altText ?? version.name ?? ""} className="object-cover" fill sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw" src={version.heroMedia.url} /></div> : null}
+                  <div className="space-y-3 p-5"><h2 className="text-xl font-bold leading-[1.45] group-hover:text-[oklch(37%_0.075_155)]">{version.name}</h2><p className="text-sm leading-[1.8] text-[oklch(42%_0.018_150)]">{version.shortDescription}</p></div>
+                </Link>
+              );
+            })}
+          </section>
+        )}
+      </div>
+    </main>
+  );
+}

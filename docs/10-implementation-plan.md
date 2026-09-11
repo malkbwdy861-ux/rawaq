@@ -5,6 +5,7 @@
 Defines the recommended implementation sequence.
 
 Goals:
+
 - reduce rework,
 - keep AI coding sessions scoped,
 - respect dependencies,
@@ -18,6 +19,7 @@ Goals:
 Do not implement the entire project in one AI coding session.
 
 Recommended:
+
 1. inspect current code,
 2. load relevant reference files,
 3. implement one bounded phase,
@@ -30,6 +32,7 @@ Recommended:
 ## 3. Phase 0 — Foundation
 
 Tasks:
+
 - Next.js + TypeScript foundation,
 - Tailwind,
 - shadcn/ui,
@@ -40,6 +43,7 @@ Tasks:
 - lint/type-check/build.
 
 Done when:
+
 - app builds,
 - DB connects,
 - migrations work,
@@ -50,6 +54,7 @@ Done when:
 ## 4. Phase 1 — Auth + Dashboard Shell
 
 Tasks:
+
 - AdminUser,
 - Auth.js,
 - login/logout,
@@ -58,6 +63,7 @@ Tasks:
 - dashboard navigation shell.
 
 Done when:
+
 - anonymous access blocked,
 - admin access works,
 - mutations require authorization.
@@ -67,6 +73,7 @@ Done when:
 ## 5. Phase 2 — Core Database + Versioning
 
 Implement:
+
 - Service/ServiceVersion,
 - Solution/SolutionVersion,
 - Material/MaterialVersion,
@@ -82,6 +89,7 @@ Implement:
 - publication pointers.
 
 Critical acceptance:
+
 - Draft field changes do not alter Published output,
 - Draft relationship changes do not alter Published output,
 - Draft slug changes do not alter public route before Publish.
@@ -91,6 +99,7 @@ Critical acceptance:
 ## 6. Phase 3 — Shared CMS Infrastructure
 
 Build:
+
 - reusable forms,
 - list patterns,
 - search/status filters,
@@ -109,6 +118,7 @@ Do not build a generic CMS framework or page builder.
 ## 7. Phase 4 — Media
 
 Tasks:
+
 - persistent volume path,
 - upload validation,
 - safe filenames,
@@ -120,6 +130,7 @@ Tasks:
 - media serving.
 
 Done when:
+
 - uploads survive deployment setup,
 - existing Media can be reused,
 - unauthorized uploads fail.
@@ -129,6 +140,7 @@ Done when:
 ## 8. Phase 5 — Services
 
 Implement complete vertical slice:
+
 - Service CMS list/create/edit,
 - Draft,
 - Preview,
@@ -147,6 +159,7 @@ Done when a new Service can be created and published without code changes.
 ## 9. Phase 6 — Materials + Solutions
 
 Repeat complete vertical slices for:
+
 - Material,
 - Solution.
 
@@ -157,6 +170,7 @@ Verify relationship versioning.
 ## 10. Phase 7 — Projects
 
 Tasks:
+
 - Project CMS,
 - location fields,
 - ordered versioned gallery,
@@ -172,6 +186,7 @@ Done when a real project can be published entirely through CMS.
 ## 11. Phase 8 — Articles + TipTap
 
 Tasks:
+
 - TipTap configuration,
 - controlled extensions,
 - JSON persistence,
@@ -188,6 +203,7 @@ Do not create `/articles`.
 ## 12. Phase 9 — FAQs + Static Pages
 
 Tasks:
+
 - FAQ publishing,
 - Page schemas,
 - Home editor,
@@ -197,6 +213,7 @@ Tasks:
 - Preview/Publish.
 
 Prices rule:
+
 - `/prices` fixed hub,
 - selected pricing Articles link to `/guides/[slug]`,
 - no `/prices/[slug]`.
@@ -206,6 +223,7 @@ Prices rule:
 ## 13. Phase 10 — Site Settings + Contact
 
 Tasks:
+
 - company settings,
 - contact settings,
 - social settings,
@@ -220,6 +238,7 @@ No Lead/Quote persistence.
 ## 14. Phase 11 — Redirects + SEO Technical Layer
 
 Tasks:
+
 - Redirect entity/admin tooling,
 - publish-time slug-change redirect creation,
 - redirect resolution,
@@ -240,6 +259,7 @@ Done when old Published slug preserves SEO through redirect after republish.
 ## 15. Phase 12 — Publishing Hardening
 
 Cross-module verification:
+
 - immutable Published snapshots,
 - editable Draft snapshots,
 - relationship snapshot correctness,
@@ -257,6 +277,7 @@ This phase is mandatory.
 ## 16. Phase 13 — QA + Security
 
 Test:
+
 - auth,
 - authorization,
 - form validation,
@@ -278,6 +299,7 @@ Test:
 ## 17. Phase 14 — Deployment + Backup
 
 Tasks:
+
 - production env,
 - PostgreSQL production setup,
 - Prisma migrations,
@@ -315,6 +337,7 @@ Tasks:
 ## 19. Session Prompt Requirements
 
 Each coding session should state:
+
 - exact phase,
 - relevant reference files,
 - current codebase state,
@@ -333,6 +356,7 @@ Recommended instruction:
 ## 20. Dependencies
 
 Do not:
+
 - build content CRUD before schema/versioning,
 - build Project gallery before Media,
 - expose Preview before secure Draft resolution,
@@ -345,6 +369,7 @@ Do not:
 ## 21. Definition of Done
 
 Every phase must pass:
+
 - type-check,
 - production build,
 - relevant automated tests,
@@ -360,12 +385,14 @@ Generated code alone is not completion.
 Design skills/workflows are separate.
 
 Implementation references are authoritative for:
+
 - behavior,
 - data,
 - scope,
 - architecture.
 
 Design outputs are authoritative for:
+
 - colors,
 - typography,
 - identity,
@@ -377,6 +404,7 @@ Design outputs are authoritative for:
 ## 23. V1 Final Acceptance
 
 V1 complete when:
+
 - all required dynamic entities work,
 - static Pages are editable with fixed schemas,
 - Media is persistent,

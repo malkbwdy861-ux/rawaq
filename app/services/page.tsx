@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   description: "تصفح خدمات جده شيدنج المنشورة في التظليل والإنشاءات الخارجية.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ServicesIndexPage() {
   const services = await getPublishedServices();
 
