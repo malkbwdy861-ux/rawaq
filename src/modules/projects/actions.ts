@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { readStringArray } from "@/modules/cms/validation";
+import { lockPublishingNamespace } from "@/modules/cms/publishing";
 import { savePublishedSlugRedirect } from "@/modules/redirects/service";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
@@ -13,11 +14,10 @@ import { projectDraftSchema, projectIdSchema, projectPublishSchema, type Project
 
 export async function createProjectAction() {
   await requireAdmin();
-  const project = await prisma.project.create({
-    data: { status: ContentStatus.DRAFT, versions: { create: {} } },
-    include: { versions: { select: { id: true }, take: 1 } },
+  const project = await prisma.$transaction(async (tx) => {
+    const created = await tx.project.create({ data: { status: ContentStatus.DRAFT, versions: { create: {} } }, include: { versions: { select: { id: true }, take: 1 } } });
+    return tx.project.update({ where: { id: created.id }, data: { draftVersionId: created.versions[0]?.id } });
   });
-  await prisma.project.update({ where: { id: project.id }, data: { draftVersionId: project.versions[0]?.id } });
   revalidatePath("/dashboard/projects");
   redirect(`/dashboard/projects/${project.id}?success=${encodeURIComponent("تم إنشاء مسودة مشروع جديدة.")}`);
 }
@@ -29,7 +29,7 @@ export async function saveProjectDraftAction(formData: FormData) {
     redirectWithMessage(parsed.data?.projectId, "error", "تعذر حفظ المسودة. راجع الحقول المدخلة.");
   }
   await saveDraft(parsed.data.projectId, parsed.data);
-  revalidateProjectPaths(parsed.data.projectId);
+  revalidateProjectDraftPaths(parsed.data.projectId);
   redirectWithMessage(parsed.data.projectId, "success", "تم حفظ مسودة المشروع دون تغيير النسخة المنشورة.");
 }
 
@@ -40,7 +40,6 @@ export async function publishProjectAction(formData: FormData) {
     redirectWithMessage(parsed.data?.projectId, "error", "تعذر النشر. أكمل العنوان والرابط والوصف المختصر.");
   }
   try {
-    await saveDraft(parsed.data.projectId, parsed.data);
     const oldPath = await publishProject(parsed.data.projectId, parsed.data);
     revalidateProjectPaths(parsed.data.projectId, parsed.data.slug, oldPath);
   } catch (error) {
@@ -54,8 +53,8 @@ export async function archiveProjectAction(formData: FormData) {
   await requireAdmin();
   const parsed = projectIdSchema.safeParse({ projectId: formData.get("projectId") });
   if (!parsed.success) redirect("/dashboard/projects?error=تعذر تحديد المشروع المطلوب أرشفته.");
-  await prisma.project.update({ where: { id: parsed.data.projectId }, data: { status: ContentStatus.ARCHIVED } });
-  revalidateProjectPaths(parsed.data.projectId);
+  const project = await prisma.project.update({ where: { id: parsed.data.projectId }, data: { status: ContentStatus.ARCHIVED }, select: { publishedVersion: { select: { slug: true } } } });
+  revalidateProjectPaths(parsed.data.projectId, undefined, project.publishedVersion?.slug ? `/projects/${project.publishedVersion.slug}` : undefined);
   redirectWithMessage(parsed.data.projectId, "success", "تمت أرشفة المشروع وإزالته من العرض العام.");
 }
 
@@ -110,8 +109,11 @@ async function saveDraft(projectId: string, input: ProjectDraftInput) {
 
 async function publishProject(projectId: string, input: ProjectPublishInput) {
   return prisma.$transaction(async (tx) => {
+    await lockPublishingNamespace(tx, "projects");
     const project = await tx.project.findUnique({ where: { id: projectId }, include: { publishedVersion: { select: { slug: true } } } });
     if (!project?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
+    await tx.projectVersion.update({ where: { id: project.draftVersionId }, data: toVersionData(input) });
+    await replaceVersionCollections(tx, project.draftVersionId, input);
     await assertSlugAvailable(tx, projectId, input.slug);
     const published = await tx.projectVersion.create({ data: { projectId, ...toVersionData(input) } });
     await replaceVersionCollections(tx, published.id, input);
@@ -120,6 +122,12 @@ async function publishProject(projectId: string, input: ProjectPublishInput) {
     await tx.project.update({ where: { id: projectId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
     return oldPath;
   });
+}
+
+function revalidateProjectDraftPaths(projectId: string) {
+  revalidatePath("/dashboard/projects");
+  revalidatePath(`/dashboard/projects/${projectId}`);
+  revalidatePath(`/preview/projects/${projectId}`);
 }
 
 async function assertSlugAvailable(tx: Prisma.TransactionClient, projectId: string, slug: string) {

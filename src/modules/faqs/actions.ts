@@ -11,11 +11,10 @@ import { faqDraftSchema, faqIdSchema, faqPublishSchema, type FaqDraftInput } fro
 
 export async function createFaqAction() {
   await requireAdmin();
-  const faq = await prisma.fAQ.create({
-    data: { status: ContentStatus.DRAFT, versions: { create: {} } },
-    include: { versions: { select: { id: true }, take: 1 } },
+  const faq = await prisma.$transaction(async (tx) => {
+    const created = await tx.fAQ.create({ data: { status: ContentStatus.DRAFT, versions: { create: {} } }, include: { versions: { select: { id: true }, take: 1 } } });
+    return tx.fAQ.update({ where: { id: created.id }, data: { draftVersionId: created.versions[0]?.id } });
   });
-  await prisma.fAQ.update({ where: { id: faq.id }, data: { draftVersionId: faq.versions[0]?.id } });
   revalidatePath("/dashboard/faqs");
   redirect(`/dashboard/faqs/${faq.id}?success=${encodeURIComponent("تم إنشاء مسودة سؤال جديدة.")}`);
 }
@@ -25,7 +24,7 @@ export async function saveFaqDraftAction(formData: FormData) {
   const parsed = faqDraftSchema.safeParse(readFaqFormData(formData));
   if (!parsed.success || !parsed.data.faqId) redirectWithMessage(parsed.data?.faqId, "error", "تعذر حفظ المسودة. راجع الحقول المدخلة.");
   await saveDraft(parsed.data.faqId, parsed.data);
-  revalidateFaqPaths(parsed.data.faqId);
+  revalidateFaqDraftPaths(parsed.data.faqId);
   redirectWithMessage(parsed.data.faqId, "success", "تم حفظ مسودة السؤال دون تغيير النسخة المنشورة.");
 }
 
@@ -35,10 +34,10 @@ export async function publishFaqAction(formData: FormData) {
   if (!parsed.success || !parsed.data.faqId) redirectWithMessage(parsed.data?.faqId, "error", "تعذر النشر. أدخل السؤال والإجابة.");
   const faqId = parsed.data.faqId;
   try {
-    await saveDraft(faqId, parsed.data);
     await prisma.$transaction(async (tx) => {
       const faq = await tx.fAQ.findUnique({ where: { id: faqId }, select: { draftVersionId: true } });
       if (!faq?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
+      await tx.fAQVersion.update({ where: { id: faq.draftVersionId }, data: toVersionData(parsed.data) });
       const published = await tx.fAQVersion.create({ data: { faqId, ...toVersionData(parsed.data) } });
       await tx.fAQ.update({ where: { id: faqId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
     });
@@ -93,6 +92,12 @@ function revalidateFaqPaths(faqId: string) {
   revalidatePath("/solutions/[slug]", "page");
   revalidatePath("/materials/[slug]", "page");
   revalidatePath("/guides/[slug]", "page");
+}
+
+function revalidateFaqDraftPaths(faqId: string) {
+  revalidatePath("/dashboard/faqs");
+  revalidatePath(`/dashboard/faqs/${faqId}`);
+  revalidatePath(`/preview/faqs/${faqId}`);
 }
 
 function redirectWithMessage(faqId: string | undefined, type: "success" | "error", message: string): never {

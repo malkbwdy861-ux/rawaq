@@ -71,7 +71,7 @@ function faqOptions<T extends { id: string; status: "DRAFT" | "PUBLISHED" | "ARC
 
 async function resolveSelections(key: PageKey, data: StaticPageData, preview: boolean) {
   const versionInclude = preview ? { draftVersion: true, publishedVersion: true } : { publishedVersion: true };
-  const statusWhere = preview ? {} : { status: ContentStatus.PUBLISHED };
+  const statusWhere = preview ? {} : { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } };
   const heroMediaId = "mediaId" in data.hero ? data.hero.mediaId || null : null;
   const homeData = key === "HOME" ? data as Extract<StaticPageData, { featuredServices: unknown }> : null;
   const pricesData = key === "PRICES" ? data as Extract<StaticPageData, { selectedPricingArticleIds: unknown }> : null;
@@ -81,9 +81,28 @@ async function resolveSelections(key: PageKey, data: StaticPageData, preview: bo
     homeData ? prisma.solution.findMany({ where: { id: { in: homeData.featuredSolutions.selectedSolutionIds }, ...statusWhere }, include: versionInclude }) : key === "CONTACT" ? prisma.solution.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],
     key === "CONTACT" ? prisma.material.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],
     homeData ? prisma.project.findMany({ where: { id: { in: homeData.featuredProjects.selectedProjectIds }, ...statusWhere }, include: { ...versionInclude, publishedVersion: { include: { coverMedia: true } }, ...(preview ? { draftVersion: { include: { coverMedia: true } } } : {}) } }) : [],
-    pricesData ? prisma.article.findMany({ where: { id: { in: pricesData.selectedPricingArticleIds }, ...statusWhere }, include: versionInclude }) : [],
+    pricesData ? prisma.article.findMany({ where: { id: { in: pricesData.selectedPricingArticleIds }, ...statusWhere, ...(preview ? {} : { publishedVersion: { articleType: "PRICING" } }) }, include: versionInclude }) : [],
     (homeData || pricesData) ? prisma.fAQ.findMany({ where: { id: { in: (homeData ?? pricesData)!.faqSection.selectedFaqIds }, ...statusWhere }, include: versionInclude }) : [],
     key === "CONTACT" ? prisma.siteSettings.findFirst({ include: { defaultOpenGraphImage: true } }) : null,
   ]);
-  return { heroMedia, services, solutions, materials, projects, articles, faqs, settings: settings ? { ...settings, socialLinks: parseSocialLinks(settings.socialLinks) } : null, preview };
+  const faqIds = (homeData ?? pricesData)?.faqSection.selectedFaqIds ?? [];
+  return {
+    heroMedia,
+    services: homeData ? orderSelections(services, homeData.featuredServices.selectedServiceIds) : services,
+    solutions: homeData ? orderSelections(solutions, homeData.featuredSolutions.selectedSolutionIds) : solutions,
+    materials,
+    projects: homeData ? orderSelections(projects, homeData.featuredProjects.selectedProjectIds) : projects,
+    articles: pricesData ? orderSelections(articles, pricesData.selectedPricingArticleIds) : articles,
+    faqs: orderSelections(faqs, faqIds),
+    settings: settings ? { ...settings, socialLinks: parseSocialLinks(settings.socialLinks) } : null,
+    preview,
+  };
+}
+
+function orderSelections<T extends { id: string }>(items: T[], ids: string[]) {
+  const byId = new Map(items.map((item) => [item.id, item]));
+  return ids.flatMap((id) => {
+    const item = byId.get(id);
+    return item ? [item] : [];
+  });
 }

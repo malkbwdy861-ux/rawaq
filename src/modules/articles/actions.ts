@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { readStringArray } from "@/modules/cms/validation";
+import { lockPublishingNamespace } from "@/modules/cms/publishing";
 import { savePublishedSlugRedirect } from "@/modules/redirects/service";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
@@ -13,8 +14,10 @@ import { articleDraftSchema, articleIdSchema, articlePublishSchema, type Article
 
 export async function createArticleAction() {
   await requireAdmin();
-  const article = await prisma.article.create({ data: { status: ContentStatus.DRAFT, versions: { create: {} } }, include: { versions: { select: { id: true }, take: 1 } } });
-  await prisma.article.update({ where: { id: article.id }, data: { draftVersionId: article.versions[0]?.id } });
+  const article = await prisma.$transaction(async (tx) => {
+    const created = await tx.article.create({ data: { status: ContentStatus.DRAFT, versions: { create: {} } }, include: { versions: { select: { id: true }, take: 1 } } });
+    return tx.article.update({ where: { id: created.id }, data: { draftVersionId: created.versions[0]?.id } });
+  });
   revalidatePath("/dashboard/articles");
   redirect(`/dashboard/articles/${article.id}?success=${encodeURIComponent("تم إنشاء مسودة مقال جديدة.")}`);
 }
@@ -24,7 +27,7 @@ export async function saveArticleDraftAction(formData: FormData) {
   const parsed = articleDraftSchema.safeParse(readArticleFormData(formData));
   if (!parsed.success || !parsed.data.articleId) redirectWithMessage(parsed.data?.articleId, "error", "تعذر حفظ المسودة. راجع محتوى المقال والحقول المدخلة.");
   await saveDraft(parsed.data.articleId, parsed.data);
-  revalidateArticlePaths(parsed.data.articleId);
+  revalidateArticleDraftPaths(parsed.data.articleId);
   redirectWithMessage(parsed.data.articleId, "success", "تم حفظ مسودة المقال دون تغيير النسخة المنشورة.");
 }
 
@@ -33,7 +36,6 @@ export async function publishArticleAction(formData: FormData) {
   const parsed = articlePublishSchema.safeParse(readArticleFormData(formData));
   if (!parsed.success || !parsed.data.articleId) redirectWithMessage(parsed.data?.articleId, "error", "تعذر النشر. أكمل العنوان والرابط والمقتطف والمحتوى.");
   try {
-    await saveDraft(parsed.data.articleId, parsed.data);
     const oldPath = await publishArticle(parsed.data.articleId, parsed.data);
     revalidateArticlePaths(parsed.data.articleId, parsed.data.slug, oldPath);
   } catch (error) {
@@ -46,8 +48,8 @@ export async function archiveArticleAction(formData: FormData) {
   await requireAdmin();
   const parsed = articleIdSchema.safeParse({ articleId: formData.get("articleId") });
   if (!parsed.success) redirect("/dashboard/articles?error=تعذر تحديد المقال المطلوب أرشفته.");
-  await prisma.article.update({ where: { id: parsed.data.articleId }, data: { status: ContentStatus.ARCHIVED } });
-  revalidateArticlePaths(parsed.data.articleId);
+  const article = await prisma.article.update({ where: { id: parsed.data.articleId }, data: { status: ContentStatus.ARCHIVED }, select: { publishedVersion: { select: { slug: true } } } });
+  revalidateArticlePaths(parsed.data.articleId, undefined, article.publishedVersion?.slug ? `/guides/${article.publishedVersion.slug}` : undefined);
   redirectWithMessage(parsed.data.articleId, "success", "تمت أرشفة المقال وإزالته من الأدلة العامة.");
 }
 
@@ -91,8 +93,11 @@ async function saveDraft(articleId: string, input: ArticleDraftInput) {
 
 async function publishArticle(articleId: string, input: ArticlePublishInput) {
   return prisma.$transaction(async (tx) => {
+    await lockPublishingNamespace(tx, "articles");
     const article = await tx.article.findUnique({ where: { id: articleId }, include: { publishedVersion: { select: { slug: true } } } });
     if (!article?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
+    await tx.articleVersion.update({ where: { id: article.draftVersionId }, data: toVersionData(input) });
+    await replaceVersionRelations(tx, article.draftVersionId, input);
     await assertSlugAvailable(tx, articleId, input.slug);
     const published = await tx.articleVersion.create({ data: { articleId, ...toVersionData(input) } });
     await replaceVersionRelations(tx, published.id, input);
@@ -101,6 +106,12 @@ async function publishArticle(articleId: string, input: ArticlePublishInput) {
     await tx.article.update({ where: { id: articleId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
     return oldPath;
   });
+}
+
+function revalidateArticleDraftPaths(articleId: string) {
+  revalidatePath("/dashboard/articles");
+  revalidatePath(`/dashboard/articles/${articleId}`);
+  revalidatePath(`/preview/articles/${articleId}`);
 }
 
 async function assertSlugAvailable(tx: Prisma.TransactionClient, articleId: string, slug: string) {

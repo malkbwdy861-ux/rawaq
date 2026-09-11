@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { readStringArray } from "@/modules/cms/validation";
+import { lockPublishingNamespace } from "@/modules/cms/publishing";
 import { savePublishedSlugRedirect } from "@/modules/redirects/service";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
@@ -14,17 +15,9 @@ import { solutionDraftSchema, solutionIdSchema, solutionPublishSchema, type Solu
 export async function createSolutionAction() {
   await requireAdmin();
 
-  const solution = await prisma.solution.create({
-    data: {
-      status: ContentStatus.DRAFT,
-      versions: { create: {} },
-    },
-    include: { versions: { select: { id: true }, take: 1 } },
-  });
-
-  await prisma.solution.update({
-    where: { id: solution.id },
-    data: { draftVersionId: solution.versions[0]?.id },
+  const solution = await prisma.$transaction(async (tx) => {
+    const created = await tx.solution.create({ data: { status: ContentStatus.DRAFT, versions: { create: {} } }, include: { versions: { select: { id: true }, take: 1 } } });
+    return tx.solution.update({ where: { id: created.id }, data: { draftVersionId: created.versions[0]?.id } });
   });
 
   revalidatePath("/dashboard/solutions");
@@ -40,7 +33,7 @@ export async function saveSolutionDraftAction(formData: FormData) {
   }
 
   await saveDraft(parsed.data.solutionId, parsed.data);
-  revalidateSolutionPaths(parsed.data.solutionId);
+  revalidateSolutionDraftPaths(parsed.data.solutionId);
   redirectWithMessage(parsed.data.solutionId, "success", "تم حفظ مسودة الحل دون تغيير النسخة المنشورة.");
 }
 
@@ -53,7 +46,6 @@ export async function publishSolutionAction(formData: FormData) {
   }
 
   try {
-    await saveDraft(parsed.data.solutionId, parsed.data);
     const oldPath = await publishSolution(parsed.data.solutionId, parsed.data);
     revalidateSolutionPaths(parsed.data.solutionId, parsed.data.slug, oldPath);
   } catch (error) {
@@ -72,9 +64,9 @@ export async function archiveSolutionAction(formData: FormData) {
     redirect("/dashboard/solutions?error=تعذر تحديد الحل المطلوب أرشفته.");
   }
 
-  await prisma.solution.update({ where: { id: parsed.data.solutionId }, data: { status: ContentStatus.ARCHIVED } });
+  const solution = await prisma.solution.update({ where: { id: parsed.data.solutionId }, data: { status: ContentStatus.ARCHIVED }, select: { publishedVersion: { select: { slug: true } } } });
 
-  revalidateSolutionPaths(parsed.data.solutionId);
+  revalidateSolutionPaths(parsed.data.solutionId, undefined, solution.publishedVersion?.slug ? `/solutions/${solution.publishedVersion.slug}` : undefined);
   redirectWithMessage(parsed.data.solutionId, "success", "تمت أرشفة الحل وإزالته من العرض العام.");
 }
 
@@ -102,26 +94,17 @@ function readSolutionFormData(formData: FormData) {
 }
 
 async function saveDraft(solutionId: string, input: SolutionDraftInput) {
-  const solution = await prisma.solution.findUnique({ where: { id: solutionId }, select: { draftVersionId: true } });
-  if (!solution) throw new Error("الحل غير موجود.");
-
-  const versionData = toVersionData(input);
-  if (!solution.draftVersionId) {
-    const draft = await prisma.solutionVersion.create({ data: { solutionId, ...versionData } });
-    await prisma.solution.update({ where: { id: solutionId }, data: { draftVersionId: draft.id } });
-    await replaceRelations(prisma, draft.id, input);
-    return;
-  }
-
-  await prisma.solutionVersion.update({ where: { id: solution.draftVersionId }, data: versionData });
-  await replaceRelations(prisma, solution.draftVersionId, input);
+  await prisma.$transaction(async (tx) => saveDraftInTransaction(tx, solutionId, input));
 }
 
 async function publishSolution(solutionId: string, input: SolutionPublishInput) {
   return prisma.$transaction(async (tx) => {
+    await lockPublishingNamespace(tx, "solutions");
     const solution = await tx.solution.findUnique({ where: { id: solutionId }, include: { publishedVersion: { select: { slug: true } } } });
     if (!solution?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
 
+    await tx.solutionVersion.update({ where: { id: solution.draftVersionId }, data: toVersionData(input) });
+    await replaceRelations(tx, solution.draftVersionId, input);
     await assertSlugAvailable(tx, solutionId, input.slug);
     const published = await tx.solutionVersion.create({ data: { solutionId, ...toVersionData(input) } });
     await replaceRelations(tx, published.id, input);
@@ -132,6 +115,20 @@ async function publishSolution(solutionId: string, input: SolutionPublishInput) 
     await tx.solution.update({ where: { id: solutionId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
     return oldPath;
   });
+}
+
+async function saveDraftInTransaction(tx: Prisma.TransactionClient, solutionId: string, input: SolutionDraftInput) {
+  const solution = await tx.solution.findUnique({ where: { id: solutionId }, select: { draftVersionId: true } });
+  if (!solution) throw new Error("الحل غير موجود.");
+  let versionId = solution.draftVersionId;
+  if (!versionId) {
+    const draft = await tx.solutionVersion.create({ data: { solutionId, ...toVersionData(input) } });
+    versionId = draft.id;
+    await tx.solution.update({ where: { id: solutionId }, data: { draftVersionId: draft.id } });
+  } else {
+    await tx.solutionVersion.update({ where: { id: versionId }, data: toVersionData(input) });
+  }
+  await replaceRelations(tx, versionId, input);
 }
 
 async function assertSlugAvailable(tx: Prisma.TransactionClient, solutionId: string, slug: string) {
@@ -160,7 +157,7 @@ function toVersionData(input: SolutionDraftInput) {
   };
 }
 
-async function replaceRelations(tx: Prisma.TransactionClient | typeof prisma, solutionVersionId: string, input: SolutionDraftInput) {
+async function replaceRelations(tx: Prisma.TransactionClient, solutionVersionId: string, input: SolutionDraftInput) {
   await Promise.all([
     tx.solutionVersionService.deleteMany({ where: { solutionVersionId } }),
     tx.solutionVersionMaterial.deleteMany({ where: { solutionVersionId } }),
@@ -176,6 +173,12 @@ async function replaceRelations(tx: Prisma.TransactionClient | typeof prisma, so
     input.relatedArticleIds.length ? tx.solutionVersionArticle.createMany({ data: input.relatedArticleIds.map((articleId) => ({ solutionVersionId, articleId })), skipDuplicates: true }) : null,
     input.relatedFaqIds.length ? tx.solutionVersionFAQ.createMany({ data: input.relatedFaqIds.map((faqId) => ({ solutionVersionId, faqId })), skipDuplicates: true }) : null,
   ]);
+}
+
+function revalidateSolutionDraftPaths(solutionId: string) {
+  revalidatePath("/dashboard/solutions");
+  revalidatePath(`/dashboard/solutions/${solutionId}`);
+  revalidatePath(`/preview/solutions/${solutionId}`);
 }
 
 function revalidateSolutionPaths(solutionId: string, slug?: string, oldPath?: string) {

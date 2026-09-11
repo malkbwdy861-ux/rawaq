@@ -1,10 +1,11 @@
 "use server";
 
-import { ContentStatus, type Prisma } from "@prisma/client";
+import { ContentStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { readStringArray } from "@/modules/cms/validation";
+import { lockPublishingNamespace } from "@/modules/cms/publishing";
 import { savePublishedSlugRedirect } from "@/modules/redirects/service";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
@@ -14,12 +15,10 @@ import { materialDraftSchema, materialIdSchema, materialPublishSchema, type Mate
 export async function createMaterialAction() {
   await requireAdmin();
 
-  const material = await prisma.material.create({
-    data: { status: ContentStatus.DRAFT, versions: { create: {} } },
-    include: { versions: { select: { id: true }, take: 1 } },
+  const material = await prisma.$transaction(async (tx) => {
+    const created = await tx.material.create({ data: { status: ContentStatus.DRAFT, versions: { create: {} } }, include: { versions: { select: { id: true }, take: 1 } } });
+    return tx.material.update({ where: { id: created.id }, data: { draftVersionId: created.versions[0]?.id } });
   });
-
-  await prisma.material.update({ where: { id: material.id }, data: { draftVersionId: material.versions[0]?.id } });
 
   revalidatePath("/dashboard/materials");
   redirect(`/dashboard/materials/${material.id}?success=${encodeURIComponent("تم إنشاء مسودة مادة جديدة.")}`);
@@ -34,7 +33,7 @@ export async function saveMaterialDraftAction(formData: FormData) {
   }
 
   await saveDraft(parsed.data.materialId, parsed.data);
-  revalidateMaterialPaths(parsed.data.materialId);
+  revalidateMaterialDraftPaths(parsed.data.materialId);
   redirectWithMessage(parsed.data.materialId, "success", "تم حفظ مسودة المادة دون تغيير النسخة المنشورة.");
 }
 
@@ -47,7 +46,6 @@ export async function publishMaterialAction(formData: FormData) {
   }
 
   try {
-    await saveDraft(parsed.data.materialId, parsed.data);
     const oldPath = await publishMaterial(parsed.data.materialId, parsed.data);
     revalidateMaterialPaths(parsed.data.materialId, parsed.data.slug, oldPath);
   } catch (error) {
@@ -64,8 +62,8 @@ export async function archiveMaterialAction(formData: FormData) {
   const parsed = materialIdSchema.safeParse({ materialId: formData.get("materialId") });
   if (!parsed.success) redirect("/dashboard/materials?error=تعذر تحديد المادة المطلوب أرشفتها.");
 
-  await prisma.material.update({ where: { id: parsed.data.materialId }, data: { status: ContentStatus.ARCHIVED } });
-  revalidateMaterialPaths(parsed.data.materialId);
+  const material = await prisma.material.update({ where: { id: parsed.data.materialId }, data: { status: ContentStatus.ARCHIVED }, select: { publishedVersion: { select: { slug: true } } } });
+  revalidateMaterialPaths(parsed.data.materialId, undefined, material.publishedVersion?.slug ? `/materials/${material.publishedVersion.slug}` : undefined);
   redirectWithMessage(parsed.data.materialId, "success", "تمت أرشفة المادة وإزالتها من العرض العام.");
 }
 
@@ -97,26 +95,17 @@ function readMaterialFormData(formData: FormData) {
 }
 
 async function saveDraft(materialId: string, input: MaterialDraftInput) {
-  const material = await prisma.material.findUnique({ where: { id: materialId }, select: { draftVersionId: true } });
-  if (!material) throw new Error("المادة غير موجودة.");
-
-  const versionData = toVersionData(input);
-  if (!material.draftVersionId) {
-    const draft = await prisma.materialVersion.create({ data: { materialId, ...versionData } });
-    await prisma.material.update({ where: { id: materialId }, data: { draftVersionId: draft.id } });
-    await replaceRelations(prisma, draft.id, input);
-    return;
-  }
-
-  await prisma.materialVersion.update({ where: { id: material.draftVersionId }, data: versionData });
-  await replaceRelations(prisma, material.draftVersionId, input);
+  await prisma.$transaction(async (tx) => saveDraftInTransaction(tx, materialId, input));
 }
 
 async function publishMaterial(materialId: string, input: MaterialPublishInput) {
   return prisma.$transaction(async (tx) => {
+    await lockPublishingNamespace(tx, "materials");
     const material = await tx.material.findUnique({ where: { id: materialId }, include: { publishedVersion: { select: { slug: true } } } });
     if (!material?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
 
+    await tx.materialVersion.update({ where: { id: material.draftVersionId }, data: toVersionData(input) });
+    await replaceRelations(tx, material.draftVersionId, input);
     await assertSlugAvailable(tx, materialId, input.slug);
     const published = await tx.materialVersion.create({ data: { materialId, ...toVersionData(input) } });
     await replaceRelations(tx, published.id, input);
@@ -127,6 +116,20 @@ async function publishMaterial(materialId: string, input: MaterialPublishInput) 
     await tx.material.update({ where: { id: materialId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
     return oldPath;
   });
+}
+
+async function saveDraftInTransaction(tx: Prisma.TransactionClient, materialId: string, input: MaterialDraftInput) {
+  const material = await tx.material.findUnique({ where: { id: materialId }, select: { draftVersionId: true } });
+  if (!material) throw new Error("المادة غير موجودة.");
+  let versionId = material.draftVersionId;
+  if (!versionId) {
+    const draft = await tx.materialVersion.create({ data: { materialId, ...toVersionData(input) } });
+    versionId = draft.id;
+    await tx.material.update({ where: { id: materialId }, data: { draftVersionId: draft.id } });
+  } else {
+    await tx.materialVersion.update({ where: { id: versionId }, data: toVersionData(input) });
+  }
+  await replaceRelations(tx, versionId, input);
 }
 
 async function assertSlugAvailable(tx: Prisma.TransactionClient, materialId: string, slug: string) {
@@ -144,10 +147,10 @@ function toVersionData(input: MaterialDraftInput) {
     slug: input.slug || null,
     shortDescription: input.shortDescription || null,
     content: input.content || null,
-    advantages: input.advantages.length ? input.advantages : undefined,
-    limitations: input.limitations.length ? input.limitations : undefined,
+    advantages: input.advantages.length ? input.advantages : Prisma.JsonNull,
+    limitations: input.limitations.length ? input.limitations : Prisma.JsonNull,
     maintenanceNotes: input.maintenanceNotes || null,
-    recommendedUses: input.recommendedUses.length ? input.recommendedUses : undefined,
+    recommendedUses: input.recommendedUses.length ? input.recommendedUses : Prisma.JsonNull,
     heroMediaId: input.heroMediaId || null,
     seoTitle: input.seoTitle || null,
     seoDescription: input.seoDescription || null,
@@ -159,7 +162,7 @@ function toVersionData(input: MaterialDraftInput) {
   };
 }
 
-async function replaceRelations(tx: Prisma.TransactionClient | typeof prisma, materialVersionId: string, input: MaterialDraftInput) {
+async function replaceRelations(tx: Prisma.TransactionClient, materialVersionId: string, input: MaterialDraftInput) {
   await Promise.all([
     tx.materialVersionService.deleteMany({ where: { materialVersionId } }),
     tx.materialVersionSolution.deleteMany({ where: { materialVersionId } }),
@@ -175,6 +178,12 @@ async function replaceRelations(tx: Prisma.TransactionClient | typeof prisma, ma
     input.relatedArticleIds.length ? tx.materialVersionArticle.createMany({ data: input.relatedArticleIds.map((articleId) => ({ materialVersionId, articleId })), skipDuplicates: true }) : null,
     input.relatedFaqIds.length ? tx.materialVersionFAQ.createMany({ data: input.relatedFaqIds.map((faqId) => ({ materialVersionId, faqId })), skipDuplicates: true }) : null,
   ]);
+}
+
+function revalidateMaterialDraftPaths(materialId: string) {
+  revalidatePath("/dashboard/materials");
+  revalidatePath(`/dashboard/materials/${materialId}`);
+  revalidatePath(`/preview/materials/${materialId}`);
 }
 
 function readLines(value: FormDataEntryValue | null) {

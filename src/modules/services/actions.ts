@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { readStringArray } from "@/modules/cms/validation";
+import { lockPublishingNamespace } from "@/modules/cms/publishing";
 import { savePublishedSlugRedirect } from "@/modules/redirects/service";
 import { prisma } from "@/server/db/prisma";
 import { requireAdmin } from "@/server/auth";
@@ -14,17 +15,12 @@ import { serviceDraftSchema, serviceIdSchema, servicePublishSchema, type Service
 export async function createServiceAction() {
   await requireAdmin();
 
-  const service = await prisma.service.create({
-    data: {
-      status: ContentStatus.DRAFT,
-      versions: { create: {} },
-    },
-    include: { versions: { select: { id: true }, take: 1 } },
-  });
-
-  await prisma.service.update({
-    where: { id: service.id },
-    data: { draftVersionId: service.versions[0]?.id },
+  const service = await prisma.$transaction(async (tx) => {
+    const created = await tx.service.create({
+      data: { status: ContentStatus.DRAFT, versions: { create: {} } },
+      include: { versions: { select: { id: true }, take: 1 } },
+    });
+    return tx.service.update({ where: { id: created.id }, data: { draftVersionId: created.versions[0]?.id } });
   });
 
   revalidatePath("/dashboard/services");
@@ -40,7 +36,7 @@ export async function saveServiceDraftAction(formData: FormData) {
   }
 
   await saveDraft(parsed.data.serviceId, parsed.data);
-  revalidateServicePaths(parsed.data.serviceId);
+  revalidateServiceDraftPaths(parsed.data.serviceId);
   redirectWithMessage(parsed.data.serviceId, "success", "تم حفظ مسودة الخدمة دون تغيير النسخة المنشورة.");
 }
 
@@ -53,7 +49,6 @@ export async function publishServiceAction(formData: FormData) {
   }
 
   try {
-    await saveDraft(parsed.data.serviceId, parsed.data);
     const oldPath = await publishService(parsed.data.serviceId, parsed.data);
     revalidateServicePaths(parsed.data.serviceId, parsed.data.slug, oldPath);
   } catch (error) {
@@ -72,12 +67,13 @@ export async function archiveServiceAction(formData: FormData) {
     redirect("/dashboard/services?error=تعذر تحديد الخدمة المطلوب أرشفتها.");
   }
 
-  await prisma.service.update({
+  const service = await prisma.service.update({
     where: { id: parsed.data.serviceId },
     data: { status: ContentStatus.ARCHIVED },
+    select: { publishedVersion: { select: { slug: true } } },
   });
 
-  revalidateServicePaths(parsed.data.serviceId);
+  revalidateServicePaths(parsed.data.serviceId, undefined, service.publishedVersion?.slug ? `/services/${service.publishedVersion.slug}` : undefined);
   redirectWithMessage(parsed.data.serviceId, "success", "تمت أرشفة الخدمة وإزالتها من العرض العام.");
 }
 
@@ -105,24 +101,12 @@ function readServiceFormData(formData: FormData) {
 }
 
 async function saveDraft(serviceId: string, input: ServiceDraftInput) {
-  const service = await prisma.service.findUnique({ where: { id: serviceId }, select: { draftVersionId: true } });
-  if (!service) throw new Error("الخدمة غير موجودة.");
-
-  const versionData = toVersionData(input);
-
-  if (!service.draftVersionId) {
-    const draft = await prisma.serviceVersion.create({ data: { serviceId, ...versionData } });
-    await prisma.service.update({ where: { id: serviceId }, data: { draftVersionId: draft.id } });
-    await replaceRelations(prisma, draft.id, input);
-    return;
-  }
-
-  await prisma.serviceVersion.update({ where: { id: service.draftVersionId }, data: versionData });
-  await replaceRelations(prisma, service.draftVersionId, input);
+  await prisma.$transaction(async (tx) => saveDraftInTransaction(tx, serviceId, input));
 }
 
 async function publishService(serviceId: string, input: ServicePublishInput) {
   return prisma.$transaction(async (tx) => {
+    await lockPublishingNamespace(tx, "services");
     const service = await tx.service.findUnique({
       where: { id: serviceId },
       include: { publishedVersion: { select: { slug: true } } },
@@ -130,6 +114,8 @@ async function publishService(serviceId: string, input: ServicePublishInput) {
 
     if (!service?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
 
+    await tx.serviceVersion.update({ where: { id: service.draftVersionId }, data: toVersionData(input) });
+    await replaceRelations(tx, service.draftVersionId, input);
     await assertSlugAvailable(tx, serviceId, input.slug);
 
     const published = await tx.serviceVersion.create({ data: { serviceId, ...toVersionData(input) } });
@@ -148,6 +134,20 @@ async function publishService(serviceId: string, input: ServicePublishInput) {
     });
     return oldPath;
   });
+}
+
+async function saveDraftInTransaction(tx: Prisma.TransactionClient, serviceId: string, input: ServiceDraftInput) {
+  const service = await tx.service.findUnique({ where: { id: serviceId }, select: { draftVersionId: true } });
+  if (!service) throw new Error("الخدمة غير موجودة.");
+  let versionId = service.draftVersionId;
+  if (!versionId) {
+    const draft = await tx.serviceVersion.create({ data: { serviceId, ...toVersionData(input) } });
+    versionId = draft.id;
+    await tx.service.update({ where: { id: serviceId }, data: { draftVersionId: draft.id } });
+  } else {
+    await tx.serviceVersion.update({ where: { id: versionId }, data: toVersionData(input) });
+  }
+  await replaceRelations(tx, versionId, input);
 }
 
 async function assertSlugAvailable(tx: Prisma.TransactionClient, serviceId: string, slug: string) {
@@ -182,7 +182,7 @@ function toVersionData(input: ServiceDraftInput) {
   };
 }
 
-async function replaceRelations(tx: Prisma.TransactionClient | typeof prisma, serviceVersionId: string, input: ServiceDraftInput) {
+async function replaceRelations(tx: Prisma.TransactionClient, serviceVersionId: string, input: ServiceDraftInput) {
   await Promise.all([
     tx.serviceVersionSolution.deleteMany({ where: { serviceVersionId } }),
     tx.serviceVersionMaterial.deleteMany({ where: { serviceVersionId } }),
@@ -198,6 +198,12 @@ async function replaceRelations(tx: Prisma.TransactionClient | typeof prisma, se
     input.relatedArticleIds.length ? tx.serviceVersionArticle.createMany({ data: input.relatedArticleIds.map((articleId) => ({ serviceVersionId, articleId })), skipDuplicates: true }) : null,
     input.relatedFaqIds.length ? tx.serviceVersionFAQ.createMany({ data: input.relatedFaqIds.map((faqId) => ({ serviceVersionId, faqId })), skipDuplicates: true }) : null,
   ]);
+}
+
+function revalidateServiceDraftPaths(serviceId: string) {
+  revalidatePath("/dashboard/services");
+  revalidatePath(`/dashboard/services/${serviceId}`);
+  revalidatePath(`/preview/services/${serviceId}`);
 }
 
 function revalidateServicePaths(serviceId: string, slug?: string, oldPath?: string) {
