@@ -75,7 +75,7 @@ export async function submitServiceAction(previousState: ServiceFormState, formD
     return mutationErrorState(previousState, input, error, "publish");
   }
   revalidateServicePaths(published.serviceId, published.slug, published.oldPath);
-  redirectWithMessage(published.serviceId, "success", "تم نشر الخدمة وتحديث الصفحة العامة.");
+  redirect(cmsContentPath("/services", published.slug));
 }
 
 export async function deleteServiceAction(formData: FormData) {

@@ -11,7 +11,7 @@ import { isSafeLink, type TipTapDocument } from "../content";
 const emptyDocument: TipTapDocument = { type: "doc", content: [{ type: "paragraph", content: [] }] };
 const controlClass = "min-h-10 rounded-[4px] border border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] px-3 py-2 text-sm font-semibold transition-colors hover:bg-[oklch(95.5%_0.018_145)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[oklch(51%_0.09_155)] disabled:text-[oklch(53%_0.012_150)] aria-pressed:border-[oklch(37%_0.075_155)] aria-pressed:bg-[oklch(90%_0.035_150)]";
 
-export function RichTextEditor({ defaultValue }: { defaultValue?: TipTapDocument | null }) {
+export function RichTextEditor({ defaultValue, error }: { defaultValue?: TipTapDocument | null; error?: string }) {
   const [content, setContent] = useState<TipTapDocument>(defaultValue ?? emptyDocument);
   const [linkHref, setLinkHref] = useState("");
   const [linkError, setLinkError] = useState("");
@@ -33,6 +33,8 @@ export function RichTextEditor({ defaultValue }: { defaultValue?: TipTapDocument
       attributes: {
         class: "min-h-72 max-w-[72ch] px-4 py-4 text-base leading-[1.8] outline-none [&_blockquote]:border-y [&_blockquote]:border-[oklch(82%_0.012_145)] [&_blockquote]:py-3 [&_h2]:mt-6 [&_h2]:text-2xl [&_h2]:font-bold [&_h3]:mt-5 [&_h3]:text-xl [&_h3]:font-semibold [&_ol]:list-decimal [&_ol]:pr-6 [&_p]:my-3 [&_ul]:list-disc [&_ul]:pr-6",
         "aria-label": "محتوى المقال",
+        "aria-describedby": error ? "article-content-error" : "",
+        "aria-invalid": error ? "true" : "false",
         id: "article-content",
       },
     },

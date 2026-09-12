@@ -4,85 +4,148 @@ import { ContentStatus, type Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { lockPublishingNamespace } from "@/modules/cms/publishing";
 import { cmsContentPath, generateUniqueCmsSlug } from "@/modules/cms/slugs";
 import { readStringArray } from "@/modules/cms/validation";
-import { lockPublishingNamespace } from "@/modules/cms/publishing";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
 
 import { projectDraftSchema, projectIdSchema, projectPublishSchema, type ProjectDraftInput, type ProjectPublishInput } from "./validation";
 
+export type ProjectGalleryValue = { mediaId: string; caption: string };
+
+export type ProjectFormValues = {
+  projectId?: string;
+  title: string;
+  shortDescription: string;
+  content: string;
+  challenge: string;
+  solutionSummary: string;
+  technicalDetails: string;
+  completedAt: string;
+  city: string;
+  district: string;
+  coverMediaId: string;
+  gallery: ProjectGalleryValue[];
+  seoTitle: string;
+  seoDescription: string;
+  canonicalUrl: string;
+  noIndex: boolean;
+  openGraphTitle: string;
+  openGraphDescription: string;
+  openGraphImageId: string;
+  relatedServiceIds: string[];
+  relatedSolutionIds: string[];
+  relatedMaterialIds: string[];
+  relatedArticleIds: string[];
+};
+
+export type ProjectFormState = {
+  status: "idle" | "error";
+  message?: string;
+  fieldErrors?: Record<string, string[] | undefined>;
+  values?: ProjectFormValues;
+  revision: number;
+};
+
+// Existing dashboard entry points can use this action without creating an empty record.
 export async function createProjectAction() {
   await requireAdmin();
-  const project = await prisma.$transaction(async (tx) => {
-    const created = await tx.project.create({ data: { status: ContentStatus.DRAFT, versions: { create: {} } }, include: { versions: { select: { id: true }, take: 1 } } });
-    return tx.project.update({ where: { id: created.id }, data: { draftVersionId: created.versions[0]?.id } });
-  });
-  revalidatePath("/dashboard/projects");
-  redirect(`/dashboard/projects/${project.id}?success=${encodeURIComponent("تم إنشاء مسودة مشروع جديدة.")}`);
+  redirect("/dashboard/projects/new");
 }
 
-export async function saveProjectDraftAction(formData: FormData) {
+export async function submitProjectAction(previousState: ProjectFormState, formData: FormData): Promise<ProjectFormState> {
   await requireAdmin();
-  const parsed = projectDraftSchema.safeParse(readProjectFormData(formData));
-  if (!parsed.success || !parsed.data.projectId) {
-    redirectWithMessage(parsed.data?.projectId, "error", "تعذر حفظ المسودة. راجع الحقول المدخلة.");
-  }
-  await saveDraft(parsed.data.projectId, parsed.data);
-  revalidateProjectDraftPaths(parsed.data.projectId);
-  redirectWithMessage(parsed.data.projectId, "success", "تم حفظ مسودة المشروع دون تغيير النسخة المنشورة.");
-}
 
-export async function publishProjectAction(formData: FormData) {
-  await requireAdmin();
-  const parsed = projectPublishSchema.safeParse(readProjectFormData(formData));
-  if (!parsed.success || !parsed.data.projectId) {
-    redirectWithMessage(parsed.data?.projectId, "error", "تعذر النشر. أكمل العنوان والوصف المختصر.");
+  const input = readProjectFormData(formData);
+  const intent = formData.get("intent") === "publish" ? "publish" : "saveDraft";
+  const parsed = (intent === "publish" ? projectPublishSchema : projectDraftSchema).safeParse(input);
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message: intent === "publish" ? "تعذر نشر المشروع. راجع الحقول المحددة أدناه." : "تعذر حفظ المسودة. راجع الحقول المحددة أدناه.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+      values: input,
+      revision: previousState.revision + 1,
+    };
   }
+
+  if (intent === "saveDraft") {
+    let projectId: string;
+    try {
+      projectId = parsed.data.projectId ?? await createProjectDraft(parsed.data);
+      if (parsed.data.projectId) await saveDraft(parsed.data.projectId, parsed.data);
+    } catch (error) {
+      return mutationErrorState(previousState, input, error, "saveDraft");
+    }
+    revalidateProjectDraftPaths(projectId);
+    redirect(`/dashboard/projects/${projectId}?success=${encodeURIComponent("تم حفظ مسودة المشروع.")}`);
+  }
+
+  let published: Awaited<ReturnType<typeof publishProject>>;
   try {
-    const { oldPath, slug } = await publishProject(parsed.data.projectId, parsed.data);
-    revalidateProjectPaths(parsed.data.projectId, slug, oldPath);
+    published = await publishProject(parsed.data.projectId, parsed.data as ProjectPublishInput);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "فشل نشر المشروع. بقيت النسخة المنشورة الحالية كما هي.";
-    redirectWithMessage(parsed.data.projectId, "error", message);
+    return mutationErrorState(previousState, input, error, "publish");
   }
-  redirectWithMessage(parsed.data.projectId, "success", "تم نشر المشروع وتحديث الصفحة العامة.");
+  revalidateProjectPaths(published.projectId, published.slug, published.oldPath);
+  redirect(cmsContentPath("/projects", published.slug));
 }
 
-export async function archiveProjectAction(formData: FormData) {
+export async function deleteProjectAction(formData: FormData) {
   await requireAdmin();
+
   const parsed = projectIdSchema.safeParse({ projectId: formData.get("projectId") });
-  if (!parsed.success) redirect("/dashboard/projects?error=تعذر تحديد المشروع المطلوب أرشفته.");
-  const project = await prisma.project.update({ where: { id: parsed.data.projectId }, data: { status: ContentStatus.ARCHIVED }, select: { publishedVersion: { select: { slug: true } } } });
-  revalidateProjectPaths(parsed.data.projectId, undefined, project.publishedVersion?.slug ? cmsContentPath("/projects", project.publishedVersion.slug) : undefined);
-  redirectWithMessage(parsed.data.projectId, "success", "تمت أرشفة المشروع وإزالته من العرض العام.");
+  if (!parsed.success) redirect("/dashboard/projects?error=تعذر تحديد المشروع المطلوب حذفه.");
+
+  const project = await prisma.project.findUnique({
+    where: { id: parsed.data.projectId },
+    select: { publishedVersion: { select: { slug: true } } },
+  });
+  if (!project) redirect("/dashboard/projects?error=المشروع غير موجود أو حُذف مسبقاً.");
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.serviceVersionProject.deleteMany({ where: { projectId: parsed.data.projectId } });
+      await tx.solutionVersionProject.deleteMany({ where: { projectId: parsed.data.projectId } });
+      await tx.materialVersionProject.deleteMany({ where: { projectId: parsed.data.projectId } });
+      await tx.articleVersionProject.deleteMany({ where: { projectId: parsed.data.projectId } });
+      await tx.project.delete({ where: { id: parsed.data.projectId } });
+    });
+  } catch {
+    redirect("/dashboard/projects?error=تعذر حذف المشروع. حاول مرة أخرى.");
+  }
+
+  revalidatePath("/dashboard/projects");
+  revalidatePath("/dashboard");
+  revalidatePath("/projects");
+  if (project.publishedVersion?.slug) revalidatePath(cmsContentPath("/projects", project.publishedVersion.slug));
+  revalidatePath("/sitemap.xml");
+  redirect(`/dashboard/projects?success=${encodeURIComponent("تم حذف المشروع نهائياً.")}`);
 }
 
-function readProjectFormData(formData: FormData) {
+function readProjectFormData(formData: FormData): ProjectFormValues {
   const galleryCaptions = formData.getAll("galleryCaptions");
   return {
-    projectId: formData.get("projectId") || undefined,
-    title: formData.get("title") ?? "",
-    shortDescription: formData.get("shortDescription") ?? "",
-    content: formData.get("content") ?? "",
-    challenge: formData.get("challenge") ?? "",
-    solutionSummary: formData.get("solutionSummary") ?? "",
-    technicalDetails: formData.get("technicalDetails") ?? "",
-    completedAt: formData.get("completedAt") ?? "",
-    city: formData.get("city") ?? "",
-    district: formData.get("district") ?? "",
-    coverMediaId: formData.get("coverMediaId") ?? "",
-    gallery: formData.getAll("galleryMediaIds").map((mediaId, index) => ({
-      mediaId: String(mediaId),
-      caption: String(galleryCaptions[index] ?? ""),
-    })),
-    seoTitle: formData.get("seoTitle") ?? "",
-    seoDescription: formData.get("seoDescription") ?? "",
-    canonicalUrl: formData.get("canonicalUrl") ?? "",
+    projectId: readText(formData, "projectId") || undefined,
+    title: readText(formData, "title"),
+    shortDescription: readText(formData, "shortDescription"),
+    content: readText(formData, "content"),
+    challenge: readText(formData, "challenge"),
+    solutionSummary: readText(formData, "solutionSummary"),
+    technicalDetails: readText(formData, "technicalDetails"),
+    completedAt: readText(formData, "completedAt"),
+    city: readText(formData, "city"),
+    district: readText(formData, "district"),
+    coverMediaId: readText(formData, "coverMediaId"),
+    gallery: formData.getAll("galleryMediaIds").map((mediaId, index) => ({ mediaId: String(mediaId), caption: String(galleryCaptions[index] ?? "") })),
+    seoTitle: readText(formData, "seoTitle"),
+    seoDescription: readText(formData, "seoDescription"),
+    canonicalUrl: readText(formData, "canonicalUrl"),
     noIndex: formData.get("noIndex") === "on",
-    openGraphTitle: formData.get("openGraphTitle") ?? "",
-    openGraphDescription: formData.get("openGraphDescription") ?? "",
-    openGraphImageId: formData.get("openGraphImageId") ?? "",
+    openGraphTitle: readText(formData, "openGraphTitle"),
+    openGraphDescription: readText(formData, "openGraphDescription"),
+    openGraphImageId: readText(formData, "openGraphImageId"),
     relatedServiceIds: readStringArray(formData, "relatedServiceIds"),
     relatedSolutionIds: readStringArray(formData, "relatedSolutionIds"),
     relatedMaterialIds: readStringArray(formData, "relatedMaterialIds"),
@@ -90,46 +153,87 @@ function readProjectFormData(formData: FormData) {
   };
 }
 
+function readText(formData: FormData, fieldName: string) {
+  const value = formData.get(fieldName);
+  return typeof value === "string" ? value : "";
+}
+
+function mutationErrorState(previousState: ProjectFormState, values: ProjectFormValues, error: unknown, intent: "saveDraft" | "publish"): ProjectFormState {
+  console.error(`Project ${intent} failed`, error);
+  const code = typeof error === "object" && error && "code" in error ? error.code : undefined;
+  let message = intent === "publish"
+    ? "تعذر نشر المشروع بسبب خطأ في قاعدة البيانات. بقيت بيانات النموذج والنسخة المنشورة الحالية كما هي."
+    : "تعذر حفظ المسودة بسبب خطأ في قاعدة البيانات. بقيت بيانات النموذج كما هي.";
+
+  if (error instanceof Error && /^[\u0600-\u06ff]/u.test(error.message)) message = error.message;
+  if (code === "P2003") message = "تعذر الحفظ لأن أحد العناصر المرتبطة أو الصور لم يعد موجوداً. حدّث اختياراتك ثم حاول مرة أخرى.";
+  if (code === "P2025") message = "المشروع لم يعد موجوداً. ارجع إلى قائمة المشاريع وحدّث الصفحة.";
+  return { status: "error", message, values, revision: previousState.revision + 1 };
+}
+
+async function createProjectDraft(input: ProjectDraftInput) {
+  return prisma.$transaction(async (tx) => {
+    await lockPublishingNamespace(tx, "projects");
+    const project = await tx.project.create({ data: { status: ContentStatus.DRAFT } });
+    const slug = input.title ? await resolveProjectSlug(tx, project.id, input) : null;
+    const draft = await tx.projectVersion.create({ data: { projectId: project.id, ...toVersionData({ ...input, slug: slug ?? undefined }) } });
+    await replaceVersionCollections(tx, draft.id, input);
+    await tx.project.update({ where: { id: project.id }, data: { draftVersionId: draft.id } });
+    return project.id;
+  });
+}
+
 async function saveDraft(projectId: string, input: ProjectDraftInput) {
   await prisma.$transaction(async (tx) => {
     await lockPublishingNamespace(tx, "projects");
-    const project = await tx.project.findUnique({ where: { id: projectId }, include: { publishedVersion: { select: { slug: true } } } });
-    if (!project) throw new Error("المشروع غير موجود.");
-    const slug = input.title ? await resolveProjectSlug(tx, projectId, input, project.publishedVersion?.slug) : project.publishedVersion?.slug ?? null;
-    const versionData = toVersionData({ ...input, slug: slug ?? undefined });
-    let versionId = project.draftVersionId;
-    if (!versionId) {
-      const draft = await tx.projectVersion.create({ data: { projectId, ...versionData } });
-      versionId = draft.id;
-      await tx.project.update({ where: { id: projectId }, data: { draftVersionId: draft.id } });
-    } else {
-      await tx.projectVersion.update({ where: { id: versionId }, data: versionData });
-    }
-    await replaceVersionCollections(tx, versionId, input);
+    await saveDraftInTransaction(tx, projectId, input);
   });
 }
 
-async function publishProject(projectId: string, input: ProjectPublishInput) {
+async function saveDraftInTransaction(tx: Prisma.TransactionClient, projectId: string, input: ProjectDraftInput) {
+  const project = await tx.project.findUnique({ where: { id: projectId }, include: { publishedVersion: { select: { slug: true } } } });
+  if (!project) throw new Error("المشروع غير موجود.");
+  const slug = input.title ? await resolveProjectSlug(tx, projectId, input, project.publishedVersion?.slug) : project.publishedVersion?.slug ?? null;
+  const versionData = toVersionData({ ...input, slug: slug ?? undefined });
+  let versionId = project.draftVersionId;
+  if (versionId) {
+    await tx.projectVersion.update({ where: { id: versionId }, data: versionData });
+  } else {
+    const draft = await tx.projectVersion.create({ data: { projectId, ...versionData } });
+    versionId = draft.id;
+    await tx.project.update({ where: { id: projectId }, data: { draftVersionId: draft.id } });
+  }
+  if (project.status === ContentStatus.ARCHIVED) await tx.project.update({ where: { id: projectId }, data: { status: ContentStatus.DRAFT } });
+  await replaceVersionCollections(tx, versionId, input);
+}
+
+async function publishProject(existingProjectId: string | undefined, input: ProjectPublishInput) {
   return prisma.$transaction(async (tx) => {
     await lockPublishingNamespace(tx, "projects");
-    const project = await tx.project.findUnique({ where: { id: projectId }, include: { publishedVersion: { select: { slug: true } } } });
-    if (!project?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
-    const slug = await resolveProjectSlug(tx, projectId, input, project.publishedVersion?.slug);
+    const project = existingProjectId
+      ? await tx.project.findUnique({ where: { id: existingProjectId }, include: { publishedVersion: { select: { slug: true } } } })
+      : await tx.project.create({ data: { status: ContentStatus.DRAFT }, include: { publishedVersion: { select: { slug: true } } } });
+    if (!project) throw new Error("المشروع غير موجود.");
+
+    const slug = await resolveProjectSlug(tx, project.id, input, project.publishedVersion?.slug);
     const versionData = toVersionData({ ...input, slug });
-    await tx.projectVersion.update({ where: { id: project.draftVersionId }, data: versionData });
-    await replaceVersionCollections(tx, project.draftVersionId, input);
-    const published = await tx.projectVersion.create({ data: { projectId, ...versionData } });
+    let draftVersionId = project.draftVersionId;
+    if (draftVersionId) await tx.projectVersion.update({ where: { id: draftVersionId }, data: versionData });
+    else {
+      const draft = await tx.projectVersion.create({ data: { projectId: project.id, ...versionData } });
+      draftVersionId = draft.id;
+    }
+    await replaceVersionCollections(tx, draftVersionId, input);
+
+    const published = await tx.projectVersion.create({ data: { projectId: project.id, ...versionData } });
     await replaceVersionCollections(tx, published.id, input);
     const oldPath = project.publishedVersion?.slug ? cmsContentPath("/projects", project.publishedVersion.slug) : undefined;
-    await tx.project.update({ where: { id: projectId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
-    return { oldPath, slug };
+    await tx.project.update({
+      where: { id: project.id },
+      data: { status: ContentStatus.PUBLISHED, draftVersionId, publishedVersionId: published.id, publishedAt: new Date() },
+    });
+    return { projectId: project.id, oldPath, slug };
   });
-}
-
-function revalidateProjectDraftPaths(projectId: string) {
-  revalidatePath("/dashboard/projects");
-  revalidatePath(`/dashboard/projects/${projectId}`);
-  revalidatePath(`/preview/projects/${projectId}`);
 }
 
 async function resolveProjectSlug(tx: Prisma.TransactionClient, projectId: string, input: ProjectDraftInput, publishedSlug?: string | null) {
@@ -177,6 +281,12 @@ async function replaceVersionCollections(tx: Prisma.TransactionClient, projectVe
   ]);
 }
 
+function revalidateProjectDraftPaths(projectId: string) {
+  revalidatePath("/dashboard/projects");
+  revalidatePath(`/dashboard/projects/${projectId}`);
+  revalidatePath(`/preview/projects/${projectId}`);
+}
+
 function revalidateProjectPaths(projectId: string, slug?: string, oldPath?: string) {
   revalidatePath("/dashboard/projects");
   revalidatePath(`/dashboard/projects/${projectId}`);
@@ -184,9 +294,4 @@ function revalidateProjectPaths(projectId: string, slug?: string, oldPath?: stri
   if (slug) revalidatePath(cmsContentPath("/projects", slug));
   if (oldPath) revalidatePath(oldPath);
   revalidatePath("/sitemap.xml");
-}
-
-function redirectWithMessage(projectId: string | undefined, type: "success" | "error", message: string): never {
-  const target = projectId ? `/dashboard/projects/${projectId}` : "/dashboard/projects";
-  redirect(`${target}?${type}=${encodeURIComponent(message)}`);
 }

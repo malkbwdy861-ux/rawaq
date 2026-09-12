@@ -1,36 +1,49 @@
 import { ContentStatus } from "@prisma/client";
 import { notFound } from "next/navigation";
 
-import { getCmsPagination, parseCmsSearchParams } from "@/modules/cms/validation";
 import { decodeCmsSlug } from "@/modules/cms/slugs";
+import { getCmsPagination, parseCmsSearchParams } from "@/modules/cms/validation";
 import { prisma } from "@/server/db/prisma";
 
 export async function getArticleList(searchParams: Record<string, string | string[] | undefined>) {
-  const params = parseCmsSearchParams(searchParams);
-  const page = params.page ?? 1;
-  const pageSize = params.pageSize ?? 20;
+  const parsedParams = parseCmsSearchParams(searchParams);
+  const params = {
+    ...parsedParams,
+    status: parsedParams.status === "DRAFT" || parsedParams.status === "PUBLISHED" ? parsedParams.status : "ALL",
+    pageSize: 10,
+  } as const;
   const where = {
     AND: [
-      params.status === "ALL" || params.status === "UNPUBLISHED_CHANGES" ? {} : { status: params.status },
+      params.status === "ALL" ? {} : params.status === "PUBLISHED" ? { status: ContentStatus.PUBLISHED } : { status: { not: ContentStatus.PUBLISHED } },
       params.q ? { OR: [
         { draftVersion: { title: { contains: params.q, mode: "insensitive" as const } } },
         { publishedVersion: { title: { contains: params.q, mode: "insensitive" as const } } },
         { draftVersion: { slug: { contains: params.q, mode: "insensitive" as const } } },
         { publishedVersion: { slug: { contains: params.q, mode: "insensitive" as const } } },
       ] } : {},
-      params.status === "UNPUBLISHED_CHANGES" ? { publishedVersionId: { not: null }, draftVersionId: { not: null } } : {},
     ],
   };
-  const totalItems = await prisma.article.count({ where });
-  const pagination = getCmsPagination({ page, pageSize, totalItems });
+  const [totalItems, groupedStatuses] = await Promise.all([
+    prisma.article.count({ where }),
+    prisma.article.groupBy({ by: ["status"], _count: { _all: true } }),
+  ]);
+  const pagination = getCmsPagination({ page: params.page ?? 1, pageSize: 10, totalItems });
   const articles = await prisma.article.findMany({
     where,
-    include: { draftVersion: { select: { title: true, slug: true, articleType: true } }, publishedVersion: { select: { title: true, slug: true, articleType: true } } },
+    include: {
+      draftVersion: { select: { title: true, slug: true, excerpt: true, articleType: true, heroMedia: true } },
+      publishedVersion: { select: { title: true, slug: true, excerpt: true, articleType: true, heroMedia: true } },
+    },
     orderBy: { updatedAt: "desc" },
     skip: pagination.skip,
     take: pagination.take,
   });
-  return { params, pagination, articles };
+  const statusCounts = {
+    ALL: groupedStatuses.reduce((sum, item) => sum + item._count._all, 0),
+    DRAFT: groupedStatuses.filter((item) => item.status !== ContentStatus.PUBLISHED).reduce((sum, item) => sum + item._count._all, 0),
+    PUBLISHED: groupedStatuses.find((item) => item.status === ContentStatus.PUBLISHED)?._count._all ?? 0,
+  };
+  return { params, pagination, articles, statusCounts };
 }
 
 export async function getArticleEditorData(articleId: string) {
@@ -39,19 +52,20 @@ export async function getArticleEditorData(articleId: string) {
       where: { id: articleId },
       include: { draftVersion: { include: { services: true, solutions: true, materials: true, projects: true, faqs: true } }, publishedVersion: true },
     }),
-    prisma.media.findMany({ where: { type: "IMAGE" }, orderBy: { createdAt: "desc" }, take: 80 }),
+    getArticleImages(),
     getRelationOptions(),
   ]);
   if (!article) notFound();
   return { article, media, relationOptions };
 }
 
+export async function getNewArticleEditorData() {
+  const [media, relationOptions] = await Promise.all([getArticleImages(), getRelationOptions()]);
+  return { media, relationOptions };
+}
+
 export async function getPublishedArticles() {
-  return prisma.article.findMany({
-    where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } },
-    include: { publishedVersion: { include: { heroMedia: true } } },
-    orderBy: { publishedAt: "desc" },
-  });
+  return prisma.article.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: { include: { heroMedia: true } } }, orderBy: { publishedAt: "desc" } });
 }
 
 export async function getPublishedArticleBySlug(slug: string) {
@@ -85,6 +99,10 @@ export async function getArticlePreview(articleId: string) {
   return article;
 }
 
+function getArticleImages() {
+  return prisma.media.findMany({ where: { type: "IMAGE" }, orderBy: { createdAt: "desc" }, take: 80 });
+}
+
 async function getRelationOptions() {
   const [services, solutions, materials, projects, faqs] = await Promise.all([
     prisma.service.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }),
@@ -98,6 +116,6 @@ async function getRelationOptions() {
     solutions: solutions.map((item) => ({ id: item.id, label: item.draftVersion?.title ?? item.publishedVersion?.title ?? "حل بدون عنوان", description: item.draftVersion?.slug ?? item.publishedVersion?.slug ?? undefined, status: item.status })),
     materials: materials.map((item) => ({ id: item.id, label: item.draftVersion?.name ?? item.publishedVersion?.name ?? "مادة بدون عنوان", description: item.draftVersion?.slug ?? item.publishedVersion?.slug ?? undefined, status: item.status })),
     projects: projects.map((item) => ({ id: item.id, label: item.draftVersion?.title ?? item.publishedVersion?.title ?? "مشروع بدون عنوان", description: item.draftVersion?.slug ?? item.publishedVersion?.slug ?? undefined, status: item.status })),
-    faqs: faqs.map((item) => ({ id: item.id, label: item.draftVersion?.question ?? item.publishedVersion?.question ?? "سؤال بدون عنوان", status: item.status })),
+    faqs: faqs.map((item) => ({ id: item.id, label: item.draftVersion?.question ?? item.publishedVersion?.question ?? "سؤال بدون عنوان", description: item.draftVersion?.answer ?? item.publishedVersion?.answer ?? undefined, status: item.status })),
   };
 }

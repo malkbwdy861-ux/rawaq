@@ -1,17 +1,22 @@
 import { ContentStatus } from "@prisma/client";
 import { notFound } from "next/navigation";
 
-import { getCmsPagination, parseCmsSearchParams } from "@/modules/cms/validation";
 import { decodeCmsSlug } from "@/modules/cms/slugs";
+import { getCmsPagination, parseCmsSearchParams } from "@/modules/cms/validation";
 import { prisma } from "@/server/db/prisma";
 
 export async function getSolutionList(searchParams: Record<string, string | string[] | undefined>) {
-  const params = parseCmsSearchParams(searchParams);
+  const parsedParams = parseCmsSearchParams(searchParams);
+  const params = {
+    ...parsedParams,
+    status: parsedParams.status === "DRAFT" || parsedParams.status === "PUBLISHED" ? parsedParams.status : "ALL",
+    pageSize: 10,
+  } as const;
   const page = params.page ?? 1;
-  const pageSize = params.pageSize ?? 20;
+  const pageSize = 10;
   const where = {
     AND: [
-      params.status === "ALL" || params.status === "UNPUBLISHED_CHANGES" ? {} : { status: params.status },
+      params.status === "ALL" ? {} : params.status === "PUBLISHED" ? { status: ContentStatus.PUBLISHED } : { status: { not: ContentStatus.PUBLISHED } },
       params.q
         ? {
             OR: [
@@ -22,21 +27,30 @@ export async function getSolutionList(searchParams: Record<string, string | stri
             ],
           }
         : {},
-      params.status === "UNPUBLISHED_CHANGES" ? { publishedVersionId: { not: null }, draftVersionId: { not: null } } : {},
     ],
   };
-
-  const totalItems = await prisma.solution.count({ where });
+  const [totalItems, groupedStatuses] = await Promise.all([
+    prisma.solution.count({ where }),
+    prisma.solution.groupBy({ by: ["status"], _count: { _all: true } }),
+  ]);
   const pagination = getCmsPagination({ page, pageSize, totalItems });
   const solutions = await prisma.solution.findMany({
     where,
-    include: { draftVersion: true, publishedVersion: true },
+    include: {
+      draftVersion: { include: { heroMedia: true } },
+      publishedVersion: { include: { heroMedia: true } },
+    },
     orderBy: { updatedAt: "desc" },
     skip: pagination.skip,
     take: pagination.take,
   });
+  const statusCounts = {
+    ALL: groupedStatuses.reduce((sum, item) => sum + item._count._all, 0),
+    DRAFT: groupedStatuses.filter((item) => item.status !== ContentStatus.PUBLISHED).reduce((sum, item) => sum + item._count._all, 0),
+    PUBLISHED: groupedStatuses.find((item) => item.status === ContentStatus.PUBLISHED)?._count._all ?? 0,
+  };
 
-  return { params, pagination, solutions };
+  return { params, pagination, solutions, statusCounts };
 }
 
 export async function getSolutionEditorData(solutionId: string) {
@@ -48,12 +62,16 @@ export async function getSolutionEditorData(solutionId: string) {
         publishedVersion: true,
       },
     }),
-    prisma.media.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
+    getImageMedia(),
     getRelationOptions(),
   ]);
-
   if (!solution) notFound();
   return { solution, media, relationOptions };
+}
+
+export async function getNewSolutionEditorData() {
+  const [media, relationOptions] = await Promise.all([getImageMedia(), getRelationOptions()]);
+  return { media, relationOptions };
 }
 
 export async function getPublishedSolutions() {
@@ -82,7 +100,6 @@ export async function getPublishedSolutionBySlug(slug: string) {
       },
     },
   });
-
   if (!solution?.publishedVersion) notFound();
   return solution;
 }
@@ -93,6 +110,10 @@ export async function getSolutionPreview(solutionId: string) {
   return solution;
 }
 
+function getImageMedia() {
+  return prisma.media.findMany({ where: { type: "IMAGE" }, orderBy: { createdAt: "desc" }, take: 80 });
+}
+
 async function getRelationOptions() {
   const [services, materials, projects, articles, faqs] = await Promise.all([
     prisma.service.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }),
@@ -101,7 +122,6 @@ async function getRelationOptions() {
     prisma.article.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }),
     prisma.fAQ.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }),
   ]);
-
   return {
     services: services.map((item) => ({ id: item.id, label: item.draftVersion?.title ?? item.publishedVersion?.title ?? "خدمة بدون عنوان", description: item.draftVersion?.slug ?? item.publishedVersion?.slug ?? undefined, status: item.status })),
     materials: materials.map((item) => ({ id: item.id, label: item.draftVersion?.name ?? item.publishedVersion?.name ?? "مادة بدون عنوان", description: item.draftVersion?.slug ?? item.publishedVersion?.slug ?? undefined, status: item.status })),
