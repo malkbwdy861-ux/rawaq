@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 
 import { normalizeCmsSlug } from "../validation";
-import { CmsFieldShell, cmsInputClassName } from "./form";
+import { CmsFieldShell, CmsInput } from "./form";
 
 export function CmsSlugField({
   name = "slug",
@@ -31,9 +31,8 @@ export function CmsSlugField({
       error={error}
     >
       <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-        <input
+        <CmsInput
           aria-describedby={`${id}-hint${error ? ` ${id}-error` : ""}`}
-          className={cmsInputClassName}
           dir="ltr"
           id={id}
           name={name}

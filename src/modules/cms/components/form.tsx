@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import {
   FormProvider,
   type DefaultValues,
@@ -13,6 +13,7 @@ import {
 import type { z } from "zod";
 
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 export function useCmsForm<TValues extends FieldValues>({
@@ -106,9 +107,19 @@ export function CmsFieldShell({
   );
 }
 
-export const cmsInputClassName = "min-h-11 w-full max-w-[760px] rounded-md border border-border-strong bg-card px-3 py-2 text-base outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:bg-muted disabled:text-muted-foreground";
+export function CmsInput({ className, ...props }: ComponentProps<typeof Input>) {
+  return (
+    <Input
+      className={cn(
+        "min-h-11 w-full max-w-[760px] border-border-strong bg-card text-base focus-visible:border-primary focus-visible:ring-ring focus-visible:ring-offset-2 disabled:bg-muted disabled:text-muted-foreground",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
 
-export function CmsTextarea({ className, ...props }: React.ComponentProps<typeof Textarea>) {
+export function CmsTextarea({ className, ...props }: ComponentProps<typeof Textarea>) {
   return (
     <Textarea
       className={cn(

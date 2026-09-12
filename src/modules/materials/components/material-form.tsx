@@ -2,7 +2,7 @@ import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { CmsFieldGroup, CmsFieldShell, CmsTextarea, cmsInputClassName } from "@/modules/cms/components/form";
+import { CmsFieldGroup, CmsFieldShell, CmsInput, CmsTextarea } from "@/modules/cms/components/form";
 import { CmsRelationSelector } from "@/modules/cms/components/relation-selector";
 import { CmsStatusBadge } from "@/modules/cms/components/status-badge";
 import type { CmsRelationOption } from "@/modules/cms/types";
@@ -55,7 +55,7 @@ export function MaterialForm({ material, media, relationOptions }: { material: {
       </div>
 
       <CmsFieldGroup title="محتوى المادة" description="هذه الحقول مطلوبة عند النشر وتبقى كمسودة حتى تضغط نشر. يتم إنشاء الرابط المختصر تلقائيًا من الاسم.">
-        <CmsFieldShell id="name" label="اسم المادة"><input className={cmsInputClassName} id="name" name="name" defaultValue={draft?.name ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="name" label="اسم المادة"><CmsInput id="name" name="name" defaultValue={draft?.name ?? ""} /></CmsFieldShell>
         <CmsFieldShell id="shortDescription" label="الوصف المختصر"><CmsTextarea id="shortDescription" name="shortDescription" defaultValue={draft?.shortDescription ?? ""} /></CmsFieldShell>
         <CmsFieldShell id="content" label="المحتوى"><CmsTextarea className="min-h-64" id="content" name="content" defaultValue={draft?.content ?? ""} /></CmsFieldShell>
       </CmsFieldGroup>
@@ -73,11 +73,11 @@ export function MaterialForm({ material, media, relationOptions }: { material: {
       </CmsFieldGroup>
 
       <CmsFieldGroup title="SEO" description="حقول اختيارية لتحسين عنوان ووصف الصفحة العامة بعد النشر.">
-        <CmsFieldShell id="seoTitle" label="عنوان SEO"><input className={cmsInputClassName} id="seoTitle" name="seoTitle" defaultValue={draft?.seoTitle ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="seoTitle" label="عنوان SEO"><CmsInput id="seoTitle" name="seoTitle" defaultValue={draft?.seoTitle ?? ""} /></CmsFieldShell>
         <CmsFieldShell id="seoDescription" label="وصف SEO"><CmsTextarea id="seoDescription" name="seoDescription" defaultValue={draft?.seoDescription ?? ""} /></CmsFieldShell>
-        <CmsFieldShell id="canonicalUrl" label="الرابط القانوني"><input className={cmsInputClassName} dir="ltr" id="canonicalUrl" name="canonicalUrl" defaultValue={draft?.canonicalUrl ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="canonicalUrl" label="الرابط القانوني"><CmsInput dir="ltr" id="canonicalUrl" name="canonicalUrl" defaultValue={draft?.canonicalUrl ?? ""} /></CmsFieldShell>
         <label className="flex items-center gap-3 text-sm font-semibold"><input className="size-4 accent-[oklch(37%_0.075_155)]" name="noIndex" type="checkbox" defaultChecked={draft?.noIndex ?? false} />منع الفهرسة بعد النشر</label>
-        <CmsFieldShell id="openGraphTitle" label="عنوان Open Graph"><input className={cmsInputClassName} id="openGraphTitle" name="openGraphTitle" defaultValue={draft?.openGraphTitle ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="openGraphTitle" label="عنوان Open Graph"><CmsInput id="openGraphTitle" name="openGraphTitle" defaultValue={draft?.openGraphTitle ?? ""} /></CmsFieldShell>
         <CmsFieldShell id="openGraphDescription" label="وصف Open Graph"><CmsTextarea id="openGraphDescription" name="openGraphDescription" defaultValue={draft?.openGraphDescription ?? ""} /></CmsFieldShell>
       </CmsFieldGroup>
 

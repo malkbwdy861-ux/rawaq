@@ -12,69 +12,76 @@ import { requireAdmin } from "@/server/auth";
 
 import { serviceDraftSchema, serviceIdSchema, servicePublishSchema, type ServiceDraftInput, type ServicePublishInput } from "./validation";
 
-export async function createServiceAction() {
-  await requireAdmin();
-
-  const service = await prisma.$transaction(async (tx) => {
-    const created = await tx.service.create({
-      data: { status: ContentStatus.DRAFT, versions: { create: {} } },
-      include: { versions: { select: { id: true }, take: 1 } },
-    });
-    return tx.service.update({ where: { id: created.id }, data: { draftVersionId: created.versions[0]?.id } });
-  });
-
-  revalidatePath("/dashboard/services");
-  redirect(`/dashboard/services/${service.id}?success=${encodeURIComponent("تم إنشاء مسودة خدمة جديدة.")}`);
-}
-
 export async function saveServiceDraftAction(formData: FormData) {
   await requireAdmin();
 
-  const parsed = serviceDraftSchema.safeParse(readServiceFormData(formData));
-  if (!parsed.success || !parsed.data.serviceId) {
-    redirectWithMessage(parsed.data?.serviceId, "error", "تعذر حفظ المسودة. راجع الحقول المدخلة.");
+  const input = readServiceFormData(formData);
+  const parsed = serviceDraftSchema.safeParse(input);
+  if (!parsed.success) {
+    redirectWithMessage(typeof input.serviceId === "string" ? input.serviceId : undefined, "error", "تعذر حفظ المسودة. راجع الحقول المدخلة.");
   }
 
-  await saveDraft(parsed.data.serviceId, parsed.data);
-  revalidateServiceDraftPaths(parsed.data.serviceId);
-  redirectWithMessage(parsed.data.serviceId, "success", "تم حفظ مسودة الخدمة دون تغيير النسخة المنشورة.");
+  let serviceId: string;
+  try {
+    serviceId = parsed.data.serviceId ?? await createServiceDraft(parsed.data);
+    if (parsed.data.serviceId) await saveDraft(serviceId, parsed.data);
+  } catch {
+    redirectWithMessage(parsed.data.serviceId, "error", "تعذر حفظ المسودة. حاول مرة أخرى.");
+  }
+  revalidateServiceDraftPaths(serviceId);
+  redirectWithMessage(serviceId, "success", "تم حفظ مسودة الخدمة.");
 }
 
 export async function publishServiceAction(formData: FormData) {
   await requireAdmin();
 
-  const parsed = servicePublishSchema.safeParse(readServiceFormData(formData));
-  if (!parsed.success || !parsed.data.serviceId) {
-    redirectWithMessage(parsed.data?.serviceId, "error", "تعذر النشر. أكمل العنوان والوصف والمحتوى.");
+  const input = readServiceFormData(formData);
+  const parsed = servicePublishSchema.safeParse(input);
+  if (!parsed.success) {
+    redirectWithMessage(typeof input.serviceId === "string" ? input.serviceId : undefined, "error", "تعذر النشر. أكمل العنوان والوصف والمحتوى.");
   }
 
+  let published: Awaited<ReturnType<typeof publishService>>;
   try {
-    const { oldPath, slug } = await publishService(parsed.data.serviceId, parsed.data);
-    revalidateServicePaths(parsed.data.serviceId, slug, oldPath);
+    published = await publishService(parsed.data.serviceId, parsed.data);
   } catch (error) {
     const message = error instanceof Error ? error.message : "فشل نشر الخدمة. بقيت النسخة المنشورة الحالية كما هي.";
     redirectWithMessage(parsed.data.serviceId, "error", message);
   }
-
-  redirectWithMessage(parsed.data.serviceId, "success", "تم نشر الخدمة وتحديث الصفحة العامة.");
+  revalidateServicePaths(published.serviceId, published.slug, published.oldPath);
+  redirectWithMessage(published.serviceId, "success", "تم نشر الخدمة وتحديث الصفحة العامة.");
 }
 
-export async function archiveServiceAction(formData: FormData) {
+export async function deleteServiceAction(formData: FormData) {
   await requireAdmin();
 
   const parsed = serviceIdSchema.safeParse({ serviceId: formData.get("serviceId") });
-  if (!parsed.success) {
-    redirect("/dashboard/services?error=تعذر تحديد الخدمة المطلوب أرشفتها.");
-  }
+  if (!parsed.success) redirect("/dashboard/services?error=تعذر تحديد الخدمة المطلوب حذفها.");
 
-  const service = await prisma.service.update({
+  const service = await prisma.service.findUnique({
     where: { id: parsed.data.serviceId },
-    data: { status: ContentStatus.ARCHIVED },
     select: { publishedVersion: { select: { slug: true } } },
   });
+  if (!service) redirect("/dashboard/services?error=الخدمة غير موجودة أو حُذفت مسبقاً.");
 
-  revalidateServicePaths(parsed.data.serviceId, undefined, service.publishedVersion?.slug ? cmsContentPath("/services", service.publishedVersion.slug) : undefined);
-  redirectWithMessage(parsed.data.serviceId, "success", "تمت أرشفة الخدمة وإزالتها من العرض العام.");
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.solutionVersionService.deleteMany({ where: { serviceId: parsed.data.serviceId } });
+      await tx.materialVersionService.deleteMany({ where: { serviceId: parsed.data.serviceId } });
+      await tx.projectVersionService.deleteMany({ where: { serviceId: parsed.data.serviceId } });
+      await tx.articleVersionService.deleteMany({ where: { serviceId: parsed.data.serviceId } });
+      await tx.service.delete({ where: { id: parsed.data.serviceId } });
+    });
+  } catch {
+    redirect("/dashboard/services?error=تعذر حذف الخدمة. حاول مرة أخرى.");
+  }
+
+  revalidatePath("/dashboard/services");
+  revalidatePath("/dashboard");
+  revalidatePath("/services");
+  if (service.publishedVersion?.slug) revalidatePath(cmsContentPath("/services", service.publishedVersion.slug));
+  revalidatePath("/sitemap.xml");
+  redirect(`/dashboard/services?success=${encodeURIComponent("تم حذف الخدمة نهائياً.")}`);
 }
 
 function readServiceFormData(formData: FormData) {
@@ -106,21 +113,39 @@ async function saveDraft(serviceId: string, input: ServiceDraftInput) {
   });
 }
 
-async function publishService(serviceId: string, input: ServicePublishInput) {
+async function createServiceDraft(input: ServiceDraftInput) {
   return prisma.$transaction(async (tx) => {
     await lockPublishingNamespace(tx, "services");
-    const service = await tx.service.findUnique({
-      where: { id: serviceId },
-      include: { publishedVersion: { select: { slug: true } } },
-    });
+    const service = await tx.service.create({ data: { status: ContentStatus.DRAFT } });
+    const slug = input.title ? await resolveServiceSlug(tx, service.id, input) : null;
+    const draft = await tx.serviceVersion.create({ data: { serviceId: service.id, ...toVersionData({ ...input, slug: slug ?? undefined }) } });
+    await replaceRelations(tx, draft.id, input);
+    await tx.service.update({ where: { id: service.id }, data: { draftVersionId: draft.id } });
+    return service.id;
+  });
+}
 
-    if (!service?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
+async function publishService(existingServiceId: string | undefined, input: ServicePublishInput) {
+  return prisma.$transaction(async (tx) => {
+    await lockPublishingNamespace(tx, "services");
+    const service = existingServiceId
+      ? await tx.service.findUnique({ where: { id: existingServiceId }, include: { publishedVersion: { select: { slug: true } } } })
+      : await tx.service.create({ data: { status: ContentStatus.DRAFT }, include: { publishedVersion: { select: { slug: true } } } });
+
+    if (!service) throw new Error("الخدمة غير موجودة.");
+    const serviceId = service.id;
 
     const slug = await resolveServiceSlug(tx, serviceId, input, service.publishedVersion?.slug);
     const versionData = toVersionData({ ...input, slug });
 
-    await tx.serviceVersion.update({ where: { id: service.draftVersionId }, data: versionData });
-    await replaceRelations(tx, service.draftVersionId, input);
+    let draftVersionId = service.draftVersionId;
+    if (draftVersionId) {
+      await tx.serviceVersion.update({ where: { id: draftVersionId }, data: versionData });
+    } else {
+      const draft = await tx.serviceVersion.create({ data: { serviceId, ...versionData } });
+      draftVersionId = draft.id;
+    }
+    await replaceRelations(tx, draftVersionId, input);
 
     const published = await tx.serviceVersion.create({ data: { serviceId, ...versionData } });
     await replaceRelations(tx, published.id, input);
@@ -131,11 +156,12 @@ async function publishService(serviceId: string, input: ServicePublishInput) {
       where: { id: serviceId },
       data: {
         status: ContentStatus.PUBLISHED,
+        draftVersionId,
         publishedVersionId: published.id,
         publishedAt: new Date(),
       },
     });
-    return { oldPath, slug };
+    return { serviceId, oldPath, slug };
   });
 }
 
@@ -151,6 +177,9 @@ async function saveDraftInTransaction(tx: Prisma.TransactionClient, serviceId: s
     await tx.service.update({ where: { id: serviceId }, data: { draftVersionId: draft.id } });
   } else {
     await tx.serviceVersion.update({ where: { id: versionId }, data: versionData });
+  }
+  if (service.status === ContentStatus.ARCHIVED) {
+    await tx.service.update({ where: { id: serviceId }, data: { status: ContentStatus.DRAFT } });
   }
   await replaceRelations(tx, versionId, input);
 }
@@ -211,6 +240,6 @@ function revalidateServicePaths(serviceId: string, slug?: string, oldPath?: stri
 }
 
 function redirectWithMessage(serviceId: string | undefined, type: "success" | "error", message: string): never {
-  const target = serviceId ? `/dashboard/services/${serviceId}` : "/dashboard/services";
+  const target = serviceId ? `/dashboard/services/${serviceId}` : "/dashboard/services/new";
   redirect(`${target}?${type}=${encodeURIComponent(message)}`);
 }

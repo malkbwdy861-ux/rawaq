@@ -2,6 +2,8 @@
 
 import { useId, useState } from "react";
 
+import { Input } from "@/components/ui/input";
+
 import type { CmsRelationOption } from "../types";
 import { CmsStatusBadge } from "./status-badge";
 
@@ -55,8 +57,8 @@ export function CmsRelationSelector({
 
       <label className="grid gap-2" htmlFor={searchId}>
         <span className="text-[0.8125rem] font-semibold leading-[1.55]">بحث في العلاقات</span>
-        <input
-          className="min-h-11 rounded-[4px] border border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] px-3 py-2 text-base outline-none focus:border-[oklch(37%_0.075_155)] focus:ring-2 focus:ring-[oklch(51%_0.09_155)] focus:ring-offset-2"
+        <Input
+          className="min-h-11 rounded-[4px] border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] text-base focus-visible:border-[oklch(37%_0.075_155)] focus-visible:ring-[oklch(51%_0.09_155)] focus-visible:ring-offset-2"
           id={searchId}
           onChange={(event) => setQuery(event.target.value)}
           type="search"

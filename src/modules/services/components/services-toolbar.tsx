@@ -1,51 +1,66 @@
-import { Search, X } from "lucide-react";
-import Link from "next/link";
+"use client";
 
-import { Button } from "@/components/ui/button";
+import { LoaderCircle, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, useTransition } from "react";
+
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cmsStatusLabels } from "@/modules/cms/components/status-badge";
-import type { CmsStatusFilter } from "@/modules/cms/types";
 
-const statusOptions: CmsStatusFilter[] = ["ALL", "DRAFT", "PUBLISHED", "UNPUBLISHED_CHANGES", "ARCHIVED"];
+type ServiceStatusFilter = "ALL" | "DRAFT" | "PUBLISHED";
+const statusLabels: Record<ServiceStatusFilter, string> = { ALL: "كل الخدمات", DRAFT: "مسودة", PUBLISHED: "منشور" };
+const statusOptions: ServiceStatusFilter[] = ["ALL", "DRAFT", "PUBLISHED"];
 
-export function ServicesToolbar({ query, status = "ALL", totalItems, statusCounts }: { query?: string; status?: CmsStatusFilter; totalItems: number; statusCounts: Record<CmsStatusFilter, number> }) {
-  const filtered = Boolean(query || status !== "ALL");
+export function ServicesToolbar({ query = "", status = "ALL", pageSize, totalItems, statusCounts }: { query?: string; status?: ServiceStatusFilter; pageSize: number; totalItems: number; statusCounts: Record<ServiceStatusFilter, number> }) {
+  const router = useRouter();
+  const [search, setSearch] = useState(query);
+  const [pending, startTransition] = useTransition();
+  const debounceRef = useRef<number>(undefined);
+
+  useEffect(() => {
+    if (search.trim() === query) return;
+    debounceRef.current = window.setTimeout(() => {
+      startTransition(() => router.replace(serviceListHref(search, status, pageSize), { scroll: false }));
+    }, 400);
+    return () => window.clearTimeout(debounceRef.current);
+  }, [pageSize, query, router, search, status]);
+
+  function navigate(nextQuery: string, nextStatus: ServiceStatusFilter) {
+    window.clearTimeout(debounceRef.current);
+    startTransition(() => router.replace(serviceListHref(nextQuery, nextStatus, pageSize), { scroll: false }));
+  }
 
   return (
-    <div className="border-b border-border bg-card">
-      <nav aria-label="تصفية الخدمات حسب الحالة" className="flex gap-1 overflow-x-auto border-b border-border px-3 pt-3">
-        {statusOptions.map((option) => {
-          const active = status === option;
-          const params = new URLSearchParams();
-          if (query) params.set("q", query);
-          if (option !== "ALL") params.set("status", option);
-          const search = params.toString();
-          return <Link aria-current={active ? "page" : undefined} className={`inline-flex min-h-9 shrink-0 items-center gap-2 rounded-t-md px-3 text-xs font-semibold transition-colors ${active ? "bg-primary-soft text-primary shadow-[inset_0_-2px_0_var(--primary)]" : "text-muted-foreground hover:bg-dashboard-hover hover:text-foreground"}`} href={search ? `/dashboard/services?${search}` : "/dashboard/services"} key={option}>{cmsStatusLabels[option]}<span className="rounded-full bg-card/80 px-1.5 py-0.5 text-[10px] tabular-nums">{statusCounts[option].toLocaleString("ar-SA")}</span></Link>;
-        })}
-      </nav>
-      <div className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center">
-      <form action="" className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row">
+    <div className="flex flex-col gap-3 border-b border-border bg-card px-3 py-3 sm:flex-row sm:items-center">
+      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row">
         <label className="relative min-w-0 flex-1 sm:max-w-md">
           <span className="sr-only">البحث في الخدمات</span>
           <Search aria-hidden="true" className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input className="h-10 w-full rounded-md border border-border-strong bg-card ps-9 pe-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/25" defaultValue={query} name="q" placeholder="البحث في الخدمات..." type="search" />
+          <Input className="h-10 border-border-strong bg-card ps-9 pe-9 text-sm focus-visible:border-primary focus-visible:ring-ring/25" onChange={(event) => setSearch(event.target.value)} placeholder="البحث في الخدمات..." type="search" value={search} />
+          {pending ? <LoaderCircle aria-label="جارٍ تحديث النتائج" className="absolute end-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" /> : null}
         </label>
         <label className="grid gap-1 sm:w-48">
           <span className="sr-only">تصفية حسب الحالة</span>
-          <Select defaultValue={status} name="status">
+          <Select onValueChange={(value) => navigate(search, value as ServiceStatusFilter)} value={status}>
             <SelectTrigger className="h-10 border-border-strong bg-card focus-visible:border-primary focus-visible:ring-ring/25">
               <SelectValue />
             </SelectTrigger>
             <SelectContent align="end">
-              {statusOptions.map((option) => <SelectItem key={option} value={option}>{cmsStatusLabels[option]}</SelectItem>)}
+              {statusOptions.map((option) => <SelectItem key={option} value={option}>{statusLabels[option]} ({statusCounts[option].toLocaleString("ar-SA")})</SelectItem>)}
             </SelectContent>
           </Select>
         </label>
-        <Button className="h-10 min-h-10" type="submit" variant="secondary">تطبيق</Button>
-        {filtered ? <Link aria-label="مسح البحث والتصفية" className="inline-flex size-10 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-dashboard-hover hover:text-foreground" href="/dashboard/services"><X className="size-4" /></Link> : null}
-      </form>
-      <p aria-live="polite" className="shrink-0 text-xs tabular-nums text-muted-foreground">{totalItems.toLocaleString("ar-SA")} خدمة</p>
       </div>
+      <p aria-live="polite" className="shrink-0 text-xs tabular-nums text-muted-foreground">{totalItems.toLocaleString("ar-SA")} خدمة</p>
     </div>
   );
+}
+
+function serviceListHref(query: string, status: ServiceStatusFilter, pageSize: number) {
+  const params = new URLSearchParams();
+  const normalizedQuery = query.trim();
+  if (normalizedQuery) params.set("q", normalizedQuery);
+  if (status !== "ALL") params.set("status", status);
+  if (pageSize !== 20) params.set("pageSize", String(pageSize));
+  return params.size ? `/dashboard/services?${params}` : "/dashboard/services";
 }

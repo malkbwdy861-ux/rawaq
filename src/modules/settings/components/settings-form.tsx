@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CmsFieldGroup, CmsFieldShell, CmsTextarea, cmsInputClassName } from "@/modules/cms/components/form";
+import { CmsFieldGroup, CmsFieldShell, CmsInput, CmsTextarea } from "@/modules/cms/components/form";
 import { MediaPicker, type MediaPickerItem } from "@/modules/media/components/media-picker";
 
 import { saveSiteSettingsAction } from "../actions";
@@ -76,7 +76,7 @@ export function SettingsForm({ settings, media }: { settings: Settings | null; m
 }
 
 function Text({ id, label, value, ltr, required }: { id: string; label: string; value?: string | null; ltr?: boolean; required?: boolean }) {
-  return <CmsFieldShell id={id} label={label}><input className={cmsInputClassName} dir={ltr ? "ltr" : undefined} id={id} name={id} defaultValue={value ?? ""} required={required} /></CmsFieldShell>;
+  return <CmsFieldShell id={id} label={label}><CmsInput dir={ltr ? "ltr" : undefined} id={id} name={id} defaultValue={value ?? ""} required={required} /></CmsFieldShell>;
 }
 
 function Area({ id, label, value }: { id: string; label: string; value?: string | null }) {

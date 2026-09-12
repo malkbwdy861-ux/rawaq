@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CmsFieldGroup, CmsFieldShell, CmsTextarea, cmsInputClassName } from "@/modules/cms/components/form";
+import { CmsFieldGroup, CmsFieldShell, CmsInput, CmsTextarea } from "@/modules/cms/components/form";
 import { CmsRelationSelector } from "@/modules/cms/components/relation-selector";
 import { CmsStatusBadge } from "@/modules/cms/components/status-badge";
 import type { CmsRelationOption } from "@/modules/cms/types";
@@ -59,7 +59,7 @@ export function ArticleForm({ article, media, relationOptions }: { article: { id
       </div>
 
       <CmsFieldGroup title="محتوى المقال" description="العنوان والمقتطف والمحتوى مطلوبة عند النشر. يتم إنشاء الرابط المختصر تلقائيًا من العنوان ويمكن حفظ مسودة غير مكتملة.">
-        <CmsFieldShell id="title" label="عنوان المقال"><input className={cmsInputClassName} id="title" name="title" defaultValue={draft?.title ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="title" label="عنوان المقال"><CmsInput id="title" name="title" defaultValue={draft?.title ?? ""} /></CmsFieldShell>
         <CmsFieldShell id="excerpt" label="المقتطف"><CmsTextarea id="excerpt" name="excerpt" defaultValue={draft?.excerpt ?? ""} /></CmsFieldShell>
         <CmsFieldShell id="articleType" label="نوع المقال"><Select defaultValue={draft?.articleType ?? "NONE"} name="articleType"><SelectTrigger className="min-h-11 max-w-[760px] border-border-strong bg-card text-base focus-visible:border-primary focus-visible:ring-ring focus-visible:ring-offset-2" id="articleType"><SelectValue /></SelectTrigger><SelectContent align="end">{articleTypes.map(([value, label]) => <SelectItem key={value || "NONE"} value={value || "NONE"}>{label}</SelectItem>)}</SelectContent></Select></CmsFieldShell>
         <CmsFieldShell id="article-content" label="المحتوى" hint="التنسيقات المتاحة محصورة في العناوين والقوائم والاقتباس والروابط الآمنة."><RichTextEditor defaultValue={isTipTapDocument(draft?.content) ? draft.content : null} /></CmsFieldShell>
@@ -79,11 +79,11 @@ export function ArticleForm({ article, media, relationOptions }: { article: { id
       </CmsFieldGroup>
 
       <CmsFieldGroup title="SEO" description="حقول اختيارية لتحسين عنوان ووصف الدليل العام بعد النشر.">
-        <CmsFieldShell id="seoTitle" label="عنوان SEO"><input className={cmsInputClassName} id="seoTitle" name="seoTitle" defaultValue={draft?.seoTitle ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="seoTitle" label="عنوان SEO"><CmsInput id="seoTitle" name="seoTitle" defaultValue={draft?.seoTitle ?? ""} /></CmsFieldShell>
         <CmsFieldShell id="seoDescription" label="وصف SEO"><CmsTextarea id="seoDescription" name="seoDescription" defaultValue={draft?.seoDescription ?? ""} /></CmsFieldShell>
-        <CmsFieldShell id="canonicalUrl" label="الرابط القانوني"><input className={cmsInputClassName} dir="ltr" id="canonicalUrl" name="canonicalUrl" defaultValue={draft?.canonicalUrl ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="canonicalUrl" label="الرابط القانوني"><CmsInput dir="ltr" id="canonicalUrl" name="canonicalUrl" defaultValue={draft?.canonicalUrl ?? ""} /></CmsFieldShell>
         <label className="flex items-center gap-3 text-sm font-semibold"><input className="size-4 accent-[oklch(37%_0.075_155)]" name="noIndex" type="checkbox" defaultChecked={draft?.noIndex ?? false} />منع الفهرسة بعد النشر</label>
-        <CmsFieldShell id="openGraphTitle" label="عنوان Open Graph"><input className={cmsInputClassName} id="openGraphTitle" name="openGraphTitle" defaultValue={draft?.openGraphTitle ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="openGraphTitle" label="عنوان Open Graph"><CmsInput id="openGraphTitle" name="openGraphTitle" defaultValue={draft?.openGraphTitle ?? ""} /></CmsFieldShell>
         <CmsFieldShell id="openGraphDescription" label="وصف Open Graph"><CmsTextarea id="openGraphDescription" name="openGraphDescription" defaultValue={draft?.openGraphDescription ?? ""} /></CmsFieldShell>
       </CmsFieldGroup>
     </form>

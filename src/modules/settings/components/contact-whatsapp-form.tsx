@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { Input } from "@/components/ui/input";
 import { Select as UiSelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -47,7 +48,7 @@ export function ContactWhatsappForm({ whatsappNumber, defaultMessage, services, 
 }
 
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return <label className="grid gap-2"><span className="text-[0.8125rem] font-semibold leading-[1.55]">{label}</span><input className="min-h-12 rounded-[4px] border border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] px-3 py-2 text-base outline-none focus:border-[oklch(37%_0.075_155)] focus:ring-2 focus:ring-[oklch(51%_0.09_155)] focus:ring-offset-2" value={value} onChange={(event) => onChange(event.target.value)} /></label>;
+  return <label className="grid gap-2"><span className="text-[0.8125rem] font-semibold leading-[1.55]">{label}</span><Input className="min-h-12 rounded-[4px] border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] text-base focus-visible:border-[oklch(37%_0.075_155)] focus-visible:ring-[oklch(51%_0.09_155)] focus-visible:ring-offset-2" value={value} onChange={(event) => onChange(event.target.value)} /></label>;
 }
 
 function RelatedSelect({ label, value, options, onChange }: { label: string; value: string; options: Option[]; onChange: (value: string) => void }) {

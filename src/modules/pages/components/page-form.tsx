@@ -2,7 +2,7 @@ import type { PageKey } from "@prisma/client";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { CmsFieldGroup, CmsFieldShell, CmsTextarea, cmsInputClassName } from "@/modules/cms/components/form";
+import { CmsFieldGroup, CmsFieldShell, CmsInput, CmsTextarea } from "@/modules/cms/components/form";
 import { CmsRelationSelector } from "@/modules/cms/components/relation-selector";
 import { CmsStatusBadge } from "@/modules/cms/components/status-badge";
 import type { CmsRelationOption } from "@/modules/cms/types";
@@ -61,6 +61,6 @@ function PricesFields({ data, options }: { data: PricesPageData | null; options:
 }
 
 function FinalCta({ data }: { data?: { title?: string; description?: string; buttonText?: string; target?: string } }) { return <CmsFieldGroup title="الدعوة الختامية"><Text id="finalCtaTitle" label="العنوان" value={data?.title} /><Area id="finalCtaDescription" label="الوصف" value={data?.description} /><div className="grid gap-4 sm:grid-cols-2"><Text id="finalCtaButtonText" label="نص الزر" value={data?.buttonText} /><Text id="finalCtaTarget" label="وجهة الزر" value={data?.target} ltr /></div></CmsFieldGroup>; }
-function Text({ id, label, value, ltr }: { id: string; label: string; value?: string | null; ltr?: boolean }) { return <CmsFieldShell id={id} label={label}><input className={cmsInputClassName} dir={ltr ? "ltr" : undefined} id={id} name={id} defaultValue={value ?? ""} /></CmsFieldShell>; }
+function Text({ id, label, value, ltr }: { id: string; label: string; value?: string | null; ltr?: boolean }) { return <CmsFieldShell id={id} label={label}><CmsInput dir={ltr ? "ltr" : undefined} id={id} name={id} defaultValue={value ?? ""} /></CmsFieldShell>; }
 function Area({ id, label, value, tall }: { id: string; label: string; value?: string | null; tall?: boolean }) { return <CmsFieldShell id={id} label={label}><CmsTextarea className={tall ? "min-h-48" : undefined} id={id} name={id} defaultValue={value ?? ""} /></CmsFieldShell>; }
 function SeoFields({ version, media }: { version: SeoVersion | null; media: MediaPickerItem[] }) { return <CmsFieldGroup title="SEO" description="حقول اختيارية تخص النسخة المنشورة من هذه الصفحة."><Text id="seoTitle" label="عنوان SEO" value={version?.seoTitle} /><Area id="seoDescription" label="وصف SEO" value={version?.seoDescription} /><Text id="canonicalUrl" label="الرابط القانوني" value={version?.canonicalUrl} ltr /><label className="flex min-h-11 items-center gap-3 text-sm font-semibold"><input className="size-4 accent-[oklch(37%_0.075_155)]" name="noIndex" type="checkbox" defaultChecked={version?.noIndex ?? false} />منع الفهرسة بعد النشر</label><Text id="openGraphTitle" label="عنوان Open Graph" value={version?.openGraphTitle} /><Area id="openGraphDescription" label="وصف Open Graph" value={version?.openGraphDescription} /><MediaPicker items={media} name="openGraphImageId" defaultValue={version?.openGraphImageId} label="صورة Open Graph" /></CmsFieldGroup>; }

@@ -16,7 +16,6 @@ import { cn } from "@/lib/utils";
 import { createArticleAction } from "@/modules/articles/actions";
 import { getCmsStatusLabel } from "@/modules/cms/components/status-badge";
 import { createProjectAction } from "@/modules/projects/actions";
-import { createServiceAction } from "@/modules/services/actions";
 import { prisma } from "@/server/db/prisma";
 
 const metricStyles = {
@@ -125,7 +124,7 @@ export default async function DashboardPage() {
           <section className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-rest)]">
             <h2 className="text-lg font-semibold">إجراءات سريعة</h2>
             <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <QuickCreate action={createServiceAction} label="خدمة جديدة" />
+              <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary-soft" href="/dashboard/services/new"><Plus className="size-4" />خدمة جديدة</Link>
               <QuickCreate action={createProjectAction} label="مشروع جديد" />
               <QuickCreate action={createArticleAction} label="مقال جديد" />
               <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary-soft" href="/dashboard/media#media-upload"><ImageIcon className="size-4" />رفع وسائط</Link>

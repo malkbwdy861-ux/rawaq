@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { CmsFieldGroup, CmsFieldShell, CmsTextarea, cmsInputClassName } from "@/modules/cms/components/form";
+import { CmsFieldGroup, CmsFieldShell, CmsInput, CmsTextarea } from "@/modules/cms/components/form";
 import { CmsStatusBadge } from "@/modules/cms/components/status-badge";
 
 import { archiveFaqAction, publishFaqAction, saveFaqDraftAction } from "../actions";
@@ -29,9 +29,9 @@ export function FaqForm({ faq }: FaqFormProps) {
       </div>
     </div>
     <CmsFieldGroup title="محتوى السؤال" description="السؤال والإجابة مطلوبان عند النشر. يمكن حفظ مسودة غير مكتملة.">
-      <CmsFieldShell id="question" label="السؤال"><input className={cmsInputClassName} id="question" name="question" defaultValue={draft?.question ?? ""} /></CmsFieldShell>
+      <CmsFieldShell id="question" label="السؤال"><CmsInput id="question" name="question" defaultValue={draft?.question ?? ""} /></CmsFieldShell>
       <CmsFieldShell id="answer" label="الإجابة"><CmsTextarea className="min-h-40" id="answer" name="answer" defaultValue={draft?.answer ?? ""} /></CmsFieldShell>
-      <CmsFieldShell id="sortOrder" label="ترتيب العرض" hint="رقم أصغر يعني ظهورًا أبكر عندما تعتمد الصفحة ترتيب السؤال."><input className={cmsInputClassName} dir="ltr" id="sortOrder" min="0" name="sortOrder" type="number" defaultValue={draft?.sortOrder ?? ""} /></CmsFieldShell>
+      <CmsFieldShell id="sortOrder" label="ترتيب العرض" hint="رقم أصغر يعني ظهورًا أبكر عندما تعتمد الصفحة ترتيب السؤال."><CmsInput dir="ltr" id="sortOrder" min="0" name="sortOrder" type="number" defaultValue={draft?.sortOrder ?? ""} /></CmsFieldShell>
     </CmsFieldGroup>
   </form>;
 }

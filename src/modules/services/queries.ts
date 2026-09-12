@@ -6,12 +6,16 @@ import { decodeCmsSlug } from "@/modules/cms/slugs";
 import { prisma } from "@/server/db/prisma";
 
 export async function getServiceList(searchParams: Record<string, string | string[] | undefined>) {
-  const params = parseCmsSearchParams(searchParams);
+  const parsedParams = parseCmsSearchParams(searchParams);
+  const params = {
+    ...parsedParams,
+    status: parsedParams.status === "DRAFT" || parsedParams.status === "PUBLISHED" ? parsedParams.status : "ALL",
+  } as const;
   const page = params.page ?? 1;
   const pageSize = params.pageSize ?? 20;
   const where = {
     AND: [
-      params.status === "ALL" || params.status === "UNPUBLISHED_CHANGES" ? {} : { status: params.status },
+      params.status === "ALL" ? {} : params.status === "PUBLISHED" ? { status: ContentStatus.PUBLISHED } : { status: { not: ContentStatus.PUBLISHED } },
       params.q
         ? {
             OR: [
@@ -22,13 +26,11 @@ export async function getServiceList(searchParams: Record<string, string | strin
             ],
           }
         : {},
-      params.status === "UNPUBLISHED_CHANGES" ? { publishedVersionId: { not: null }, draftVersionId: { not: null } } : {},
     ],
   };
-  const [totalItems, groupedStatuses, unpublishedChanges] = await Promise.all([
+  const [totalItems, groupedStatuses] = await Promise.all([
     prisma.service.count({ where }),
     prisma.service.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.service.count({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null }, draftVersionId: { not: null } } }),
   ]);
   const pagination = getCmsPagination({ page, pageSize, totalItems });
   const services = await prisma.service.findMany({
@@ -44,10 +46,8 @@ export async function getServiceList(searchParams: Record<string, string | strin
 
   const statusCounts = {
     ALL: groupedStatuses.reduce((sum, item) => sum + item._count._all, 0),
-    DRAFT: groupedStatuses.find((item) => item.status === ContentStatus.DRAFT)?._count._all ?? 0,
+    DRAFT: groupedStatuses.filter((item) => item.status !== ContentStatus.PUBLISHED).reduce((sum, item) => sum + item._count._all, 0),
     PUBLISHED: groupedStatuses.find((item) => item.status === ContentStatus.PUBLISHED)?._count._all ?? 0,
-    ARCHIVED: groupedStatuses.find((item) => item.status === ContentStatus.ARCHIVED)?._count._all ?? 0,
-    UNPUBLISHED_CHANGES: unpublishedChanges,
   };
 
   return { params, pagination, services, statusCounts };
@@ -64,12 +64,21 @@ export async function getServiceEditorData(serviceId: string) {
         publishedVersion: true,
       },
     }),
-    prisma.media.findMany({ orderBy: { createdAt: "desc" }, take: 80 }),
+    prisma.media.findMany({ where: { type: "IMAGE" }, orderBy: { createdAt: "desc" }, take: 80 }),
     getRelationOptions(),
   ]);
 
   if (!service) notFound();
   return { service, media, relationOptions };
+}
+
+export async function getNewServiceEditorData() {
+  const [media, relationOptions] = await Promise.all([
+    prisma.media.findMany({ where: { type: "IMAGE" }, orderBy: { createdAt: "desc" }, take: 80 }),
+    getRelationOptions(),
+  ]);
+
+  return { media, relationOptions };
 }
 
 export async function getPublishedServices() {

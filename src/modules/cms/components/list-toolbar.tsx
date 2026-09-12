@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { cmsStatusLabels } from "./status-badge";
@@ -30,8 +31,8 @@ export function CmsListToolbar({
     >
       <label className="grid gap-2">
         <span className="text-[0.8125rem] font-semibold leading-[1.55]">بحث</span>
-        <span className="relative"><Search aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" /><input
-          className="min-h-10 w-full rounded-[4px] border border-border-strong bg-background px-3 py-2 pe-10 text-base outline-none focus:border-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        <span className="relative"><Search aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" /><Input
+          className="min-h-10 rounded-[4px] border-border-strong bg-background pe-10 text-base focus-visible:border-primary focus-visible:ring-ring focus-visible:ring-offset-2"
           defaultValue={query}
           name="q"
           placeholder={searchPlaceholder}

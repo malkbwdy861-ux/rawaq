@@ -4,6 +4,8 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useState } from "react";
 
+import { Input } from "@/components/ui/input";
+
 import { isSafeLink, type TipTapDocument } from "../content";
 
 const emptyDocument: TipTapDocument = { type: "doc", content: [{ type: "paragraph", content: [] }] };
@@ -64,7 +66,7 @@ export function RichTextEditor({ defaultValue }: { defaultValue?: TipTapDocument
         <EditorButton active={editor?.isActive("blockquote")} disabled={!editor} onClick={() => editor?.chain().focus().toggleBlockquote().run()}>اقتباس</EditorButton>
         <div className="flex min-w-full gap-2 sm:min-w-0 sm:flex-1">
           <label className="sr-only" htmlFor="article-link">رابط النص المحدد</label>
-          <input aria-describedby={linkError ? "article-link-error" : undefined} aria-invalid={Boolean(linkError)} className="min-h-10 min-w-0 flex-1 rounded-[4px] border border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] px-3 text-sm outline-none aria-invalid:border-[oklch(46%_0.16_28)]" dir="ltr" id="article-link" onChange={(event) => setLinkHref(event.target.value)} placeholder="https:// أو /guides/..." type="text" value={linkHref} />
+          <Input aria-describedby={linkError ? "article-link-error" : undefined} aria-invalid={Boolean(linkError)} className="min-h-10 min-w-0 flex-1 rounded-[4px] border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] text-sm aria-invalid:border-[oklch(46%_0.16_28)]" dir="ltr" id="article-link" onChange={(event) => setLinkHref(event.target.value)} placeholder="https:// أو /guides/..." type="text" value={linkHref} />
           <button className={controlClass} disabled={!editor} onClick={applyLink} type="button">تطبيق الرابط</button>
         </div>
         {linkError ? <p className="min-w-full text-sm font-medium text-[oklch(46%_0.16_28)]" id="article-link-error">{linkError}</p> : null}

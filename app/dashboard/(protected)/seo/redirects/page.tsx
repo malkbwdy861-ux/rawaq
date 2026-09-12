@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CmsFieldShell, cmsInputClassName } from "@/modules/cms/components/form";
+import { CmsFieldShell, CmsInput } from "@/modules/cms/components/form";
 import { CmsPageHeader } from "@/modules/cms/components/page-header";
 import { CmsPaginationControls } from "@/modules/cms/components/pagination";
 import { CmsEmptyState, CmsStateBlock } from "@/modules/cms/components/state-blocks";
@@ -20,14 +20,14 @@ export default async function RedirectsPage({ searchParams }: RedirectsPageProps
     <section className="space-y-5 border-y border-[oklch(82%_0.012_145)] py-6" aria-labelledby="new-redirect-title">
       <div className="space-y-1"><h2 className="text-xl font-semibold" id="new-redirect-title">إضافة مسار دائم</h2><p className="max-w-[55ch] text-sm leading-[1.6] text-[oklch(42%_0.018_150)]">استخدم مسارات داخلية كاملة مثل <bdi dir="ltr">/services/old-slug</bdi>. سيمنع النظام التكرار والحلقات ويختصر السلاسل.</p></div>
       <form action={createRedirectAction} className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
-        <CmsFieldShell id="new-source" label="مسار المصدر"><input className={cmsInputClassName} dir="ltr" id="new-source" name="sourcePath" placeholder="/services/old-slug" required /></CmsFieldShell>
-        <CmsFieldShell id="new-destination" label="مسار الوجهة"><input className={cmsInputClassName} dir="ltr" id="new-destination" name="destinationPath" placeholder="/services/new-slug" required /></CmsFieldShell>
+        <CmsFieldShell id="new-source" label="مسار المصدر"><CmsInput dir="ltr" id="new-source" name="sourcePath" placeholder="/services/old-slug" required /></CmsFieldShell>
+        <CmsFieldShell id="new-destination" label="مسار الوجهة"><CmsInput dir="ltr" id="new-destination" name="destinationPath" placeholder="/services/new-slug" required /></CmsFieldShell>
         <Button className="min-h-11 rounded-[4px] bg-[oklch(37%_0.075_155)] px-4 text-[oklch(99%_0.004_100)] hover:bg-[oklch(29%_0.055_155)]" type="submit">إضافة إعادة التوجيه</Button>
       </form>
     </section>
 
     <form action="/dashboard/seo/redirects" className="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <CmsFieldShell id="redirect-search" label="البحث في المسارات"><input className={`${cmsInputClassName} w-full sm:w-96`} defaultValue={params.q} dir="ltr" id="redirect-search" name="q" /></CmsFieldShell>
+      <CmsFieldShell id="redirect-search" label="البحث في المسارات"><CmsInput className="w-full sm:w-96" defaultValue={params.q} dir="ltr" id="redirect-search" name="q" /></CmsFieldShell>
       <Button className="min-h-11 rounded-[4px]" variant="outline" type="submit">بحث</Button>
     </form>
 
@@ -37,8 +37,8 @@ export default async function RedirectsPage({ searchParams }: RedirectsPageProps
         <tbody>{redirects.map((item) => <tr className="border-t border-[oklch(82%_0.012_145)] align-top" key={item.id}>
           <td colSpan={4} className="p-0"><form action={updateRedirectAction} className="grid grid-cols-[minmax(220px,1fr)_minmax(220px,1fr)_90px_220px] items-center gap-4 p-4">
             <input name="redirectId" type="hidden" value={item.id} />
-            <label><span className="sr-only">مسار المصدر</span><input aria-label="مسار المصدر" className={`${cmsInputClassName} w-full`} defaultValue={item.sourcePath} dir="ltr" name="sourcePath" required /></label>
-            <label><span className="sr-only">مسار الوجهة</span><input aria-label="مسار الوجهة" className={`${cmsInputClassName} w-full`} defaultValue={item.destinationPath} dir="ltr" name="destinationPath" required /></label>
+            <label><span className="sr-only">مسار المصدر</span><CmsInput aria-label="مسار المصدر" className="w-full" defaultValue={item.sourcePath} dir="ltr" name="sourcePath" required /></label>
+            <label><span className="sr-only">مسار الوجهة</span><CmsInput aria-label="مسار الوجهة" className="w-full" defaultValue={item.destinationPath} dir="ltr" name="destinationPath" required /></label>
             <span className="tabular-nums" dir="ltr">301</span>
             <div className="flex items-start gap-2"><Button className="min-h-10 rounded-[4px]" variant="outline" type="submit">حفظ</Button><details className="w-44"><summary className="flex min-h-10 cursor-pointer list-none items-center rounded-[4px] px-3 text-sm font-semibold text-[oklch(46%_0.16_28)] hover:bg-[oklch(94%_0.025_28)]">حذف</summary><div className="mt-2 rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(94%_0.025_28)] p-3"><p className="mb-3 leading-[1.6]">سيعود المصدر إلى سلوكه السابق. هل تريد المتابعة؟</p><Button className="min-h-10 w-full rounded-[4px] bg-[oklch(46%_0.16_28)] text-[oklch(99%_0.004_100)] hover:bg-[oklch(40%_0.14_28)]" formAction={deleteRedirectAction} name="redirectId" value={item.id}>حذف إعادة التوجيه</Button></div></details></div>
           </form></td>

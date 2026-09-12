@@ -1,17 +1,14 @@
-"use client";
+import { Plus } from "lucide-react";
+import Link from "next/link";
 
-import { LoaderCircle, Plus } from "lucide-react";
-import { useFormStatus } from "react-dom";
-
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function CreateServiceButton({ compact = false }: { compact?: boolean }) {
-  const { pending } = useFormStatus();
-
   return (
-    <Button aria-disabled={pending} className={compact ? "min-h-9" : undefined} disabled={pending} type="submit">
-      {pending ? <LoaderCircle className="animate-spin" /> : <Plus />}
-      {pending ? "جارٍ الإنشاء" : "خدمة جديدة"}
-    </Button>
+    <Link className={cn(buttonVariants(), compact && "min-h-9")} href="/dashboard/services/new">
+      <Plus />
+      خدمة جديدة
+    </Link>
   );
 }

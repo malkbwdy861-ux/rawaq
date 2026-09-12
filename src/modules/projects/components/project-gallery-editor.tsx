@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState, type ReactNode } from "react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cmsInputClassName } from "@/modules/cms/components/form";
+import { CmsInput } from "@/modules/cms/components/form";
 import type { MediaPickerItem } from "@/modules/media/components/media-picker";
 
 type GalleryItem = {
@@ -45,7 +45,7 @@ export function ProjectGalleryEditor({ media, initialItems }: { media: MediaPick
                 </div>
                 <label className="grid gap-2">
                   <span className="text-[0.8125rem] font-semibold leading-[1.55]">تعليق الصورة {index + 1}</span>
-                  <input className={cmsInputClassName} name="galleryCaptions" value={item.caption ?? ""} onChange={(event) => setItems((current) => current.map((entry) => entry.mediaId === item.mediaId ? { ...entry, caption: event.target.value } : entry))} />
+                  <CmsInput name="galleryCaptions" value={item.caption ?? ""} onChange={(event) => setItems((current) => current.map((entry) => entry.mediaId === item.mediaId ? { ...entry, caption: event.target.value } : entry))} />
                   <span className="break-words text-xs text-[oklch(50%_0.014_150)]" dir="ltr">{selectedMedia.originalFilename}</span>
                 </label>
                 <div className="flex flex-wrap gap-2 sm:flex-col">

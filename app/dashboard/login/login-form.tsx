@@ -4,6 +4,7 @@ import { Eye, EyeOff, LoaderCircle, LockKeyhole, Mail } from "lucide-react";
 import { useActionState, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 import { loginAction, type LoginFormState } from "./actions";
 
@@ -37,11 +38,11 @@ export function LoginForm() {
             className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground"
             strokeWidth={1.8}
           />
-          <input
+          <Input
             aria-describedby={emailError ? "email-error" : undefined}
             aria-invalid={Boolean(emailError)}
             autoComplete="email"
-            className="h-14 w-full rounded-[13px] border border-border-strong/70 bg-background/70 py-3 pr-4 pl-11 text-left text-base text-foreground outline-none transition-[border-color,box-shadow,background-color] duration-150 placeholder:text-muted-foreground hover:border-border-strong focus:border-primary focus:bg-card focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/15"
+            className="h-14 rounded-[13px] border-border-strong/70 bg-background/70 py-3 pr-4 pl-11 text-left text-base text-foreground duration-150 hover:border-border-strong focus-visible:border-primary focus-visible:bg-card focus-visible:ring-ring/30 disabled:bg-muted disabled:text-muted-foreground aria-invalid:ring-destructive/15"
             dir="ltr"
             disabled={pending}
             id="email"
@@ -72,11 +73,11 @@ export function LoginForm() {
             className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground"
             strokeWidth={1.8}
           />
-          <input
+          <Input
             aria-describedby={passwordError ? "password-error" : undefined}
             aria-invalid={Boolean(passwordError)}
             autoComplete="current-password"
-            className="h-14 w-full rounded-[13px] border border-border-strong/70 bg-background/70 py-3 pr-[3.25rem] pl-11 text-left text-base text-foreground outline-none transition-[border-color,box-shadow,background-color] duration-150 placeholder:text-muted-foreground hover:border-border-strong focus:border-primary focus:bg-card focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/15"
+            className="h-14 rounded-[13px] border-border-strong/70 bg-background/70 py-3 pr-[3.25rem] pl-11 text-left text-base text-foreground duration-150 hover:border-border-strong focus-visible:border-primary focus-visible:bg-card focus-visible:ring-ring/30 disabled:bg-muted disabled:text-muted-foreground aria-invalid:ring-destructive/15"
             dir="ltr"
             disabled={pending}
             id="password"
