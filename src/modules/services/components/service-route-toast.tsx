@@ -1,17 +1,5 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { toast } from "react-toastify";
+import { CmsRouteToast } from "@/modules/cms/components/route-toast";
 
 export function ServiceRouteToast({ success, error, cleanHref }: { success?: string; error?: string; cleanHref: string }) {
-  const router = useRouter();
-
-  useEffect(() => {
-    if (success) toast.success(success, { toastId: `service-success-${success}` });
-    if (error) toast.error(error, { toastId: `service-error-${error}` });
-    if (success || error) router.replace(cleanHref, { scroll: false });
-  }, [cleanHref, error, router, success]);
-
-  return null;
+  return <CmsRouteToast cleanHref={cleanHref} error={error} success={success} />;
 }

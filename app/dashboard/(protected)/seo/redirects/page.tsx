@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Search, Trash2 } from "lucide-react";
+import { ArrowDown, ChevronDown, Search, Trash2 } from "lucide-react";
 import { CmsFieldShell, CmsInput } from "@/modules/cms/components/form";
 import { CmsPageHeader } from "@/modules/cms/components/page-header";
 import { CmsPaginationControls } from "@/modules/cms/components/pagination";
-import { CmsEmptyState, CmsStateBlock } from "@/modules/cms/components/state-blocks";
+import { CmsRouteToast } from "@/modules/cms/components/route-toast";
+import { CmsEmptyState } from "@/modules/cms/components/state-blocks";
 import { createRedirectAction, deleteRedirectAction, updateRedirectAction } from "@/modules/redirects/actions";
 import { getRedirectList } from "@/modules/redirects/queries";
 
@@ -15,8 +16,7 @@ export default async function RedirectsPage({ searchParams }: RedirectsPageProps
 
   return <div className="mx-auto max-w-[1280px] space-y-6">
     <CmsPageHeader title="إعادة التوجيه" description="اربط المسارات القديمة بوجهاتها النهائية مع إبقاء عناوين الموقع المنشورة قابلة للوصول." />
-    {typeof rawParams.success === "string" ? <CmsStateBlock tone="success" title="اكتملت العملية" description={rawParams.success} /> : null}
-    {typeof rawParams.error === "string" ? <CmsStateBlock tone="error" title="تعذرت العملية" description={rawParams.error} /> : null}
+    <CmsRouteToast cleanHref="/dashboard/seo/redirects" error={typeof rawParams.error === "string" ? rawParams.error : undefined} success={typeof rawParams.success === "string" ? rawParams.success : undefined} />
 
     <section className="rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-rest)] sm:p-5" aria-labelledby="new-redirect-title">
       <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
@@ -47,7 +47,8 @@ export default async function RedirectsPage({ searchParams }: RedirectsPageProps
         </form>
       </div>
 
-      {redirects.length === 0 ? <div className="p-4"><CmsEmptyState title={params.q ? "لا توجد نتائج" : "لا توجد مسارات معاد توجيهها"} description={params.q ? "غيّر عبارة البحث لعرض مسارات أخرى." : "ستظهر هنا المسارات المضافة يدويًا أو الناتجة عن تغيير رابط منشور."} /></div> : <div className="overflow-x-auto outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" tabIndex={0} aria-label="جدول إعادة التوجيه، يمكن تمريره أفقياً على الشاشات الصغيرة">
+      {redirects.length === 0 ? <div className="p-4"><CmsEmptyState title={params.q ? "لا توجد نتائج" : "لا توجد مسارات معاد توجيهها"} description={params.q ? "غيّر عبارة البحث لعرض مسارات أخرى." : "ستظهر هنا المسارات المضافة يدويًا أو الناتجة عن تغيير رابط منشور."} /></div> : <>
+      <div className="hidden overflow-x-auto outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring md:block" tabIndex={0} aria-label="جدول إعادة التوجيه">
         <table className="w-full min-w-[820px] border-collapse text-sm">
           <thead className="bg-secondary/70 text-right text-xs text-text-secondary"><tr><th className="px-4 py-3 font-semibold">المصدر</th><th className="px-4 py-3 font-semibold">الوجهة</th><th className="w-20 px-4 py-3 text-center font-semibold">الرمز</th><th className="w-64 px-4 py-3 font-semibold">الإجراءات</th></tr></thead>
           <tbody>{redirects.map((item) => <tr className="border-t border-border align-top" key={item.id}>
@@ -72,7 +73,16 @@ export default async function RedirectsPage({ searchParams }: RedirectsPageProps
             </form></td>
           </tr>)}</tbody>
         </table>
-      </div>}
+      </div>
+      <div className="divide-y divide-border md:hidden">{redirects.map((item) => <form action={updateRedirectAction} className="grid gap-3 p-4" key={item.id}>
+        <input name="redirectId" type="hidden" value={item.id} />
+        <div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold text-muted-foreground">إعادة توجيه دائمة</span><span className="inline-flex min-h-7 items-center rounded-md bg-info-soft px-2 text-xs font-bold tabular-nums text-info" dir="ltr">301</span></div>
+        <label className="grid gap-1.5"><span className="text-xs font-semibold text-text-secondary">مسار المصدر</span><CmsInput className="w-full text-left" defaultValue={item.sourcePath} dir="ltr" name="sourcePath" required /></label>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground"><ArrowDown className="size-4" aria-hidden="true" /><span>يُنقل الزائر إلى</span></div>
+        <label className="grid gap-1.5"><span className="text-xs font-semibold text-text-secondary">مسار الوجهة</span><CmsInput className="w-full text-left" defaultValue={item.destinationPath} dir="ltr" name="destinationPath" required /></label>
+        <div className="mt-1 grid gap-2"><Button className="min-h-11" type="submit" variant="outline">حفظ التغييرات</Button><details className="group"><summary className="flex min-h-11 cursor-pointer list-none items-center justify-center gap-2 rounded-md text-sm font-semibold text-destructive outline-none hover:bg-danger-soft focus-visible:ring-2 focus-visible:ring-destructive/30"><Trash2 className="size-4" />حذف<ChevronDown className="size-4 transition-transform group-open:rotate-180" /></summary><div className="mt-2 rounded-md border border-destructive/20 bg-danger-soft p-3"><p className="text-xs leading-5 text-destructive">سيعود مسار المصدر إلى سلوكه السابق.</p><Button className="mt-3 w-full" formAction={deleteRedirectAction} name="redirectId" value={item.id} variant="destructive">تأكيد حذف المسار</Button></div></details></div>
+      </form>)}</div>
+      </>}
     </section>
     <CmsPaginationControls pagination={{ page: pagination.page, pageSize: pagination.pageSize, totalItems: pagination.totalItems }} basePath="/dashboard/seo/redirects" query={{ q: params.q }} />
   </div>;

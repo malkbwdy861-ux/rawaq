@@ -3,10 +3,10 @@ import { ImageIcon } from "lucide-react";
 import Image from "next/image";
 
 import { getCmsPagination } from "@/modules/cms/validation";
+import { CmsRouteToast } from "@/modules/cms/components/route-toast";
 import { MediaEditDialog } from "@/modules/media/components/media-edit-dialog";
 import { MediaToolbar } from "@/modules/media/components/media-toolbar";
 import { MediaUploadDialog } from "@/modules/media/components/media-upload-dialog";
-import { ServiceRouteToast } from "@/modules/services/components/service-route-toast";
 import { ServicesPagination } from "@/modules/services/components/services-pagination";
 import { prisma } from "@/server/db/prisma";
 
@@ -40,7 +40,7 @@ export default async function MediaPage({ searchParams }: { searchParams: MediaP
   return (
     <div className="mx-auto w-full max-w-[1360px] space-y-5">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><h1 className="text-[1.75rem] font-bold leading-10">مكتبة الصور</h1><p className="mt-1 text-sm leading-6 text-text-secondary">رفع الصور المستخدمة في الموقع وتحرير أوصافها وروابطها.</p></div><MediaUploadDialog /></header>
-      <ServiceRouteToast cleanHref="/dashboard/media" error={params.error} success={params.success} />
+      <CmsRouteToast cleanHref="/dashboard/media" error={params.error} success={params.success} />
 
       <section aria-label="مكتبة الصور" className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-rest)]">
         <MediaToolbar query={query} sort={sort} totalItems={totalItems} />
