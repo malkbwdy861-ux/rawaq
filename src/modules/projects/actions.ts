@@ -48,12 +48,6 @@ export type ProjectFormState = {
   revision: number;
 };
 
-// Existing dashboard entry points can use this action without creating an empty record.
-export async function createProjectAction() {
-  await requireAdmin();
-  redirect("/dashboard/projects/new");
-}
-
 export async function submitProjectAction(previousState: ProjectFormState, formData: FormData): Promise<ProjectFormState> {
   await requireAdmin();
 

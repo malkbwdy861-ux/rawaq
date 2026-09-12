@@ -41,12 +41,6 @@ export type ArticleFormState = {
   revision: number;
 };
 
-// Retained for dashboard callers, but creation is deliberately deferred until submit.
-export async function createArticleAction() {
-  await requireAdmin();
-  redirect("/dashboard/articles/new");
-}
-
 export async function submitArticleAction(previousState: ArticleFormState, formData: FormData): Promise<ArticleFormState> {
   await requireAdmin();
 

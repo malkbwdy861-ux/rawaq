@@ -11,11 +11,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { createArticleAction } from "@/modules/articles/actions";
 import { getCmsStatusLabel } from "@/modules/cms/components/status-badge";
-import { createProjectAction } from "@/modules/projects/actions";
 import { prisma } from "@/server/db/prisma";
 
 const metricStyles = {
@@ -125,8 +122,8 @@ export default async function DashboardPage() {
             <h2 className="text-lg font-semibold">إجراءات سريعة</h2>
             <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary-soft" href="/dashboard/services/new"><Plus className="size-4" />خدمة جديدة</Link>
-              <QuickCreate action={createProjectAction} label="مشروع جديد" />
-              <QuickCreate action={createArticleAction} label="مقال جديد" />
+              <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary-soft" href="/dashboard/projects/new"><Plus className="size-4" />مشروع جديد</Link>
+              <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary-soft" href="/dashboard/articles/new"><Plus className="size-4" />دليل جديد</Link>
               <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary-soft" href="/dashboard/media#media-upload"><ImageIcon className="size-4" />رفع وسائط</Link>
             </div>
           </section>
@@ -134,10 +131,6 @@ export default async function DashboardPage() {
       </div>
     </div>
   );
-}
-
-function QuickCreate({ action, label }: { action: () => Promise<void>; label: string }) {
-  return <form action={action}><Button className="w-full" type="submit" variant="outline"><Plus className="size-4" />{label}</Button></form>;
 }
 
 function formatRelativeDate(date: Date, now: Date) {
