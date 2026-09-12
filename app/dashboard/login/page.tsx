@@ -12,17 +12,38 @@ export default async function DashboardLoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[oklch(97.5%_0.009_100)] px-4 py-10 text-[oklch(22%_0.018_155)]">
-      <section className="w-full max-w-md rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] p-6 sm:p-8">
-        <div className="mb-8 space-y-3">
-          <p className="text-sm font-semibold text-[oklch(37%_0.075_155)]">
+    <main
+      className="login-canvas flex min-h-screen min-h-dvh items-center justify-center px-5 py-6 text-foreground sm:px-6 sm:py-10"
+    >
+      <section
+        aria-labelledby="login-title"
+        className="login-card w-full max-w-[500px] rounded-[26px] border border-border/80 bg-card px-6 py-9 sm:px-10 sm:py-11 md:px-12"
+      >
+        <div className="text-center">
+          <p className="text-[1.375rem] font-bold leading-[1.5] text-primary">
+            مظلات جدة
+          </p>
+          <p
+            className="mt-0.5 text-[0.8125rem] font-medium leading-5 text-text-secondary"
+            dir="ltr"
+          >
             Jeddah Shading
           </p>
-          <h1 className="text-2xl font-bold leading-[1.45] sm:text-[1.75rem]">
+          <span
+            aria-hidden="true"
+            className="mx-auto mt-4 block h-px w-11 bg-clay/55"
+          />
+        </div>
+
+        <div className="mb-8 mt-9 text-center sm:mb-9 sm:mt-10">
+          <h1
+            className="text-[1.625rem] font-bold leading-[1.45] text-foreground sm:text-[1.75rem]"
+            id="login-title"
+          >
             دخول المسؤول
           </h1>
-          <p className="max-w-[55ch] text-base leading-[1.65] text-[oklch(42%_0.018_150)]">
-            هذه المساحة مخصصة لإدارة المحتوى والنشر داخل لوحة التحكم.
+          <p className="mt-2 text-sm leading-7 text-text-secondary sm:text-[0.9375rem]">
+            تسجيل الدخول إلى لوحة تحكم مظلات جدة
           </p>
         </div>
         <LoginForm />

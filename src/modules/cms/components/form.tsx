@@ -58,11 +58,11 @@ export function CmsFieldGroup({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-4">
+    <section className="space-y-5 border-t border-border pt-8 first:border-t-0 first:pt-0">
       <div className="space-y-1">
         <h2 className="text-xl font-semibold leading-[1.5]">{title}</h2>
         {description ? (
-          <p className="max-w-[55ch] text-sm leading-[1.6] text-[oklch(42%_0.018_150)]">
+          <p className="max-w-[55ch] text-sm leading-[1.6] text-text-secondary">
             {description}
           </p>
         ) : null}
@@ -105,4 +105,4 @@ export function CmsFieldShell({
   );
 }
 
-export const cmsInputClassName = "min-h-11 rounded-[4px] border border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] px-3 py-2 text-base outline-none focus:border-[oklch(37%_0.075_155)] focus:ring-2 focus:ring-[oklch(51%_0.09_155)] focus:ring-offset-2 disabled:bg-[oklch(95%_0.012_110)] disabled:text-[oklch(53%_0.012_150)]";
+export const cmsInputClassName = "min-h-11 w-full max-w-[760px] rounded-md border border-border-strong bg-card px-3 py-2 text-base outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:bg-muted disabled:text-muted-foreground";

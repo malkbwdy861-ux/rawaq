@@ -8,6 +8,10 @@ import { signIn } from "@/server/auth";
 
 export type LoginFormState = {
   error?: string;
+  fieldErrors?: {
+    email?: string[];
+    password?: string[];
+  };
 };
 
 const loginSchema = z.object({
@@ -25,7 +29,7 @@ export async function loginAction(
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "بيانات الدخول غير صحيحة." };
+    return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
   try {

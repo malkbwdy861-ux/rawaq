@@ -1,3 +1,5 @@
+import { Search } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 
 import { cmsStatusLabels } from "./status-badge";
@@ -23,23 +25,23 @@ export function CmsListToolbar({
   return (
     <form
       action=""
-      className="grid gap-3 rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] p-4 md:grid-cols-[minmax(0,1fr)_220px_auto]"
+      className="grid gap-3 border-y border-border bg-card px-4 py-3 md:grid-cols-[minmax(0,1fr)_220px_auto]"
     >
       <label className="grid gap-2">
         <span className="text-[0.8125rem] font-semibold leading-[1.55]">بحث</span>
-        <input
-          className="min-h-10 rounded-[4px] border border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] px-3 py-2 text-base outline-none focus:border-[oklch(37%_0.075_155)] focus:ring-2 focus:ring-[oklch(51%_0.09_155)] focus:ring-offset-2"
+        <span className="relative"><Search aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" /><input
+          className="min-h-10 w-full rounded-[4px] border border-border-strong bg-background px-3 py-2 pe-10 text-base outline-none focus:border-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
           defaultValue={query}
           name="q"
           placeholder={searchPlaceholder}
           type="search"
-        />
+        /></span>
       </label>
 
       <label className="grid gap-2">
         <span className="text-[0.8125rem] font-semibold leading-[1.55]">الحالة</span>
         <select
-          className="min-h-10 rounded-[4px] border border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] px-3 py-2 text-base outline-none focus:border-[oklch(37%_0.075_155)] focus:ring-2 focus:ring-[oklch(51%_0.09_155)] focus:ring-offset-2"
+          className="min-h-10 rounded-[4px] border border-border-strong bg-background px-3 py-2 text-base outline-none focus:border-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
           defaultValue={status}
           name="status"
         >

@@ -20,10 +20,10 @@ export default async function MaterialsIndexPage() {
         <header className="space-y-4">
           <p className="text-sm font-semibold text-[oklch(37%_0.075_155)]">المواد</p>
           <h1 className="max-w-3xl text-3xl font-bold leading-[1.35] md:text-5xl">مواد وخيارات منشورة ومدعومة فعليًا</h1>
-          <p className="max-w-2xl text-base leading-[1.8] text-[oklch(42%_0.018_150)]">تعرض هذه الصفحة المواد المنشورة فقط، دون توليد مزايا أو ادعاءات غير مدخلة في لوحة التحكم.</p>
+          <p className="max-w-2xl text-base leading-[1.8] text-[oklch(42%_0.018_150)]">قارن خصائص المواد واستخداماتها وحدودها قبل اختيار ما يلائم الموقع وظروفه.</p>
         </header>
         {materials.length === 0 ? (
-          <section className="rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] p-6"><h2 className="text-xl font-semibold">لا توجد مواد منشورة بعد</h2><p className="mt-2 text-[oklch(42%_0.018_150)]">ستظهر المواد هنا بعد نشرها من لوحة التحكم.</p></section>
+          <section className="border-y border-border py-10"><h2 className="text-xl font-semibold">نعمل على توثيق المواد المتاحة</h2><p className="mt-2 text-text-secondary">يمكنك التواصل معنا للسؤال عن مادة أو استخدام محدد.</p></section>
         ) : (
           <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" aria-label="قائمة المواد">
             {materials.map((material) => {

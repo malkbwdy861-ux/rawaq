@@ -2,18 +2,18 @@
 name: "Jeddah Shading"
 description: "Arabic-first architectural clarity for durable outdoor work in Jeddah and Makkah"
 colors:
-  background-canvas: "oklch(97.5% 0.009 100)"
-  background-muted: "oklch(95% 0.012 110)"
+  background-canvas: "oklch(97.2% 0.004 145)"
+  background-muted: "oklch(95.4% 0.006 145)"
   background-brand-subtle: "oklch(95.5% 0.018 145)"
-  surface-base: "oklch(99% 0.004 110)"
-  surface-raised: "oklch(96.5% 0.009 120)"
-  surface-overlay: "oklch(98.5% 0.006 115)"
+  surface-base: "oklch(99.3% 0.003 145)"
+  surface-raised: "oklch(96.2% 0.006 145)"
+  surface-overlay: "oklch(98.8% 0.004 145)"
   text-primary: "oklch(22% 0.018 155)"
   text-secondary: "oklch(42% 0.018 150)"
   text-muted: "oklch(50% 0.014 150)"
   text-inverted: "oklch(99% 0.004 100)"
-  border-default: "oklch(82% 0.012 145)"
-  border-strong: "oklch(64% 0.018 145)"
+  border-default: "oklch(87.5% 0.008 145)"
+  border-strong: "oklch(74% 0.014 145)"
   brand-primary: "oklch(37% 0.075 155)"
   brand-primary-hover: "oklch(29% 0.055 155)"
   brand-primary-active: "oklch(22% 0.035 155)"
@@ -89,9 +89,9 @@ typography:
 rounded:
   none: "0"
   subtle: "2px"
-  control: "4px"
-  surface: "8px"
-  prominent: "12px"
+  control: "9px"
+  surface: "12px"
+  prominent: "16px"
   pill: "999px"
 spacing:
   2xs: "4px"
@@ -151,6 +151,106 @@ components:
 ---
 
 # Design System: Jeddah Shading
+
+## 0. Compliance Contract And Audit Baseline
+
+This document is an implementation contract. A screen is not compliant because it uses the correct colors. It must also use the correct surface mode, width, density, hierarchy, interaction states, responsive behavior, and RTL treatment defined here.
+
+### September 2026 focused audit
+
+The pre-reset implementation failed primarily because:
+
+- The public site had no shared header, navigation, footer, skip link, or persistent conversion path.
+- Dashboard navigation had no current-route state and fell below content on small screens instead of becoming a drawer.
+- One `1600px` dashboard width was applied to overview, collections, editors, media, and settings despite their different tasks.
+- Collections repeated page-level row, action, flash-message, and empty-state styling instead of using a stable data-management composition.
+- Editors were long, undifferentiated forms with action controls at the top, full-width fields, repeated embedded media libraries, and no contextual rail.
+- Media, redirects, settings, and editors visually inherited the collection-page pattern even though they are different tools.
+- Public Services, Solutions, and Materials repeated the same card grid and exposed CMS language such as “published records” to visitors.
+- Public detail pages repeatedly boxed prose and relationship groups, weakening narrative hierarchy and conversion flow.
+- Raw color values and one-off dimensions were embedded throughout routes, preventing coherent system-level adjustment.
+- Technical values, navigation direction, active state, mobile behavior, and focus treatment were inconsistently handled in RTL.
+
+Patterns may be shared only when the user task is shared. Similar database models are not a reason to give Services, Media, Redirects, Settings, and Projects the same composition.
+
+### Surface modes
+
+Every route declares one visual mode through its nearest shell:
+
+- `PERSUADE`: public pages. Image-led or architectural, generous chapter rhythm, one dominant conversion action, and a `1280px` content cap.
+- `OPERATE`: dashboard pages. Neutral, compact, explicit state, predictable controls, and widths selected by task.
+
+Do not mix public display typography, orchestrated motion, broad green fields, or promotional copy into `OPERATE`. Do not expose dashboard lifecycle language or dense toolbars in `PERSUADE`.
+
+### Required layout widths
+
+- `public`: `1280px`; wide project media may use `1440px`.
+- `dashboard-wide`: `1600px`; overview and media only.
+- `dashboard-list`: `1280px`; collections and redirects.
+- `dashboard-editor`: `1120px`; two-column editor workspace.
+- `dashboard-form`: `880px`; settings and focused forms.
+- `editor-main`: `minmax(0, 760px)`.
+- `editor-rail`: `288px`, sticky below the `64px` top bar on desktop.
+- `prose`: preferred `62ch`, hard maximum `72ch`.
+
+No page may default to the widest width. Inputs follow the information they collect: titles and URLs cap at `760px`, short metadata at `520px`, numeric/date controls at `320px`, and prose editors at `760px`.
+
+### Operational sizing
+
+- Dashboard sidebar: `264px`; mobile drawer: `min(88vw, 320px)`.
+- Dashboard top bar: `56px` mobile, `64px` desktop.
+- Dashboard control: `40px` with fine pointers, `44px` minimum target, `48px` on mobile primary paths.
+- Public header: `72px` mobile, `88px` desktop.
+- Public action: `48px` minimum.
+- Dashboard table row: `64px` compact, `72px` when secondary metadata is present.
+- Dashboard icon: `18px` navigation and controls, `20px` top-level actions, `24px` empty states.
+- Collection surface padding: `12px 16px`; editor section spacing: `40px`; major public section spacing: `80px` tablet and `96px` desktop.
+
+### Archetype contracts
+
+- Overview uses an operational summary, useful counts, recent records, and direct creation/navigation actions. No fake metrics or charts.
+- Collections use a compact page header, toolbar, scan-friendly rows, explicit lifecycle state, stable actions, pagination, and a purposeful empty state.
+- Editors use a main content column plus contextual publication rail on desktop. The rail moves before the main content on small screens, and primary actions remain reachable.
+- Media uses thumbnail browsing and a focused details/editing context. It must not render as a text collection.
+- Redirects use aligned technical columns, LTR-isolated paths, explicit validation, and local overflow only when comparison requires it.
+- Settings use category sections with a medium form width and reachable save action. They are not one unstructured full-width form.
+- Home uses a decisive brand field, authentic evidence when supplied, varied narrative sections, and one contact hierarchy.
+- Service detail uses need, evidence, explanation, related decision support, FAQ, then contact. It is not an article template.
+- Project detail is image-led. Guide detail is reading-led. Their widths and rhythm must remain different.
+
+### Approved dashboard presentation contract
+
+Until the five reference screens receive visual approval, dashboard implementation is limited to the shared shell, Overview, Services collection, Service editor, and Media Library. Other routes must not inherit experimental collection or editor markup.
+
+- Physical scene: one Arabic-speaking administrator works at a bright office monitor for sustained content-entry sessions. The interface is light, cool, low-glare, compact, and immediately scannable rather than dark or decorative.
+- Color strategy: restrained. At least 90 percent of each viewport uses the cool canvas, white-green surfaces, and tinted ink. Deep mineral green is reserved for primary actions, current navigation, focus, selection, and success. Semantic blue, amber, and violet appear only in small icon or status surfaces.
+- Canvas and surfaces: the dashboard canvas is `background-canvas`. Sidebar is a slightly distinct near-white neutral. Primary working surfaces use `surface-base`; controls may use `surface-overlay`; hover uses a cool neutral-green tint. Major cards use a full 1px `border-default`, 12–14px radius, 18–24px padding, and at most `0 1px 2px` low-opacity resting elevation.
+- Shell: `240px` desktop sidebar from `1280px`, right-side drawer below it, `60px` utility topbar, compact `40–42px` navigation rows, `16–18px` icons, and no invented brand mark. The brand area stays within `60–68px`. Navigation groups have 12–16px separation, not large dead gaps.
+- Page frame: desktop padding is 24–32px, tablet 20–24px, mobile 16px. Overview and Media cap at `1600px`, Services at `1360px`, and Service editor at `1200px`. Heading-to-first-section spacing is 24px; major section gaps are 20–24px; card grids use 16–20px gaps.
+- Typography: dashboard page titles are 28–30px at weight 700; section titles 18–20px at weight 600–700; card titles 15–17px at weight 600; body and fields 14–16px; navigation 13–14px; metadata 12–13px. Values use tabular numerals. Secondary and muted colors, not bold weight everywhere, establish supporting hierarchy.
+- Controls: fields and buttons use 8–10px radius and `40px` visual height on desktop, with at least `44px` targets on coarse pointers and mobile. Inputs use the white control surface and a visible neutral boundary. Focus uses the standard 2px ring. Menus use 10–12px radius and the floating-control shadow.
+- Overview: use only database-backed Service, Project, Article, Media, and Draft counts. KPI cards are 112–124px high with one small tinted icon block, label, value, and real supporting state. Below them, recent records, real attention checks, and compact creation/navigation actions fill a purposeful asymmetric grid. Never render dashes, fake trends, or decorative charts.
+- Services collection: use status summary tabs, one cohesive 40px search/filter toolbar, a semantic desktop table, labelled record rows below `768px`, and pagination attached to the result surface. The table uses a 44px tinted header, 60–64px rows, no vertical rules, one subtle separator, title plus isolated LTR slug, restrained status, localized update time, and one contextual action menu.
+- Service editor: use `minmax(0, 820px)` main column, `300px` context rail, and 24px gap. Below `1280px`, the rail follows the main editor instead of compressing the writing canvas. The header keeps breadcrumb context and Preview, Save Draft, Publish in one clear action region. Publish is the only filled action.
+- Main editor: Basic Information, Content, and Relationships share one 12–14px working surface with open sections separated by rhythm, not nested cards. The title field is visually stronger than minor metadata. Existing Service content remains an intentional plain-text editor because the data model does not preserve rich formatting.
+- Publication rail: status, saved metadata, visibility, featured image, SEO, and additional actions use compact panels. Secondary groups use native progressive disclosure. Selected media shows a real preview; empty media uses an icon-led selection area, never a plain “not selected” box.
+- Media Library: use a wide 1600px browser with a compact search/type/sort toolbar and a responsive 4/3/2/1-column image grid. Image-first cards use a consistent square preview, 12px radius, concise filename/size/date metadata, and progressively disclosed editing controls. Upload is a polished dashed tile or compact top action, not a large competing form.
+- Status and feedback: badges are compact pills only where status is the affordance. Published is soft green, Draft cool gray, warnings soft amber, errors soft red, and information soft blue. Existing server feedback remains visible and specific. Empty states are compact, icon-led, factual, and contain one valid next action.
+- Responsive: at 1280px retain the sidebar and multi-column workspaces. Below 1280px use the right drawer. KPI cards become two columns on tablet and one or two on mobile. Tables become labelled records below 768px. The editor and inspector stack. Media becomes three, two, then one column based on available width.
+- RTL and bidi: identifying content begins on the right and row actions remain on the left. Directional arrows follow RTL progression. Slugs, URLs, filenames, MIME types, dimensions, and technical identifiers use isolated LTR runs. Drawers originate from the right; menus align to their trigger without viewport overflow.
+- Motion: hover, press, disclosure, and drawer state only. Use 120–200ms for controls and exponential ease-out. Do not animate page entry or layout properties. Reduced-motion removes spatial movement.
+- Approval gate: inspect the real shell, Overview, Services, Service editor, and Media Library at 1920x1080, 1440x900, 1280x800, and a mobile width. Stop after these five screens for visual approval before propagating the system.
+
+### Component enforcement
+
+- Route files compose domain data and archetypes. They must not define new button, field, badge, status, page-header, empty-state, or container styling inline.
+- Raw `oklch()` values are allowed only in token definitions and exceptional data visualization. Components consume semantic tokens.
+- Cards require a distinct object, action, selection, or comparison boundary. Ordinary sections use spacing, tonal change, or one separator.
+- Every interactive component implements default, hover where supported, focus-visible, active, disabled, and pending states.
+- Active navigation uses text weight, icon treatment, and a full soft surface or hairline boundary. It never relies on color alone.
+- Destructive actions are separated from routine actions and use explicit consequence copy before irreversible work.
+- Mixed-direction identifiers use `<bdi dir="ltr">` or an equivalent isolated LTR run. Do not set an entire Arabic sentence to LTR.
+- At `320px` and `200%` zoom, primary content must reflow in one dimension. Only true tables and media strips may own horizontal scrolling.
 
 ## 1. Overview
 

@@ -28,7 +28,7 @@ export default async function GuideDetailPage({ params }: GuidePageProps) {
   const article = await getPublishedArticleBySlug(slug);
   const version = article.publishedVersion;
   if (!version || !isTipTapDocument(version.content)) notFound();
-  return <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-12 md:px-8 md:py-20">
+  return <main className="min-h-screen bg-background px-4 py-12 md:px-8 md:py-20">
     <article className="mx-auto max-w-7xl space-y-14">
       <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الأدلة", href: "/guides" }, { label: version.title ?? "دليل", href: `/guides/${slug}` }]} />
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Article", headline: version.title, description: version.excerpt, url: absoluteUrl(`/guides/${slug}`), image: version.heroMedia?.url || undefined, datePublished: article.publishedAt?.toISOString(), dateModified: version.updatedAt.toISOString() }} />
@@ -41,6 +41,7 @@ export default async function GuideDetailPage({ params }: GuidePageProps) {
       <RelatedSection title="المواد المرتبطة" items={version.materials.map((item) => ({ label: item.material.publishedVersion?.name, slug: item.material.publishedVersion?.slug, prefix: "/materials" }))} />
       <RelatedSection title="المشاريع المرتبطة" items={version.projects.map((item) => ({ label: item.project.publishedVersion?.title, slug: item.project.publishedVersion?.slug, prefix: "/projects" }))} />
       {version.faqs.length ? <section className="max-w-[72ch] space-y-6 border-t border-[oklch(82%_0.012_145)] pt-8"><h2 className="text-3xl font-bold leading-[1.35]">أسئلة مرتبطة</h2><div className="divide-y divide-[oklch(82%_0.012_145)]">{version.faqs.map((item) => item.faq.publishedVersion ? <details className="py-4" key={item.faqId}><summary className="min-h-11 cursor-pointer py-2 text-lg font-semibold">{item.faq.publishedVersion.question}</summary><p className="pt-3 leading-[1.8] text-[oklch(42%_0.018_150)]">{item.faq.publishedVersion.answer}</p></details> : null)}</div></section> : null}
+      <section className="grid gap-6 border-t border-border bg-primary-soft p-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-end md:p-8"><div><h2 className="text-2xl font-bold">هل تحتاج إلى تطبيق هذه المعلومات على موقعك؟</h2><p className="mt-3 max-w-[58ch] leading-8 text-text-secondary">انتقل إلى التواصل وشارك نوع الموقع والأبعاد التقريبية لبدء النقاش.</p></div><Link className="inline-flex min-h-12 items-center justify-center rounded-[4px] bg-primary px-5 font-semibold text-primary-foreground" href="/contact">تواصل معنا</Link></section>
     </article>
   </main>;
 }

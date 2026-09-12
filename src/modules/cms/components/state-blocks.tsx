@@ -3,11 +3,11 @@ import type { ReactNode } from "react";
 type CmsStateTone = "empty" | "loading" | "error" | "success" | "warning";
 
 const toneClasses: Record<CmsStateTone, string> = {
-  empty: "border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] text-[oklch(22%_0.018_155)]",
-  loading: "border-[oklch(82%_0.012_145)] bg-[oklch(96.5%_0.009_120)] text-[oklch(22%_0.018_155)]",
-  error: "border-[oklch(46%_0.16_28)] bg-[oklch(94%_0.025_28)] text-[oklch(46%_0.16_28)]",
-  success: "border-[oklch(44%_0.085_155)] bg-[oklch(95.5%_0.018_145)] text-[oklch(44%_0.085_155)]",
-  warning: "border-[oklch(47%_0.10_75)] bg-[oklch(94%_0.035_80)] text-[oklch(47%_0.10_75)]",
+  empty: "border-border bg-card text-foreground",
+  loading: "border-border bg-surface-raised text-foreground",
+  error: "border-destructive bg-danger-soft text-destructive",
+  success: "border-success bg-success-soft text-success",
+  warning: "border-warning bg-warning-soft text-warning",
 };
 
 export function CmsStateBlock({
@@ -22,7 +22,7 @@ export function CmsStateBlock({
   action?: ReactNode;
 }) {
   return (
-    <div className={`rounded-[8px] border p-5 ${toneClasses[tone]}`}>
+    <div className={`rounded-[8px] border p-5 ${toneClasses[tone]}`} role={tone === "error" ? "alert" : "status"}>
       <h2 className="text-xl font-semibold leading-[1.5]">{title}</h2>
       {description ? (
         <p className="mt-2 max-w-[55ch] text-base leading-[1.65]">{description}</p>
