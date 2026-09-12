@@ -20,10 +20,10 @@ import { createServiceAction } from "@/modules/services/actions";
 import { prisma } from "@/server/db/prisma";
 
 const metricStyles = {
-  green: "bg-primary-soft text-primary",
-  blue: "bg-info-soft text-info",
-  violet: "bg-violet-soft text-violet",
-  amber: "bg-warning-soft text-warning",
+  green: { icon: "bg-primary-soft/70 text-primary", dot: "bg-primary" },
+  blue: { icon: "bg-info-soft/75 text-info", dot: "bg-info" },
+  violet: { icon: "bg-violet-soft/75 text-violet", dot: "bg-violet" },
+  amber: { icon: "bg-warning-soft/75 text-warning", dot: "bg-warning" },
 } as const;
 
 export default async function DashboardPage() {
@@ -68,7 +68,7 @@ export default async function DashboardPage() {
     { label: "الخدمات المنشورة", value: publishedServices, detail: `${serviceDrafts.toLocaleString("ar-SA")} مسودة`, icon: Layers3, tone: "green" },
     { label: "المشاريع المنشورة", value: publishedProjects, detail: `${projectDrafts.toLocaleString("ar-SA")} مسودة`, icon: FolderKanban, tone: "blue" },
     { label: "المقالات المنشورة", value: publishedArticles, detail: `${articleDrafts.toLocaleString("ar-SA")} مسودة`, icon: BookOpenText, tone: "violet" },
-    { label: "مكتبة الوسائط", value: mediaCount, detail: `${draftCount.toLocaleString("ar-SA")} مسودة محتوى`, icon: ImageIcon, tone: "amber" },
+    { label: "مكتبة الوسائط", value: mediaCount, detail: `${draftCount.toLocaleString("ar-SA")} عنصر محتوى`, icon: ImageIcon, tone: "amber" },
   ] as const;
 
   const recent = [
@@ -95,11 +95,17 @@ export default async function DashboardPage() {
         <time className="text-xs font-medium text-muted-foreground" dateTime={now.toISOString()}>{new Intl.DateTimeFormat("ar-SA", { dateStyle: "full" }).format(now)}</time>
       </header>
 
-      <section aria-label="ملخص المحتوى" className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+      <section aria-label="ملخص المحتوى" className="grid grid-cols-[repeat(auto-fit,minmax(148px,1fr))] gap-3 sm:grid-cols-2 sm:gap-4 2xl:grid-cols-4">
         {metrics.map(({ label, value, detail, icon: Icon, tone }) => (
-          <article className="flex min-h-28 items-start justify-between rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-rest)]" key={label}>
-            <div><p className="text-sm font-medium text-text-secondary">{label}</p><p className="mt-2 text-[2rem] font-bold leading-none tabular-nums">{value.toLocaleString("ar-SA")}</p><p className="mt-3 text-xs text-muted-foreground">{detail}</p></div>
-            <span className={cn("grid size-10 shrink-0 place-items-center rounded-lg", metricStyles[tone])}><Icon aria-hidden="true" className="size-5" /></span>
+          <article className="flex min-h-[142px] flex-col justify-between rounded-[20px] border border-border/70 bg-card/95 p-3.5 shadow-[0_10px_24px_oklch(22%_0.018_155_/_0.045)] sm:min-h-[154px] sm:p-4" key={label}>
+            <div>
+              <span className={cn("grid size-8 place-items-center rounded-xl sm:size-9", metricStyles[tone].icon)}><Icon aria-hidden="true" className="size-4 sm:size-[18px]" strokeWidth={1.9} /></span>
+              <p className="mt-3 text-[12px] font-semibold leading-5 text-text-secondary sm:text-[13px]">{label}</p>
+              <p className="mt-1 text-[1.75rem] font-bold leading-none tracking-tight tabular-nums text-foreground sm:text-[2rem]">{value.toLocaleString("ar-SA")}</p>
+            </div>
+            <div className="mt-3 border-t border-border/65 pt-2.5">
+              <p className="flex items-center gap-1.5 text-[11px] font-medium leading-5 text-muted-foreground sm:text-xs"><span className={cn("size-1.5 rounded-full", metricStyles[tone].dot)} aria-hidden="true" />{detail}</p>
+            </div>
           </article>
         ))}
       </section>

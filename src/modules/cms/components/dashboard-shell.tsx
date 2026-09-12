@@ -64,8 +64,10 @@ const routeLabels = [
 export function DashboardShell({ children, userLabel, logoutAction }: { children: ReactNode; userLabel: string; logoutAction: () => Promise<void> }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
   const context = routeLabels.find(([path]) => pathname.startsWith(path))?.[1] ?? "نظرة عامة";
 
   useEffect(() => {
@@ -89,6 +91,30 @@ export function DashboardShell({ children, userLabel, logoutAction }: { children
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [open]);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (profileRef.current?.contains(event.target as Node)) return;
+      setProfileOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setProfileOpen(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [profileOpen]);
+
   return (
     <div className="dashboard-root min-h-screen bg-dashboard-canvas text-foreground xl:grid xl:grid-cols-[240px_minmax(0,1fr)]">
       <aside className="hidden border-e border-border bg-dashboard-sidebar xl:sticky xl:top-0 xl:block xl:h-screen xl:overflow-y-auto">
@@ -103,22 +129,22 @@ export function DashboardShell({ children, userLabel, logoutAction }: { children
           </div>
           <div className="flex items-center gap-1">
             <Link className="inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-medium text-text-secondary transition-colors hover:bg-dashboard-hover hover:text-foreground" href="/" target="_blank"><span className="hidden sm:inline">عرض الموقع</span><ExternalLink className="size-4" /></Link>
-            <details className="group relative">
-              <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-md px-2 transition-colors hover:bg-dashboard-hover marker:content-none"><span className="grid size-8 place-items-center rounded-full bg-primary-soft text-primary"><UserRound className="size-4" /></span><span className="hidden max-w-36 truncate text-sm font-medium md:block">{userLabel}</span><ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
-              <div className="absolute end-0 top-[calc(100%+8px)] z-200 w-56 rounded-xl border border-border bg-popover p-1.5 shadow-[var(--shadow-float)]">
+            <div className="relative" ref={profileRef}>
+              <button aria-expanded={profileOpen} aria-haspopup="menu" className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-md px-2 transition-colors hover:bg-dashboard-hover" onClick={() => setProfileOpen((current) => !current)} type="button"><span className="grid size-8 place-items-center rounded-full bg-primary-soft text-primary"><UserRound className="size-4" /></span><span className="hidden max-w-36 truncate text-sm font-medium md:block">{userLabel}</span><ChevronDown className={`size-4 text-muted-foreground transition-transform ${profileOpen ? "rotate-180" : ""}`} /></button>
+              {profileOpen ? <div className="absolute end-0 top-[calc(100%+8px)] z-200 w-56 rounded-xl border border-border bg-popover p-1.5 shadow-[var(--shadow-float)]" role="menu">
                 <div className="border-b border-border px-2 py-2"><p className="text-xs text-muted-foreground">الحساب الحالي</p><p className="mt-0.5 truncate text-sm font-medium">{userLabel}</p></div>
-                <form action={logoutAction} className="mt-1"><button className="flex min-h-10 w-full items-center gap-2 rounded-md px-2 text-sm font-medium hover:bg-dashboard-hover" type="submit"><LogOut className="size-4" />تسجيل الخروج</button></form>
-              </div>
-            </details>
+                <form action={logoutAction} className="mt-1"><button className="flex min-h-10 w-full items-center gap-2 rounded-md px-2 text-sm font-medium hover:bg-dashboard-hover" role="menuitem" type="submit"><LogOut className="size-4" />تسجيل الخروج</button></form>
+              </div> : null}
+            </div>
           </div>
         </header>
         <main id="main-content" className="w-full flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
 
       {open ? (
-        <div className="fixed inset-0 z-300 xl:hidden">
-          <button aria-label="إغلاق قائمة لوحة التحكم" className="absolute inset-0 bg-foreground/35" onClick={() => { setOpen(false); menuButtonRef.current?.focus(); }} type="button" />
-          <aside aria-label="قائمة لوحة التحكم" aria-modal="true" className="absolute inset-block-0 inset-inline-start-0 w-[min(88vw,304px)] overflow-y-auto border-e border-border bg-dashboard-sidebar shadow-[var(--shadow-float)]" ref={drawerRef} role="dialog">
+        <div className="fixed inset-0 z-300 h-[100dvh] min-h-[100dvh] xl:hidden">
+          <button aria-label="إغلاق قائمة لوحة التحكم" className="absolute inset-0 h-full bg-foreground/35" onClick={() => { setOpen(false); menuButtonRef.current?.focus(); }} type="button" />
+          <aside aria-label="قائمة لوحة التحكم" aria-modal="true" className="absolute inset-block-start-0 inset-inline-start-0 h-[100dvh] max-h-[100dvh] w-[min(88vw,320px)] overflow-y-auto overscroll-contain border-e border-border bg-dashboard-sidebar shadow-[var(--shadow-float)]" ref={drawerRef} role="dialog">
             <Button aria-label="إغلاق القائمة" className="absolute end-3 top-2.5" onClick={() => { setOpen(false); menuButtonRef.current?.focus(); }} size="icon" variant="ghost"><X /></Button>
             <DashboardNav onNavigate={() => setOpen(false)} pathname={pathname} />
           </aside>
