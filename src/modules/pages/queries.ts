@@ -50,7 +50,7 @@ async function getPageRelationOptions(key: PageKey) {
   const faqsPromise = prisma.fAQ.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } });
   if (key === "HOME") {
     const [services, solutions, projects, faqs] = await Promise.all([
-      prisma.service.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }),
+      prisma.service.findMany({ include: { draftVersion: { include: { heroMedia: true } }, publishedVersion: { include: { heroMedia: true } } }, orderBy: { updatedAt: "desc" } }),
       prisma.solution.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }),
       prisma.project.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }),
       faqsPromise,
@@ -65,20 +65,36 @@ async function getPageRelationOptions(key: PageKey) {
 }
 
 function options<T extends { id: string; status: "DRAFT" | "PUBLISHED" | "ARCHIVED"; draftVersion: Record<string, unknown> | null; publishedVersion: Record<string, unknown> | null }>(items: T[], field: string, fallback: string): CmsRelationOption[] {
-  return items.map((item) => ({ id: item.id, label: String(item.draftVersion?.[field] ?? item.publishedVersion?.[field] ?? fallback), status: item.status }));
+  return items.map((item) => ({
+    id: item.id,
+    label: String(item.draftVersion?.[field] ?? item.publishedVersion?.[field] ?? fallback),
+    imageUrl: relationImageUrl(item.draftVersion) ?? relationImageUrl(item.publishedVersion),
+    status: item.status,
+  }));
+}
+function relationImageUrl(version: Record<string, unknown> | null) {
+  const media = version?.heroMedia;
+  if (!media || typeof media !== "object" || !("url" in media)) return undefined;
+  return typeof media.url === "string" ? media.url : undefined;
 }
 function faqOptions<T extends { id: string; status: "DRAFT" | "PUBLISHED" | "ARCHIVED"; draftVersion: { question: string | null } | null; publishedVersion: { question: string | null } | null }>(items: T[]): CmsRelationOption[] { return items.map((item) => ({ id: item.id, label: item.draftVersion?.question ?? item.publishedVersion?.question ?? "سؤال بدون عنوان", status: item.status })); }
 
 async function resolveSelections(key: PageKey, data: StaticPageData, preview: boolean) {
   const versionInclude = preview ? { draftVersion: true, publishedVersion: true } : { publishedVersion: true };
+  const serviceVersionInclude = preview
+    ? { draftVersion: { include: { heroMedia: true } }, publishedVersion: { include: { heroMedia: true } } }
+    : { publishedVersion: { include: { heroMedia: true } } };
+  const solutionVersionInclude = preview
+    ? { draftVersion: { include: { heroMedia: true } }, publishedVersion: { include: { heroMedia: true } } }
+    : { publishedVersion: { include: { heroMedia: true } } };
   const statusWhere = preview ? {} : { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } };
   const heroMediaId = "mediaId" in data.hero ? data.hero.mediaId || null : null;
   const homeData = key === "HOME" ? data as Extract<StaticPageData, { featuredServices: unknown }> : null;
   const pricesData = key === "PRICES" ? data as Extract<StaticPageData, { selectedPricingArticleIds: unknown }> : null;
   const [heroMedia, services, solutions, materials, projects, articles, faqs, settings] = await Promise.all([
     heroMediaId ? prisma.media.findUnique({ where: { id: heroMediaId } }) : null,
-    homeData ? prisma.service.findMany({ where: { id: { in: homeData.featuredServices.selectedServiceIds }, ...statusWhere }, include: versionInclude }) : key === "CONTACT" ? prisma.service.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],
-    homeData ? prisma.solution.findMany({ where: { id: { in: homeData.featuredSolutions.selectedSolutionIds }, ...statusWhere }, include: versionInclude }) : key === "CONTACT" ? prisma.solution.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],
+    homeData ? prisma.service.findMany({ where: { id: { in: homeData.featuredServices.selectedServiceIds }, ...statusWhere }, include: serviceVersionInclude }) : key === "CONTACT" ? prisma.service.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],
+    homeData ? prisma.solution.findMany({ where: { id: { in: homeData.featuredSolutions.selectedSolutionIds }, ...statusWhere }, include: solutionVersionInclude }) : key === "CONTACT" ? prisma.solution.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],
     key === "CONTACT" ? prisma.material.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],
     homeData ? prisma.project.findMany({ where: { id: { in: homeData.featuredProjects.selectedProjectIds }, ...statusWhere }, include: { ...versionInclude, publishedVersion: { include: { coverMedia: true } }, ...(preview ? { draftVersion: { include: { coverMedia: true } } } : {}) } }) : [],
     pricesData ? prisma.article.findMany({ where: { id: { in: pricesData.selectedPricingArticleIds }, ...statusWhere, ...(preview ? {} : { publishedVersion: { articleType: "PRICING" } }) }, include: versionInclude }) : [],

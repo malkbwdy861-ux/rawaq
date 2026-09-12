@@ -29,7 +29,7 @@ export async function createPageDraftAction(formData: FormData) {
     await tx.page.update({ where: { id: page.id }, data: { draftVersionId: page.versions[0]?.id } });
   });
   revalidatePath("/dashboard/pages");
-  redirect(`/dashboard/pages/${parsed.data}?success=${encodeURIComponent("تم إنشاء مسودة الصفحة.")}`);
+  redirect(`/dashboard/pages/${parsed.data}?success=${encodeURIComponent("تم إنشاء الصفحة.")}`);
 }
 
 export async function savePageDraftAction(formData: FormData) {

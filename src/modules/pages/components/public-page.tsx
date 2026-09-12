@@ -1,4 +1,4 @@
-import { ImageIcon, MapPin, MessageCircle, Settings2, ShieldCheck, UsersRound } from "lucide-react";
+import { ArrowLeft, ImageIcon, MapPin, MessageCircle, Settings2, ShieldCheck, UsersRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -11,9 +11,10 @@ import { buildWhatsAppUrl, digitsOnly, phoneHref } from "@/modules/settings/cont
 import { ContactWhatsappForm } from "@/modules/settings/components/contact-whatsapp-form";
 
 import type { AboutPageData, ContactPageData, HomePageData, PricesPageData, StaticPageData } from "../validation";
+import { FeaturedSolutions, type FeaturedSolutionItem } from "./featured-solutions";
 
 type Media = { url: string; altText: string | null; caption?: string | null };
-type Version = { title?: string | null; name?: string | null; slug?: string | null; shortDescription?: string | null; excerpt?: string | null; question?: string | null; answer?: string | null; coverMedia?: Media | null };
+type Version = { title?: string | null; name?: string | null; slug?: string | null; shortDescription?: string | null; excerpt?: string | null; question?: string | null; answer?: string | null; coverMedia?: Media | null; heroMedia?: Media | null };
 type Entity = { id: string; draftVersion?: Version | null; publishedVersion?: Version | null };
 export type ResolvedPageData = { heroMedia: Media | null; services: Entity[]; solutions: Entity[]; materials: Entity[]; projects: Entity[]; articles: Entity[]; faqs: Entity[]; settings: { primaryPhone: string; secondaryPhone: string | null; whatsappNumber: string; email: string | null; address: string | null; businessHours: string | null; defaultSeoTitle: string | null; defaultSeoDescription: string | null; defaultOpenGraphImage?: { url: string } | null; defaultWhatsappText: string | null; defaultCtaText: string | null } | null };
 
@@ -30,6 +31,17 @@ export function PublicPage({ pageKey, data, resolved, preview = false }: { pageK
 function HomeContent({ data, resolved, preview }: { data: HomePageData; resolved: ResolvedPageData; preview: boolean }) {
   const services = ordered(data.featuredServices.selectedServiceIds, resolved.services);
   const solutions = ordered(data.featuredSolutions.selectedSolutionIds, resolved.solutions);
+  const solutionItems = solutions.flatMap((item): FeaturedSolutionItem[] => {
+    const version = entityVersion(item, preview);
+    if (!version?.title || !version.shortDescription) return [];
+    return [{
+      id: item.id,
+      title: version.title,
+      shortDescription: version.shortDescription,
+      href: !preview && version.slug ? cmsContentPath("/solutions", version.slug) : null,
+      image: version.heroMedia ? { url: version.heroMedia.url, altText: version.heroMedia.altText || version.title } : null,
+    }];
+  });
   const projects = ordered(data.featuredProjects.selectedProjectIds, resolved.projects);
   const faqs = faqItems(data.faqSection.selectedFaqIds, resolved.faqs, preview);
   return <>
@@ -51,8 +63,8 @@ function HomeContent({ data, resolved, preview }: { data: HomePageData; resolved
         {data.trustSection.items.length ? <HeroTrustStrip items={data.trustSection.items.slice(0, 3)} /> : null}
       </div>
     </section>
-    <EntityRows title={data.featuredServices.title || "الخدمات"} description={data.featuredServices.description} items={services} prefix="/services" preview={preview} />
-    {solutions.length ? <section className="bg-[oklch(95.5%_0.018_145)] px-4 py-16 md:px-8 md:py-20"><div className="mx-auto max-w-7xl"><EntityRowsInner title={data.featuredSolutions.title || "الحلول"} description={data.featuredSolutions.description} items={solutions} prefix="/solutions" preview={preview} /></div></section> : null}
+    <FeaturedServices items={services} preview={preview} />
+    {solutionItems.length ? <FeaturedSolutions title={data.featuredSolutions.title || "حلول تظليل لكل نوع من المشاريع"} description={data.featuredSolutions.description} items={solutionItems} /> : null}
     <ProjectSection title={data.featuredProjects.title || "مشاريع مختارة"} description={data.featuredProjects.description} items={projects} preview={preview} />
     {faqs.length ? <section className="px-4 py-16 md:px-8 md:py-20" id="faq"><div className="mx-auto max-w-4xl space-y-7"><h2 className="text-3xl font-bold leading-[1.35] md:text-4xl">{data.faqSection.title || "الأسئلة الشائعة"}</h2><FaqList items={faqs} /></div></section> : null}
     {!preview && faqs.length ? <FaqStructuredData items={faqs} /> : null}
@@ -78,6 +90,69 @@ function PricesContent({ data, resolved, preview }: { data: PricesPageData; reso
   const articles = ordered(data.selectedPricingArticleIds, resolved.articles);
   const faqs = faqItems(data.faqSection.selectedFaqIds, resolved.faqs, preview);
   return <div className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-20"><Breadcrumb current="الأسعار" /><header className="mt-12 max-w-4xl space-y-5"><p className="text-sm font-semibold text-[oklch(34%_0.065_42)]">مركز الأسعار</p><h1 className="text-4xl font-bold leading-[1.24] md:text-6xl">{data.hero.title}</h1><p className="max-w-[62ch] text-xl leading-[1.7] text-[oklch(42%_0.018_150)]">{data.hero.description}</p></header><section className="grid gap-8 py-20 md:grid-cols-12"><h2 className="text-3xl font-bold md:col-span-4">{data.intro.title}</h2><p className="whitespace-pre-line text-lg leading-[1.9] text-[oklch(42%_0.018_150)] md:col-span-7 md:col-start-6">{data.intro.content}</p></section>{data.pricingFactors.items.length ? <section className="bg-[oklch(37%_0.075_155)] px-5 py-12 text-[oklch(99%_0.004_100)] md:px-10"><h2 className="text-3xl font-bold">{data.pricingFactors.title}</h2><div className="mt-8 divide-y divide-[oklch(64%_0.018_145)]">{data.pricingFactors.items.map((item, index) => <div className="grid gap-3 py-5 md:grid-cols-[4rem_260px_minmax(0,1fr)]" key={`${item.title}-${index}`}><span className="tabular-nums text-[oklch(91%_0.035_55)]">{String(index + 1).padStart(2, "0")}</span><h3 className="text-xl font-semibold">{item.title}</h3><p className="leading-[1.8] text-[oklch(95.5%_0.018_145)]">{item.description}</p></div>)}</div></section> : null}<EntityRows title="أدلة أسعار مفصلة" items={articles} prefix="/guides" preview={preview} />{faqs.length ? <section className="mx-auto max-w-4xl py-16 md:py-20"><h2 className="mb-7 text-3xl font-bold">أسئلة الأسعار</h2><FaqList items={faqs} /></section> : null}{!preview && faqs.length ? <FaqStructuredData items={faqs} /> : null}<FinalBand {...data.finalCta} /></div>;
+}
+
+const serviceSubtitles: Record<string, string> = {
+  "مظلات سيارات": "حماية وأناقة لسيارتك في كل الأوقات",
+  "برجولات": "مساحات خارجية أكثر جمالاً وراحة",
+  "سواتر": "خصوصية وأمان بمظهر عصري",
+  "مظلات حدائق": "استمتع بمساحاتك الخارجية براحة أكبر",
+  "مظلات مدارس": "بيئة مريحة وآمنة للمساحات التعليمية",
+};
+
+const serviceTileClasses = [
+  "min-h-[420px] md:col-span-6 md:min-h-[460px] lg:col-span-6 lg:row-span-2 lg:min-h-0",
+  "min-h-[330px] md:col-span-3 md:min-h-[300px] lg:col-span-3 lg:min-h-0",
+  "min-h-[300px] md:col-span-3 md:min-h-[300px] lg:col-span-3 lg:min-h-0",
+  "min-h-[270px] md:col-span-4 md:min-h-[260px] lg:col-span-4 lg:min-h-0",
+  "min-h-[245px] md:col-span-2 md:min-h-[260px] lg:col-span-2 lg:min-h-0",
+] as const;
+
+function FeaturedServices({ items, preview }: { items: Entity[]; preview: boolean }) {
+  const services = items.slice(0, 5).flatMap((item) => {
+    const version = entityVersion(item, preview);
+    return version?.title ? [{ item, version }] : [];
+  });
+  if (!services.length) return null;
+
+  return <section className="relative overflow-hidden bg-background px-4 py-16 md:px-8 md:py-20 lg:py-24" aria-labelledby="featured-services-title">
+    <div aria-hidden="true" className="absolute inset-x-0 top-0 h-px bg-border" />
+    <div className="mx-auto max-w-7xl">
+      <header className="grid gap-6 md:grid-cols-12 md:items-end">
+        <div className="md:col-span-7">
+          <p className="flex items-center gap-3 text-sm font-semibold text-clay-strong before:h-px before:w-9 before:bg-clay">الخدمات المميزة</p>
+          <h2 className="mt-4 max-w-[700px] text-[clamp(2rem,4vw,3.5rem)] font-bold leading-[1.2] text-pretty" id="featured-services-title">حلول تظليل متكاملة لكل مساحة</h2>
+        </div>
+        <p className="max-w-[54ch] text-[1.0625rem] leading-[1.85] text-text-secondary md:col-span-5 md:pb-1">من المظلات إلى السواتر والبرجولات، نقدم حلول تظليل عصرية تجمع بين الجودة والجمال لتمنحك الراحة والحماية في مختلف المساحات.</p>
+      </header>
+
+      <div className="mt-10 grid grid-cols-1 gap-3 md:mt-12 md:grid-cols-6 md:gap-4 lg:auto-rows-[292px] lg:grid-cols-12">
+        {services.map(({ item, version }, index) => {
+          const subtitle = serviceSubtitles[version.title!] ?? version.shortDescription ?? "حلول مصممة بعناية لتناسب احتياج مساحتك";
+          const panel = <>
+            {version.heroMedia ? <Image alt={version.heroMedia.altText || version.title || ""} className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.035]" fill sizes={index === 0 ? "(min-width: 1024px) 50vw, 100vw" : "(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"} src={version.heroMedia.url} /> : <div aria-hidden="true" className="absolute inset-0 bg-primary [background-image:linear-gradient(125deg,transparent_0%,color-mix(in_oklch,var(--primary-active)_48%,transparent)_100%),linear-gradient(90deg,color-mix(in_oklch,var(--primary-soft)_12%,transparent)_1px,transparent_1px)] [background-size:auto,48px_100%]" />}
+            <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,color-mix(in_oklch,var(--primary-active)_90%,transparent)_0%,color-mix(in_oklch,var(--primary-active)_62%,transparent)_38%,color-mix(in_oklch,var(--primary)_9%,transparent)_76%)] transition-opacity duration-300 group-hover:opacity-90" />
+            <div className="relative z-10 flex h-full flex-col justify-end p-5 text-primary-foreground md:p-6">
+              <div className={`flex gap-4 ${index === 4 ? "items-end md:flex-col md:items-start" : "items-end justify-between"}`}>
+                <div className="min-w-0">
+                  <div className="mb-2 flex items-center gap-3 text-primary-soft"><span className="h-px w-6 bg-clay" /><span className="text-xs font-semibold tabular-nums" dir="ltr">{String(index + 1).padStart(2, "0")}</span></div>
+                  <h3 className={`${index === 0 ? "text-[clamp(1.75rem,3vw,2.5rem)]" : "text-[clamp(1.25rem,2vw,1.75rem)]"} font-bold leading-[1.35]`}>{version.title}</h3>
+                  <p className={`mt-2 max-w-[38ch] leading-[1.7] text-primary-soft ${index === 4 ? "text-xs md:text-sm" : "text-sm md:text-[0.9375rem]"}`}>{subtitle}</p>
+                </div>
+                <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full border border-primary-soft/60 bg-primary-active/50 transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:-translate-x-1 group-hover:bg-primary-active"><ArrowLeft className="size-[18px]" /></span>
+              </div>
+            </div>
+          </>;
+          const className = `group relative isolate overflow-hidden rounded-[12px] outline-none ring-offset-2 ring-offset-background focus-visible:ring-2 focus-visible:ring-ring ${serviceTileClasses[index]}`;
+          return !preview && version.slug ? <Link aria-label={`${version.title}: ${subtitle}`} className={className} href={cmsContentPath("/services", version.slug)} key={item.id}>{panel}</Link> : <article className={className} key={item.id}>{panel}</article>;
+        })}
+      </div>
+
+      <div className="mt-8 flex justify-start md:mt-10">
+        <Link className="group inline-flex min-h-12 items-center gap-3 rounded-[9px] bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors duration-150 hover:bg-primary-hover active:bg-primary-active focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" href="/services">استكشف جميع خدماتنا<ArrowLeft aria-hidden="true" className="size-[18px] transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:-translate-x-1" /></Link>
+      </div>
+    </div>
+  </section>;
 }
 
 function EntityRows({ title, description, items, prefix, preview }: { title: string; description?: string; items: Entity[]; prefix: string; preview: boolean }) { if (!items.length) return null; return <section className="px-4 py-16 md:px-8 md:py-24"><div className="mx-auto max-w-7xl"><EntityRowsInner title={title} description={description} items={items} prefix={prefix} preview={preview} /></div></section>; }

@@ -32,5 +32,6 @@ export type CmsRelationOption = {
   id: string;
   label: string;
   description?: string;
+  imageUrl?: string;
   status?: CmsStatus;
 };
