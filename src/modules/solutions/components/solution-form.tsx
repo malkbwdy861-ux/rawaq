@@ -1,9 +1,8 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { CmsFieldGroup, CmsFieldShell, cmsInputClassName } from "@/modules/cms/components/form";
+import { CmsFieldGroup, CmsFieldShell, CmsTextarea, cmsInputClassName } from "@/modules/cms/components/form";
 import { CmsRelationSelector } from "@/modules/cms/components/relation-selector";
-import { CmsSlugField } from "@/modules/cms/components/slug-field";
 import { CmsStatusBadge } from "@/modules/cms/components/status-badge";
 import type { CmsRelationOption } from "@/modules/cms/types";
 import { MediaPicker, type MediaPickerItem } from "@/modules/media/components/media-picker";
@@ -49,11 +48,10 @@ export function SolutionForm({ solution, media, relationOptions }: { solution: {
         </div>
       </div>
 
-      <CmsFieldGroup title="محتوى الحل" description="هذه الحقول مطلوبة عند النشر وتبقى كمسودة حتى تضغط نشر.">
+      <CmsFieldGroup title="محتوى الحل" description="هذه الحقول مطلوبة عند النشر وتبقى كمسودة حتى تضغط نشر. يتم إنشاء الرابط المختصر تلقائيًا من العنوان.">
         <CmsFieldShell id="title" label="العنوان"><input className={cmsInputClassName} id="title" name="title" defaultValue={draft?.title ?? ""} /></CmsFieldShell>
-        <CmsSlugField defaultValue={draft?.slug} routePrefix="/solutions" sourceValue={draft?.title ?? undefined} />
-        <CmsFieldShell id="shortDescription" label="الوصف المختصر"><textarea className={`${cmsInputClassName} min-h-24`} id="shortDescription" name="shortDescription" defaultValue={draft?.shortDescription ?? ""} /></CmsFieldShell>
-        <CmsFieldShell id="content" label="المحتوى"><textarea className={`${cmsInputClassName} min-h-64`} id="content" name="content" defaultValue={draft?.content ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="shortDescription" label="الوصف المختصر"><CmsTextarea id="shortDescription" name="shortDescription" defaultValue={draft?.shortDescription ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="content" label="المحتوى"><CmsTextarea className="min-h-64" id="content" name="content" defaultValue={draft?.content ?? ""} /></CmsFieldShell>
       </CmsFieldGroup>
 
       <CmsFieldGroup title="الوسائط" description="اختر صورة البطل وصورة المشاركة الاجتماعية من الوسائط الدائمة.">
@@ -63,11 +61,11 @@ export function SolutionForm({ solution, media, relationOptions }: { solution: {
 
       <CmsFieldGroup title="SEO" description="حقول اختيارية لتحسين عنوان ووصف الصفحة العامة بعد النشر.">
         <CmsFieldShell id="seoTitle" label="عنوان SEO"><input className={cmsInputClassName} id="seoTitle" name="seoTitle" defaultValue={draft?.seoTitle ?? ""} /></CmsFieldShell>
-        <CmsFieldShell id="seoDescription" label="وصف SEO"><textarea className={`${cmsInputClassName} min-h-24`} id="seoDescription" name="seoDescription" defaultValue={draft?.seoDescription ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="seoDescription" label="وصف SEO"><CmsTextarea id="seoDescription" name="seoDescription" defaultValue={draft?.seoDescription ?? ""} /></CmsFieldShell>
         <CmsFieldShell id="canonicalUrl" label="الرابط القانوني"><input className={cmsInputClassName} dir="ltr" id="canonicalUrl" name="canonicalUrl" defaultValue={draft?.canonicalUrl ?? ""} /></CmsFieldShell>
         <label className="flex items-center gap-3 text-sm font-semibold"><input className="size-4 accent-[oklch(37%_0.075_155)]" name="noIndex" type="checkbox" defaultChecked={draft?.noIndex ?? false} />منع الفهرسة بعد النشر</label>
         <CmsFieldShell id="openGraphTitle" label="عنوان Open Graph"><input className={cmsInputClassName} id="openGraphTitle" name="openGraphTitle" defaultValue={draft?.openGraphTitle ?? ""} /></CmsFieldShell>
-        <CmsFieldShell id="openGraphDescription" label="وصف Open Graph"><textarea className={`${cmsInputClassName} min-h-24`} id="openGraphDescription" name="openGraphDescription" defaultValue={draft?.openGraphDescription ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="openGraphDescription" label="وصف Open Graph"><CmsTextarea id="openGraphDescription" name="openGraphDescription" defaultValue={draft?.openGraphDescription ?? ""} /></CmsFieldShell>
       </CmsFieldGroup>
 
       <CmsFieldGroup title="العلاقات" description="كل علاقة تحفظ داخل نسخة الحل الحالية ولا تظهر للعامة قبل النشر.">

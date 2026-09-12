@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { cmsContentPath } from "@/modules/cms/slugs";
 import { getPublishedServices } from "@/modules/services/queries";
 import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
 import { listingMetadata } from "@/modules/seo/metadata";
@@ -30,7 +31,7 @@ export default async function ServicesIndexPage() {
               const version = service.publishedVersion;
               if (!version) return null;
               return (
-                <Link className="group grid gap-5 border-b border-border py-7 md:grid-cols-[56px_220px_minmax(0,1fr)_48px] md:items-center md:py-9" href={`/services/${version.slug}`} key={service.id}>
+                <Link className="group grid gap-5 border-b border-border py-7 md:grid-cols-[56px_220px_minmax(0,1fr)_48px] md:items-center md:py-9" href={cmsContentPath("/services", version.slug ?? "")} key={service.id}>
                   <span className="text-sm font-semibold tabular-nums text-clay-strong">{String(index + 1).padStart(2, "0")}</span>
                   {version.heroMedia ? <div className="relative aspect-[4/3] overflow-hidden bg-muted"><Image alt={version.heroMedia.altText ?? version.title ?? ""} className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.025]" fill sizes="220px" src={version.heroMedia.url} /></div> : <div aria-hidden="true" className="hidden aspect-[4/3] grid-cols-5 gap-1 bg-primary-soft p-3 md:grid">{Array.from({ length: 20 }, (_, cell) => <span className="border border-primary/20" key={cell} />)}</div>}
                   <div><h2 className="text-2xl font-bold leading-[1.4] group-hover:text-primary md:text-3xl">{version.title}</h2><p className="mt-3 max-w-[60ch] leading-8 text-text-secondary">{version.shortDescription}</p></div>

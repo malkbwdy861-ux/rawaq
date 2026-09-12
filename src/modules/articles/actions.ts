@@ -4,9 +4,9 @@ import { ContentStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { cmsContentPath, generateUniqueCmsSlug } from "@/modules/cms/slugs";
 import { readStringArray } from "@/modules/cms/validation";
 import { lockPublishingNamespace } from "@/modules/cms/publishing";
-import { savePublishedSlugRedirect } from "@/modules/redirects/service";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
 
@@ -34,10 +34,10 @@ export async function saveArticleDraftAction(formData: FormData) {
 export async function publishArticleAction(formData: FormData) {
   await requireAdmin();
   const parsed = articlePublishSchema.safeParse(readArticleFormData(formData));
-  if (!parsed.success || !parsed.data.articleId) redirectWithMessage(parsed.data?.articleId, "error", "تعذر النشر. أكمل العنوان والرابط والمقتطف والمحتوى.");
+  if (!parsed.success || !parsed.data.articleId) redirectWithMessage(parsed.data?.articleId, "error", "تعذر النشر. أكمل العنوان والمقتطف والمحتوى.");
   try {
-    const oldPath = await publishArticle(parsed.data.articleId, parsed.data);
-    revalidateArticlePaths(parsed.data.articleId, parsed.data.slug, oldPath);
+    const { oldPath, slug } = await publishArticle(parsed.data.articleId, parsed.data);
+    revalidateArticlePaths(parsed.data.articleId, slug, oldPath);
   } catch (error) {
     redirectWithMessage(parsed.data.articleId, "error", error instanceof Error ? error.message : "فشل نشر المقال. بقيت النسخة المنشورة الحالية كما هي.");
   }
@@ -49,7 +49,7 @@ export async function archiveArticleAction(formData: FormData) {
   const parsed = articleIdSchema.safeParse({ articleId: formData.get("articleId") });
   if (!parsed.success) redirect("/dashboard/articles?error=تعذر تحديد المقال المطلوب أرشفته.");
   const article = await prisma.article.update({ where: { id: parsed.data.articleId }, data: { status: ContentStatus.ARCHIVED }, select: { publishedVersion: { select: { slug: true } } } });
-  revalidateArticlePaths(parsed.data.articleId, undefined, article.publishedVersion?.slug ? `/guides/${article.publishedVersion.slug}` : undefined);
+  revalidateArticlePaths(parsed.data.articleId, undefined, article.publishedVersion?.slug ? cmsContentPath("/guides", article.publishedVersion.slug) : undefined);
   redirectWithMessage(parsed.data.articleId, "success", "تمت أرشفة المقال وإزالته من الأدلة العامة.");
 }
 
@@ -57,11 +57,10 @@ function readArticleFormData(formData: FormData) {
   return {
     articleId: formData.get("articleId") || undefined,
     title: formData.get("title") ?? "",
-    slug: formData.get("slug") ?? "",
     excerpt: formData.get("excerpt") ?? "",
     content: formData.get("content") ?? "",
     heroMediaId: formData.get("heroMediaId") ?? "",
-    articleType: formData.get("articleType") ?? "",
+    articleType: formData.get("articleType") === "NONE" ? "" : formData.get("articleType") ?? "",
     seoTitle: formData.get("seoTitle") ?? "",
     seoDescription: formData.get("seoDescription") ?? "",
     canonicalUrl: formData.get("canonicalUrl") ?? "",
@@ -79,14 +78,17 @@ function readArticleFormData(formData: FormData) {
 
 async function saveDraft(articleId: string, input: ArticleDraftInput) {
   await prisma.$transaction(async (tx) => {
-    const article = await tx.article.findUnique({ where: { id: articleId }, select: { draftVersionId: true } });
+    await lockPublishingNamespace(tx, "articles");
+    const article = await tx.article.findUnique({ where: { id: articleId }, include: { publishedVersion: { select: { slug: true } } } });
     if (!article) throw new Error("المقال غير موجود.");
+    const slug = input.title ? await resolveArticleSlug(tx, articleId, input, article.publishedVersion?.slug) : article.publishedVersion?.slug ?? null;
+    const versionData = toVersionData({ ...input, slug: slug ?? undefined });
     let versionId = article.draftVersionId;
     if (!versionId) {
-      const draft = await tx.articleVersion.create({ data: { articleId, ...toVersionData(input) } });
+      const draft = await tx.articleVersion.create({ data: { articleId, ...versionData } });
       versionId = draft.id;
       await tx.article.update({ where: { id: articleId }, data: { draftVersionId: draft.id } });
-    } else await tx.articleVersion.update({ where: { id: versionId }, data: toVersionData(input) });
+    } else await tx.articleVersion.update({ where: { id: versionId }, data: versionData });
     await replaceVersionRelations(tx, versionId, input);
   });
 }
@@ -96,15 +98,15 @@ async function publishArticle(articleId: string, input: ArticlePublishInput) {
     await lockPublishingNamespace(tx, "articles");
     const article = await tx.article.findUnique({ where: { id: articleId }, include: { publishedVersion: { select: { slug: true } } } });
     if (!article?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
-    await tx.articleVersion.update({ where: { id: article.draftVersionId }, data: toVersionData(input) });
+    const slug = await resolveArticleSlug(tx, articleId, input, article.publishedVersion?.slug);
+    const versionData = toVersionData({ ...input, slug });
+    await tx.articleVersion.update({ where: { id: article.draftVersionId }, data: versionData });
     await replaceVersionRelations(tx, article.draftVersionId, input);
-    await assertSlugAvailable(tx, articleId, input.slug);
-    const published = await tx.articleVersion.create({ data: { articleId, ...toVersionData(input) } });
+    const published = await tx.articleVersion.create({ data: { articleId, ...versionData } });
     await replaceVersionRelations(tx, published.id, input);
-    const oldPath = article.publishedVersion?.slug ? `/guides/${article.publishedVersion.slug}` : undefined;
-    if (oldPath && article.publishedVersion?.slug !== input.slug) await savePublishedSlugRedirect(tx, oldPath, `/guides/${input.slug}`);
+    const oldPath = article.publishedVersion?.slug ? cmsContentPath("/guides", article.publishedVersion.slug) : undefined;
     await tx.article.update({ where: { id: articleId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
-    return oldPath;
+    return { oldPath, slug };
   });
 }
 
@@ -114,9 +116,9 @@ function revalidateArticleDraftPaths(articleId: string) {
   revalidatePath(`/preview/articles/${articleId}`);
 }
 
-async function assertSlugAvailable(tx: Prisma.TransactionClient, articleId: string, slug: string) {
-  const collision = await tx.article.findFirst({ where: { id: { not: articleId }, OR: [{ publishedVersion: { slug } }, { draftVersion: { slug } }] }, select: { id: true } });
-  if (collision) throw new Error("الرابط المختصر مستخدم في مقال آخر.");
+async function resolveArticleSlug(tx: Prisma.TransactionClient, articleId: string, input: ArticleDraftInput, publishedSlug?: string | null) {
+  if (publishedSlug) return publishedSlug;
+  return generateUniqueCmsSlug({ tx, contentType: "articles", contentId: articleId, source: input.title ?? "" });
 }
 
 function toVersionData(input: ArticleDraftInput) {
@@ -158,7 +160,7 @@ function revalidateArticlePaths(articleId: string, slug?: string, oldPath?: stri
   revalidatePath("/dashboard/articles");
   revalidatePath(`/dashboard/articles/${articleId}`);
   revalidatePath("/guides");
-  if (slug) revalidatePath(`/guides/${slug}`);
+  if (slug) revalidatePath(cmsContentPath("/guides", slug));
   if (oldPath) revalidatePath(oldPath);
   revalidatePath("/sitemap.xml");
 }

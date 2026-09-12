@@ -4,9 +4,9 @@ import { ContentStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { cmsContentPath, generateUniqueCmsSlug } from "@/modules/cms/slugs";
 import { readStringArray } from "@/modules/cms/validation";
 import { lockPublishingNamespace } from "@/modules/cms/publishing";
-import { savePublishedSlugRedirect } from "@/modules/redirects/service";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
 
@@ -42,12 +42,12 @@ export async function publishMaterialAction(formData: FormData) {
 
   const parsed = materialPublishSchema.safeParse(readMaterialFormData(formData));
   if (!parsed.success || !parsed.data.materialId) {
-    redirectWithMessage(parsed.data?.materialId, "error", "تعذر النشر. أكمل الاسم والرابط والوصف والمحتوى.");
+    redirectWithMessage(parsed.data?.materialId, "error", "تعذر النشر. أكمل الاسم والوصف والمحتوى.");
   }
 
   try {
-    const oldPath = await publishMaterial(parsed.data.materialId, parsed.data);
-    revalidateMaterialPaths(parsed.data.materialId, parsed.data.slug, oldPath);
+    const { oldPath, slug } = await publishMaterial(parsed.data.materialId, parsed.data);
+    revalidateMaterialPaths(parsed.data.materialId, slug, oldPath);
   } catch (error) {
     const message = error instanceof Error ? error.message : "فشل نشر المادة. بقيت النسخة المنشورة الحالية كما هي.";
     redirectWithMessage(parsed.data.materialId, "error", message);
@@ -63,7 +63,7 @@ export async function archiveMaterialAction(formData: FormData) {
   if (!parsed.success) redirect("/dashboard/materials?error=تعذر تحديد المادة المطلوب أرشفتها.");
 
   const material = await prisma.material.update({ where: { id: parsed.data.materialId }, data: { status: ContentStatus.ARCHIVED }, select: { publishedVersion: { select: { slug: true } } } });
-  revalidateMaterialPaths(parsed.data.materialId, undefined, material.publishedVersion?.slug ? `/materials/${material.publishedVersion.slug}` : undefined);
+  revalidateMaterialPaths(parsed.data.materialId, undefined, material.publishedVersion?.slug ? cmsContentPath("/materials", material.publishedVersion.slug) : undefined);
   redirectWithMessage(parsed.data.materialId, "success", "تمت أرشفة المادة وإزالتها من العرض العام.");
 }
 
@@ -71,7 +71,6 @@ function readMaterialFormData(formData: FormData) {
   return {
     materialId: formData.get("materialId") || undefined,
     name: formData.get("name") ?? "",
-    slug: formData.get("slug") ?? "",
     shortDescription: formData.get("shortDescription") ?? "",
     content: formData.get("content") ?? "",
     advantages: readLines(formData.get("advantages")),
@@ -95,7 +94,10 @@ function readMaterialFormData(formData: FormData) {
 }
 
 async function saveDraft(materialId: string, input: MaterialDraftInput) {
-  await prisma.$transaction(async (tx) => saveDraftInTransaction(tx, materialId, input));
+  await prisma.$transaction(async (tx) => {
+    await lockPublishingNamespace(tx, "materials");
+    await saveDraftInTransaction(tx, materialId, input);
+  });
 }
 
 async function publishMaterial(materialId: string, input: MaterialPublishInput) {
@@ -104,41 +106,38 @@ async function publishMaterial(materialId: string, input: MaterialPublishInput) 
     const material = await tx.material.findUnique({ where: { id: materialId }, include: { publishedVersion: { select: { slug: true } } } });
     if (!material?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
 
-    await tx.materialVersion.update({ where: { id: material.draftVersionId }, data: toVersionData(input) });
+    const slug = await resolveMaterialSlug(tx, materialId, input, material.publishedVersion?.slug);
+    const versionData = toVersionData({ ...input, slug });
+    await tx.materialVersion.update({ where: { id: material.draftVersionId }, data: versionData });
     await replaceRelations(tx, material.draftVersionId, input);
-    await assertSlugAvailable(tx, materialId, input.slug);
-    const published = await tx.materialVersion.create({ data: { materialId, ...toVersionData(input) } });
+    const published = await tx.materialVersion.create({ data: { materialId, ...versionData } });
     await replaceRelations(tx, published.id, input);
 
-    const oldPath = material.publishedVersion?.slug ? `/materials/${material.publishedVersion.slug}` : undefined;
-    if (oldPath && material.publishedVersion?.slug !== input.slug) await savePublishedSlugRedirect(tx, oldPath, `/materials/${input.slug}`);
-
+    const oldPath = material.publishedVersion?.slug ? cmsContentPath("/materials", material.publishedVersion.slug) : undefined;
     await tx.material.update({ where: { id: materialId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
-    return oldPath;
+    return { oldPath, slug };
   });
 }
 
 async function saveDraftInTransaction(tx: Prisma.TransactionClient, materialId: string, input: MaterialDraftInput) {
-  const material = await tx.material.findUnique({ where: { id: materialId }, select: { draftVersionId: true } });
+  const material = await tx.material.findUnique({ where: { id: materialId }, include: { publishedVersion: { select: { slug: true } } } });
   if (!material) throw new Error("المادة غير موجودة.");
+  const slug = input.name ? await resolveMaterialSlug(tx, materialId, input, material.publishedVersion?.slug) : material.publishedVersion?.slug ?? null;
+  const versionData = toVersionData({ ...input, slug: slug ?? undefined });
   let versionId = material.draftVersionId;
   if (!versionId) {
-    const draft = await tx.materialVersion.create({ data: { materialId, ...toVersionData(input) } });
+    const draft = await tx.materialVersion.create({ data: { materialId, ...versionData } });
     versionId = draft.id;
     await tx.material.update({ where: { id: materialId }, data: { draftVersionId: draft.id } });
   } else {
-    await tx.materialVersion.update({ where: { id: versionId }, data: toVersionData(input) });
+    await tx.materialVersion.update({ where: { id: versionId }, data: versionData });
   }
   await replaceRelations(tx, versionId, input);
 }
 
-async function assertSlugAvailable(tx: Prisma.TransactionClient, materialId: string, slug: string) {
-  const collision = await tx.material.findFirst({
-    where: { id: { not: materialId }, OR: [{ publishedVersion: { slug } }, { draftVersion: { slug } }] },
-    select: { id: true },
-  });
-
-  if (collision) throw new Error("الرابط المختصر مستخدم في مادة أخرى.");
+async function resolveMaterialSlug(tx: Prisma.TransactionClient, materialId: string, input: MaterialDraftInput, publishedSlug?: string | null) {
+  if (publishedSlug) return publishedSlug;
+  return generateUniqueCmsSlug({ tx, contentType: "materials", contentId: materialId, source: input.name ?? "" });
 }
 
 function toVersionData(input: MaterialDraftInput) {
@@ -194,7 +193,7 @@ function revalidateMaterialPaths(materialId: string, slug?: string, oldPath?: st
   revalidatePath("/dashboard/materials");
   revalidatePath(`/dashboard/materials/${materialId}`);
   revalidatePath("/materials");
-  if (slug) revalidatePath(`/materials/${slug}`);
+  if (slug) revalidatePath(cmsContentPath("/materials", slug));
   if (oldPath) revalidatePath(oldPath);
   revalidatePath("/sitemap.xml");
 }

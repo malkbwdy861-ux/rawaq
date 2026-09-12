@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { cmsRelationIdsSchema, cmsSeoFieldsSchema, cmsSlugSchema } from "@/modules/cms/validation";
+import { cmsRelationIdsSchema, cmsSeoFieldsSchema } from "@/modules/cms/validation";
 
 const optionalText = z.string().trim().optional().or(z.literal(""));
 const optionalMediaId = z.string().cuid().optional().or(z.literal(""));
@@ -26,7 +26,6 @@ export const materialDraftSchema = cmsSeoFieldsSchema.extend({
 
 export const materialPublishSchema = materialDraftSchema.extend({
   name: z.string().trim().min(1, "أدخل اسم المادة."),
-  slug: cmsSlugSchema,
   shortDescription: z.string().trim().min(1, "أدخل وصفًا مختصرًا للمادة."),
   content: z.string().trim().min(1, "أدخل محتوى المادة."),
 });

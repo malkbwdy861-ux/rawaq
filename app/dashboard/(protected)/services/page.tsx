@@ -2,6 +2,7 @@ import { ExternalLink, FilePlus2, ImageIcon, MoreHorizontal, Pencil } from "luci
 import Image from "next/image";
 import Link from "next/link";
 
+import { cmsContentPath } from "@/modules/cms/slugs";
 import { CmsStateBlock } from "@/modules/cms/components/state-blocks";
 import { getCmsStatusLabel } from "@/modules/cms/components/status-badge";
 import { createServiceAction } from "@/modules/services/actions";
@@ -58,5 +59,5 @@ function ServiceStatus({ service }: { service: ServiceRecord }) {
 }
 
 function ServiceActions({ service, slug }: { service: ServiceRecord; slug?: string | null }) {
-  return <details className="group relative"><summary aria-label="إجراءات الخدمة" className="grid size-9 cursor-pointer list-none place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground marker:content-none"><MoreHorizontal className="size-[18px]" /></summary><div className="absolute end-0 top-[calc(100%+4px)] z-20 w-44 rounded-xl border border-border bg-popover p-1.5 shadow-[var(--shadow-float)]"><Link className="flex min-h-9 items-center gap-2 rounded-md px-2 text-sm font-medium hover:bg-dashboard-hover" href={`/dashboard/services/${service.id}`}><Pencil className="size-4" />تحرير الخدمة</Link>{service.status === "PUBLISHED" && slug ? <Link className="flex min-h-9 items-center gap-2 rounded-md px-2 text-sm font-medium hover:bg-dashboard-hover" href={`/services/${slug}`} target="_blank"><ExternalLink className="size-4" />فتح في الموقع</Link> : null}</div></details>;
+  return <details className="group relative"><summary aria-label="إجراءات الخدمة" className="grid size-9 cursor-pointer list-none place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground marker:content-none"><MoreHorizontal className="size-[18px]" /></summary><div className="absolute end-0 top-[calc(100%+4px)] z-20 w-44 rounded-xl border border-border bg-popover p-1.5 shadow-[var(--shadow-float)]"><Link className="flex min-h-9 items-center gap-2 rounded-md px-2 text-sm font-medium hover:bg-dashboard-hover" href={`/dashboard/services/${service.id}`}><Pencil className="size-4" />تحرير الخدمة</Link>{service.status === "PUBLISHED" && slug ? <Link className="flex min-h-9 items-center gap-2 rounded-md px-2 text-sm font-medium hover:bg-dashboard-hover" href={cmsContentPath("/services", slug)} target="_blank"><ExternalLink className="size-4" />فتح في الموقع</Link> : null}</div></details>;
 }

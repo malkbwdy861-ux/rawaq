@@ -4,9 +4,9 @@ import { ContentStatus, type Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { cmsContentPath, generateUniqueCmsSlug } from "@/modules/cms/slugs";
 import { readStringArray } from "@/modules/cms/validation";
 import { lockPublishingNamespace } from "@/modules/cms/publishing";
-import { savePublishedSlugRedirect } from "@/modules/redirects/service";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
 
@@ -37,11 +37,11 @@ export async function publishProjectAction(formData: FormData) {
   await requireAdmin();
   const parsed = projectPublishSchema.safeParse(readProjectFormData(formData));
   if (!parsed.success || !parsed.data.projectId) {
-    redirectWithMessage(parsed.data?.projectId, "error", "تعذر النشر. أكمل العنوان والرابط والوصف المختصر.");
+    redirectWithMessage(parsed.data?.projectId, "error", "تعذر النشر. أكمل العنوان والوصف المختصر.");
   }
   try {
-    const oldPath = await publishProject(parsed.data.projectId, parsed.data);
-    revalidateProjectPaths(parsed.data.projectId, parsed.data.slug, oldPath);
+    const { oldPath, slug } = await publishProject(parsed.data.projectId, parsed.data);
+    revalidateProjectPaths(parsed.data.projectId, slug, oldPath);
   } catch (error) {
     const message = error instanceof Error ? error.message : "فشل نشر المشروع. بقيت النسخة المنشورة الحالية كما هي.";
     redirectWithMessage(parsed.data.projectId, "error", message);
@@ -54,7 +54,7 @@ export async function archiveProjectAction(formData: FormData) {
   const parsed = projectIdSchema.safeParse({ projectId: formData.get("projectId") });
   if (!parsed.success) redirect("/dashboard/projects?error=تعذر تحديد المشروع المطلوب أرشفته.");
   const project = await prisma.project.update({ where: { id: parsed.data.projectId }, data: { status: ContentStatus.ARCHIVED }, select: { publishedVersion: { select: { slug: true } } } });
-  revalidateProjectPaths(parsed.data.projectId, undefined, project.publishedVersion?.slug ? `/projects/${project.publishedVersion.slug}` : undefined);
+  revalidateProjectPaths(parsed.data.projectId, undefined, project.publishedVersion?.slug ? cmsContentPath("/projects", project.publishedVersion.slug) : undefined);
   redirectWithMessage(parsed.data.projectId, "success", "تمت أرشفة المشروع وإزالته من العرض العام.");
 }
 
@@ -63,7 +63,6 @@ function readProjectFormData(formData: FormData) {
   return {
     projectId: formData.get("projectId") || undefined,
     title: formData.get("title") ?? "",
-    slug: formData.get("slug") ?? "",
     shortDescription: formData.get("shortDescription") ?? "",
     content: formData.get("content") ?? "",
     challenge: formData.get("challenge") ?? "",
@@ -93,15 +92,18 @@ function readProjectFormData(formData: FormData) {
 
 async function saveDraft(projectId: string, input: ProjectDraftInput) {
   await prisma.$transaction(async (tx) => {
-    const project = await tx.project.findUnique({ where: { id: projectId }, select: { draftVersionId: true } });
+    await lockPublishingNamespace(tx, "projects");
+    const project = await tx.project.findUnique({ where: { id: projectId }, include: { publishedVersion: { select: { slug: true } } } });
     if (!project) throw new Error("المشروع غير موجود.");
+    const slug = input.title ? await resolveProjectSlug(tx, projectId, input, project.publishedVersion?.slug) : project.publishedVersion?.slug ?? null;
+    const versionData = toVersionData({ ...input, slug: slug ?? undefined });
     let versionId = project.draftVersionId;
     if (!versionId) {
-      const draft = await tx.projectVersion.create({ data: { projectId, ...toVersionData(input) } });
+      const draft = await tx.projectVersion.create({ data: { projectId, ...versionData } });
       versionId = draft.id;
       await tx.project.update({ where: { id: projectId }, data: { draftVersionId: draft.id } });
     } else {
-      await tx.projectVersion.update({ where: { id: versionId }, data: toVersionData(input) });
+      await tx.projectVersion.update({ where: { id: versionId }, data: versionData });
     }
     await replaceVersionCollections(tx, versionId, input);
   });
@@ -112,15 +114,15 @@ async function publishProject(projectId: string, input: ProjectPublishInput) {
     await lockPublishingNamespace(tx, "projects");
     const project = await tx.project.findUnique({ where: { id: projectId }, include: { publishedVersion: { select: { slug: true } } } });
     if (!project?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
-    await tx.projectVersion.update({ where: { id: project.draftVersionId }, data: toVersionData(input) });
+    const slug = await resolveProjectSlug(tx, projectId, input, project.publishedVersion?.slug);
+    const versionData = toVersionData({ ...input, slug });
+    await tx.projectVersion.update({ where: { id: project.draftVersionId }, data: versionData });
     await replaceVersionCollections(tx, project.draftVersionId, input);
-    await assertSlugAvailable(tx, projectId, input.slug);
-    const published = await tx.projectVersion.create({ data: { projectId, ...toVersionData(input) } });
+    const published = await tx.projectVersion.create({ data: { projectId, ...versionData } });
     await replaceVersionCollections(tx, published.id, input);
-    const oldPath = project.publishedVersion?.slug ? `/projects/${project.publishedVersion.slug}` : undefined;
-    if (oldPath && project.publishedVersion?.slug !== input.slug) await savePublishedSlugRedirect(tx, oldPath, `/projects/${input.slug}`);
+    const oldPath = project.publishedVersion?.slug ? cmsContentPath("/projects", project.publishedVersion.slug) : undefined;
     await tx.project.update({ where: { id: projectId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
-    return oldPath;
+    return { oldPath, slug };
   });
 }
 
@@ -130,12 +132,9 @@ function revalidateProjectDraftPaths(projectId: string) {
   revalidatePath(`/preview/projects/${projectId}`);
 }
 
-async function assertSlugAvailable(tx: Prisma.TransactionClient, projectId: string, slug: string) {
-  const collision = await tx.project.findFirst({
-    where: { id: { not: projectId }, OR: [{ publishedVersion: { slug } }, { draftVersion: { slug } }] },
-    select: { id: true },
-  });
-  if (collision) throw new Error("الرابط المختصر مستخدم في مشروع آخر.");
+async function resolveProjectSlug(tx: Prisma.TransactionClient, projectId: string, input: ProjectDraftInput, publishedSlug?: string | null) {
+  if (publishedSlug) return publishedSlug;
+  return generateUniqueCmsSlug({ tx, contentType: "projects", contentId: projectId, source: input.title ?? "" });
 }
 
 function toVersionData(input: ProjectDraftInput) {
@@ -182,7 +181,7 @@ function revalidateProjectPaths(projectId: string, slug?: string, oldPath?: stri
   revalidatePath("/dashboard/projects");
   revalidatePath(`/dashboard/projects/${projectId}`);
   revalidatePath("/projects");
-  if (slug) revalidatePath(`/projects/${slug}`);
+  if (slug) revalidatePath(cmsContentPath("/projects", slug));
   if (oldPath) revalidatePath(oldPath);
   revalidatePath("/sitemap.xml");
 }

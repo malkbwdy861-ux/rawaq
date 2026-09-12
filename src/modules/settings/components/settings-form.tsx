@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CmsFieldGroup, CmsFieldShell, cmsInputClassName } from "@/modules/cms/components/form";
+import { CmsFieldGroup, CmsFieldShell, CmsTextarea, cmsInputClassName } from "@/modules/cms/components/form";
 import { MediaPicker, type MediaPickerItem } from "@/modules/media/components/media-picker";
 
 import { saveSiteSettingsAction } from "../actions";
@@ -80,5 +80,5 @@ function Text({ id, label, value, ltr, required }: { id: string; label: string; 
 }
 
 function Area({ id, label, value }: { id: string; label: string; value?: string | null }) {
-  return <CmsFieldShell id={id} label={label}><textarea className={`${cmsInputClassName} min-h-24`} id={id} name={id} defaultValue={value ?? ""} /></CmsFieldShell>;
+  return <CmsFieldShell id={id} label={label}><CmsTextarea id={id} name={id} defaultValue={value ?? ""} /></CmsFieldShell>;
 }

@@ -1,7 +1,7 @@
 import { ArticleType } from "@prisma/client";
 import { z } from "zod";
 
-import { cmsRelationIdsSchema, cmsSeoFieldsSchema, cmsSlugSchema } from "@/modules/cms/validation";
+import { cmsRelationIdsSchema, cmsSeoFieldsSchema } from "@/modules/cms/validation";
 
 import { isTipTapDocument, tipTapDocumentHasText, type TipTapDocument } from "./content";
 
@@ -43,7 +43,6 @@ export const articleDraftSchema = cmsSeoFieldsSchema.extend({
 
 export const articlePublishSchema = articleDraftSchema.extend({
   title: z.string().trim().min(1, "أدخل عنوان المقال."),
-  slug: cmsSlugSchema,
   excerpt: z.string().trim().min(1, "أدخل مقتطف المقال."),
   content: articleContentSchema.refine((content) => content && tipTapDocumentHasText(content), "أدخل محتوى المقال."),
 });

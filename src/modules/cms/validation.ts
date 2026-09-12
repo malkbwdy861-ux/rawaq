@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { normalizeCmsSlug } from "./slugs";
 import type { CmsPagination } from "./types";
 
 export const cmsPageSizeOptions = [10, 20, 50] as const;
@@ -9,7 +10,7 @@ export const cmsSlugSchema = z
   .trim()
   .min(1, "أدخل الرابط المختصر.")
   .max(120, "الرابط المختصر طويل جدًا.")
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "استخدم أحرفًا لاتينية صغيرة وأرقامًا وشرطات فقط.");
+  .regex(/^[a-z0-9\p{Script=Arabic}]+(?:-[a-z0-9\p{Script=Arabic}]+)*$/u, "استخدم أحرفًا عربية أو لاتينية صغيرة وأرقامًا وشرطات فقط.");
 
 export const optionalCmsSlugSchema = z.preprocess(
   (value) => (value === "" ? undefined : value),
@@ -44,14 +45,7 @@ export const cmsSeoFieldsSchema = z.object({
   openGraphImageId: z.string().cuid().optional().or(z.literal("")),
 });
 
-export function normalizeCmsSlug(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/-{2,}/g, "-");
-}
+export { normalizeCmsSlug };
 
 export function parseCmsSearchParams(input: Record<string, string | string[] | undefined>) {
   return cmsSearchParamsSchema.parse({

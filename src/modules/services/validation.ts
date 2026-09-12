@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { cmsRelationIdsSchema, cmsSeoFieldsSchema, cmsSlugSchema } from "@/modules/cms/validation";
+import { cmsRelationIdsSchema, cmsSeoFieldsSchema } from "@/modules/cms/validation";
 
 const optionalText = z.string().trim().optional().or(z.literal(""));
 const optionalMediaId = z.string().cuid().optional().or(z.literal(""));
@@ -21,7 +21,6 @@ export const serviceDraftSchema = cmsSeoFieldsSchema.extend({
 
 export const servicePublishSchema = serviceDraftSchema.extend({
   title: z.string().trim().min(1, "أدخل عنوان الخدمة."),
-  slug: cmsSlugSchema,
   shortDescription: z.string().trim().min(1, "أدخل وصفًا مختصرًا للخدمة."),
   content: z.string().trim().min(1, "أدخل محتوى الخدمة."),
 });

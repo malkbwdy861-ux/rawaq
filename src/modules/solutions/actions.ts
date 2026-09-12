@@ -4,9 +4,9 @@ import { ContentStatus, type Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { cmsContentPath, generateUniqueCmsSlug } from "@/modules/cms/slugs";
 import { readStringArray } from "@/modules/cms/validation";
 import { lockPublishingNamespace } from "@/modules/cms/publishing";
-import { savePublishedSlugRedirect } from "@/modules/redirects/service";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
 
@@ -42,12 +42,12 @@ export async function publishSolutionAction(formData: FormData) {
 
   const parsed = solutionPublishSchema.safeParse(readSolutionFormData(formData));
   if (!parsed.success || !parsed.data.solutionId) {
-    redirectWithMessage(parsed.data?.solutionId, "error", "تعذر النشر. أكمل العنوان والرابط والوصف والمحتوى.");
+    redirectWithMessage(parsed.data?.solutionId, "error", "تعذر النشر. أكمل العنوان والوصف والمحتوى.");
   }
 
   try {
-    const oldPath = await publishSolution(parsed.data.solutionId, parsed.data);
-    revalidateSolutionPaths(parsed.data.solutionId, parsed.data.slug, oldPath);
+    const { oldPath, slug } = await publishSolution(parsed.data.solutionId, parsed.data);
+    revalidateSolutionPaths(parsed.data.solutionId, slug, oldPath);
   } catch (error) {
     const message = error instanceof Error ? error.message : "فشل نشر الحل. بقيت النسخة المنشورة الحالية كما هي.";
     redirectWithMessage(parsed.data.solutionId, "error", message);
@@ -66,7 +66,7 @@ export async function archiveSolutionAction(formData: FormData) {
 
   const solution = await prisma.solution.update({ where: { id: parsed.data.solutionId }, data: { status: ContentStatus.ARCHIVED }, select: { publishedVersion: { select: { slug: true } } } });
 
-  revalidateSolutionPaths(parsed.data.solutionId, undefined, solution.publishedVersion?.slug ? `/solutions/${solution.publishedVersion.slug}` : undefined);
+  revalidateSolutionPaths(parsed.data.solutionId, undefined, solution.publishedVersion?.slug ? cmsContentPath("/solutions", solution.publishedVersion.slug) : undefined);
   redirectWithMessage(parsed.data.solutionId, "success", "تمت أرشفة الحل وإزالته من العرض العام.");
 }
 
@@ -74,7 +74,6 @@ function readSolutionFormData(formData: FormData) {
   return {
     solutionId: formData.get("solutionId") || undefined,
     title: formData.get("title") ?? "",
-    slug: formData.get("slug") ?? "",
     shortDescription: formData.get("shortDescription") ?? "",
     content: formData.get("content") ?? "",
     heroMediaId: formData.get("heroMediaId") ?? "",
@@ -94,7 +93,10 @@ function readSolutionFormData(formData: FormData) {
 }
 
 async function saveDraft(solutionId: string, input: SolutionDraftInput) {
-  await prisma.$transaction(async (tx) => saveDraftInTransaction(tx, solutionId, input));
+  await prisma.$transaction(async (tx) => {
+    await lockPublishingNamespace(tx, "solutions");
+    await saveDraftInTransaction(tx, solutionId, input);
+  });
 }
 
 async function publishSolution(solutionId: string, input: SolutionPublishInput) {
@@ -103,41 +105,38 @@ async function publishSolution(solutionId: string, input: SolutionPublishInput) 
     const solution = await tx.solution.findUnique({ where: { id: solutionId }, include: { publishedVersion: { select: { slug: true } } } });
     if (!solution?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
 
-    await tx.solutionVersion.update({ where: { id: solution.draftVersionId }, data: toVersionData(input) });
+    const slug = await resolveSolutionSlug(tx, solutionId, input, solution.publishedVersion?.slug);
+    const versionData = toVersionData({ ...input, slug });
+    await tx.solutionVersion.update({ where: { id: solution.draftVersionId }, data: versionData });
     await replaceRelations(tx, solution.draftVersionId, input);
-    await assertSlugAvailable(tx, solutionId, input.slug);
-    const published = await tx.solutionVersion.create({ data: { solutionId, ...toVersionData(input) } });
+    const published = await tx.solutionVersion.create({ data: { solutionId, ...versionData } });
     await replaceRelations(tx, published.id, input);
 
-    const oldPath = solution.publishedVersion?.slug ? `/solutions/${solution.publishedVersion.slug}` : undefined;
-    if (oldPath && solution.publishedVersion?.slug !== input.slug) await savePublishedSlugRedirect(tx, oldPath, `/solutions/${input.slug}`);
-
+    const oldPath = solution.publishedVersion?.slug ? cmsContentPath("/solutions", solution.publishedVersion.slug) : undefined;
     await tx.solution.update({ where: { id: solutionId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
-    return oldPath;
+    return { oldPath, slug };
   });
 }
 
 async function saveDraftInTransaction(tx: Prisma.TransactionClient, solutionId: string, input: SolutionDraftInput) {
-  const solution = await tx.solution.findUnique({ where: { id: solutionId }, select: { draftVersionId: true } });
+  const solution = await tx.solution.findUnique({ where: { id: solutionId }, include: { publishedVersion: { select: { slug: true } } } });
   if (!solution) throw new Error("الحل غير موجود.");
+  const slug = input.title ? await resolveSolutionSlug(tx, solutionId, input, solution.publishedVersion?.slug) : solution.publishedVersion?.slug ?? null;
+  const versionData = toVersionData({ ...input, slug: slug ?? undefined });
   let versionId = solution.draftVersionId;
   if (!versionId) {
-    const draft = await tx.solutionVersion.create({ data: { solutionId, ...toVersionData(input) } });
+    const draft = await tx.solutionVersion.create({ data: { solutionId, ...versionData } });
     versionId = draft.id;
     await tx.solution.update({ where: { id: solutionId }, data: { draftVersionId: draft.id } });
   } else {
-    await tx.solutionVersion.update({ where: { id: versionId }, data: toVersionData(input) });
+    await tx.solutionVersion.update({ where: { id: versionId }, data: versionData });
   }
   await replaceRelations(tx, versionId, input);
 }
 
-async function assertSlugAvailable(tx: Prisma.TransactionClient, solutionId: string, slug: string) {
-  const collision = await tx.solution.findFirst({
-    where: { id: { not: solutionId }, OR: [{ publishedVersion: { slug } }, { draftVersion: { slug } }] },
-    select: { id: true },
-  });
-
-  if (collision) throw new Error("الرابط المختصر مستخدم في حل آخر.");
+async function resolveSolutionSlug(tx: Prisma.TransactionClient, solutionId: string, input: SolutionDraftInput, publishedSlug?: string | null) {
+  if (publishedSlug) return publishedSlug;
+  return generateUniqueCmsSlug({ tx, contentType: "solutions", contentId: solutionId, source: input.title ?? "" });
 }
 
 function toVersionData(input: SolutionDraftInput) {
@@ -185,7 +184,7 @@ function revalidateSolutionPaths(solutionId: string, slug?: string, oldPath?: st
   revalidatePath("/dashboard/solutions");
   revalidatePath(`/dashboard/solutions/${solutionId}`);
   revalidatePath("/solutions");
-  if (slug) revalidatePath(`/solutions/${slug}`);
+  if (slug) revalidatePath(cmsContentPath("/solutions", slug));
   if (oldPath) revalidatePath(oldPath);
   revalidatePath("/sitemap.xml");
 }

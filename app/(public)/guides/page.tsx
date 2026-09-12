@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { cmsContentPath } from "@/modules/cms/slugs";
 import { getPublishedArticles } from "@/modules/articles/queries";
 import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
 import { listingMetadata } from "@/modules/seo/metadata";
@@ -19,8 +20,8 @@ export default async function GuidesIndexPage() {
       <header className="max-w-3xl space-y-4"><p className="text-sm font-semibold text-[oklch(58%_0.11_45)]">معرفة عملية</p><h1 className="text-4xl font-bold leading-[1.24] md:text-6xl">أدلة تساعدك على اتخاذ قرار واضح</h1><p className="max-w-[62ch] text-lg leading-[1.78] text-[oklch(42%_0.018_150)]">معلومات منشورة عن الخيارات والمواد وعوامل الأسعار والصيانة، منظمة للقراءة والرجوع إليها.</p></header>
       {articles.length === 0 ? <section className="border-y border-border py-10"><h2 className="text-2xl font-semibold">نعمل على إعداد الأدلة</h2><p className="mt-2 text-text-secondary">يمكنك العودة لاحقاً أو التواصل معنا بسؤالك مباشرة.</p></section> : <section aria-label="قائمة الأدلة" className="divide-y divide-[oklch(82%_0.012_145)] border-y border-[oklch(82%_0.012_145)]">
         {articles.map((article, index) => { const version = article.publishedVersion; if (!version) return null; return <article className="grid gap-6 py-8 md:grid-cols-[minmax(0,1fr)_minmax(220px,360px)] md:items-center md:py-10" key={article.id}>
-          <div className="space-y-3"><p className="text-sm font-semibold text-[oklch(34%_0.065_42)]">{version.articleType ? typeLabels[version.articleType] : "دليل"}</p><h2 className="text-2xl font-bold leading-[1.4] md:text-3xl"><Link className="hover:text-[oklch(37%_0.075_155)]" href={`/guides/${version.slug}`}>{version.title}</Link></h2><p className="max-w-[62ch] leading-[1.8] text-[oklch(42%_0.018_150)]">{version.excerpt}</p><Link className="inline-flex min-h-11 items-center text-sm font-semibold text-[oklch(37%_0.075_155)] underline" href={`/guides/${version.slug}`}>قراءة الدليل</Link></div>
-          {version.heroMedia ? <Link className="relative order-first aspect-video overflow-hidden rounded-[2px] bg-[oklch(95%_0.012_110)] md:order-none" href={`/guides/${version.slug}`}><Image alt={version.heroMedia.altText ?? version.title ?? ""} className="object-cover" fill priority={index === 0} sizes="(min-width: 768px) 360px, 100vw" src={version.heroMedia.url} /></Link> : null}
+          <div className="space-y-3"><p className="text-sm font-semibold text-[oklch(34%_0.065_42)]">{version.articleType ? typeLabels[version.articleType] : "دليل"}</p><h2 className="text-2xl font-bold leading-[1.4] md:text-3xl"><Link className="hover:text-[oklch(37%_0.075_155)]" href={cmsContentPath("/guides", version.slug ?? "")}>{version.title}</Link></h2><p className="max-w-[62ch] leading-[1.8] text-[oklch(42%_0.018_150)]">{version.excerpt}</p><Link className="inline-flex min-h-11 items-center text-sm font-semibold text-[oklch(37%_0.075_155)] underline" href={cmsContentPath("/guides", version.slug ?? "")}>قراءة الدليل</Link></div>
+          {version.heroMedia ? <Link className="relative order-first aspect-video overflow-hidden rounded-[2px] bg-[oklch(95%_0.012_110)] md:order-none" href={cmsContentPath("/guides", version.slug ?? "")}><Image alt={version.heroMedia.altText ?? version.title ?? ""} className="object-cover" fill priority={index === 0} sizes="(min-width: 768px) 360px, 100vw" src={version.heroMedia.url} /></Link> : null}
         </article>; })}
       </section>}
     </div>

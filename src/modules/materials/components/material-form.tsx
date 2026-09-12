@@ -2,9 +2,8 @@ import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { CmsFieldGroup, CmsFieldShell, cmsInputClassName } from "@/modules/cms/components/form";
+import { CmsFieldGroup, CmsFieldShell, CmsTextarea, cmsInputClassName } from "@/modules/cms/components/form";
 import { CmsRelationSelector } from "@/modules/cms/components/relation-selector";
-import { CmsSlugField } from "@/modules/cms/components/slug-field";
 import { CmsStatusBadge } from "@/modules/cms/components/status-badge";
 import type { CmsRelationOption } from "@/modules/cms/types";
 import { MediaPicker, type MediaPickerItem } from "@/modules/media/components/media-picker";
@@ -55,18 +54,17 @@ export function MaterialForm({ material, media, relationOptions }: { material: {
         </div>
       </div>
 
-      <CmsFieldGroup title="محتوى المادة" description="هذه الحقول مطلوبة عند النشر وتبقى كمسودة حتى تضغط نشر.">
+      <CmsFieldGroup title="محتوى المادة" description="هذه الحقول مطلوبة عند النشر وتبقى كمسودة حتى تضغط نشر. يتم إنشاء الرابط المختصر تلقائيًا من الاسم.">
         <CmsFieldShell id="name" label="اسم المادة"><input className={cmsInputClassName} id="name" name="name" defaultValue={draft?.name ?? ""} /></CmsFieldShell>
-        <CmsSlugField defaultValue={draft?.slug} routePrefix="/materials" sourceValue={draft?.name ?? undefined} />
-        <CmsFieldShell id="shortDescription" label="الوصف المختصر"><textarea className={`${cmsInputClassName} min-h-24`} id="shortDescription" name="shortDescription" defaultValue={draft?.shortDescription ?? ""} /></CmsFieldShell>
-        <CmsFieldShell id="content" label="المحتوى"><textarea className={`${cmsInputClassName} min-h-64`} id="content" name="content" defaultValue={draft?.content ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="shortDescription" label="الوصف المختصر"><CmsTextarea id="shortDescription" name="shortDescription" defaultValue={draft?.shortDescription ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="content" label="المحتوى"><CmsTextarea className="min-h-64" id="content" name="content" defaultValue={draft?.content ?? ""} /></CmsFieldShell>
       </CmsFieldGroup>
 
       <CmsFieldGroup title="حقائق المادة" description="اكتب كل بند في سطر مستقل، واترك الحقول غير المؤكدة فارغة.">
-        <CmsFieldShell id="advantages" label="المزايا"><textarea className={`${cmsInputClassName} min-h-32`} id="advantages" name="advantages" defaultValue={jsonStringArray(draft?.advantages).join("\n")} /></CmsFieldShell>
-        <CmsFieldShell id="limitations" label="القيود"><textarea className={`${cmsInputClassName} min-h-32`} id="limitations" name="limitations" defaultValue={jsonStringArray(draft?.limitations).join("\n")} /></CmsFieldShell>
-        <CmsFieldShell id="recommendedUses" label="الاستخدامات الموصى بها"><textarea className={`${cmsInputClassName} min-h-32`} id="recommendedUses" name="recommendedUses" defaultValue={jsonStringArray(draft?.recommendedUses).join("\n")} /></CmsFieldShell>
-        <CmsFieldShell id="maintenanceNotes" label="ملاحظات الصيانة"><textarea className={`${cmsInputClassName} min-h-32`} id="maintenanceNotes" name="maintenanceNotes" defaultValue={draft?.maintenanceNotes ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="advantages" label="المزايا"><CmsTextarea className="min-h-32" id="advantages" name="advantages" defaultValue={jsonStringArray(draft?.advantages).join("\n")} /></CmsFieldShell>
+        <CmsFieldShell id="limitations" label="القيود"><CmsTextarea className="min-h-32" id="limitations" name="limitations" defaultValue={jsonStringArray(draft?.limitations).join("\n")} /></CmsFieldShell>
+        <CmsFieldShell id="recommendedUses" label="الاستخدامات الموصى بها"><CmsTextarea className="min-h-32" id="recommendedUses" name="recommendedUses" defaultValue={jsonStringArray(draft?.recommendedUses).join("\n")} /></CmsFieldShell>
+        <CmsFieldShell id="maintenanceNotes" label="ملاحظات الصيانة"><CmsTextarea className="min-h-32" id="maintenanceNotes" name="maintenanceNotes" defaultValue={draft?.maintenanceNotes ?? ""} /></CmsFieldShell>
       </CmsFieldGroup>
 
       <CmsFieldGroup title="الوسائط" description="اختر صورة البطل وصورة المشاركة الاجتماعية من الوسائط الدائمة.">
@@ -76,11 +74,11 @@ export function MaterialForm({ material, media, relationOptions }: { material: {
 
       <CmsFieldGroup title="SEO" description="حقول اختيارية لتحسين عنوان ووصف الصفحة العامة بعد النشر.">
         <CmsFieldShell id="seoTitle" label="عنوان SEO"><input className={cmsInputClassName} id="seoTitle" name="seoTitle" defaultValue={draft?.seoTitle ?? ""} /></CmsFieldShell>
-        <CmsFieldShell id="seoDescription" label="وصف SEO"><textarea className={`${cmsInputClassName} min-h-24`} id="seoDescription" name="seoDescription" defaultValue={draft?.seoDescription ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="seoDescription" label="وصف SEO"><CmsTextarea id="seoDescription" name="seoDescription" defaultValue={draft?.seoDescription ?? ""} /></CmsFieldShell>
         <CmsFieldShell id="canonicalUrl" label="الرابط القانوني"><input className={cmsInputClassName} dir="ltr" id="canonicalUrl" name="canonicalUrl" defaultValue={draft?.canonicalUrl ?? ""} /></CmsFieldShell>
         <label className="flex items-center gap-3 text-sm font-semibold"><input className="size-4 accent-[oklch(37%_0.075_155)]" name="noIndex" type="checkbox" defaultChecked={draft?.noIndex ?? false} />منع الفهرسة بعد النشر</label>
         <CmsFieldShell id="openGraphTitle" label="عنوان Open Graph"><input className={cmsInputClassName} id="openGraphTitle" name="openGraphTitle" defaultValue={draft?.openGraphTitle ?? ""} /></CmsFieldShell>
-        <CmsFieldShell id="openGraphDescription" label="وصف Open Graph"><textarea className={`${cmsInputClassName} min-h-24`} id="openGraphDescription" name="openGraphDescription" defaultValue={draft?.openGraphDescription ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="openGraphDescription" label="وصف Open Graph"><CmsTextarea id="openGraphDescription" name="openGraphDescription" defaultValue={draft?.openGraphDescription ?? ""} /></CmsFieldShell>
       </CmsFieldGroup>
 
       <CmsFieldGroup title="العلاقات" description="كل علاقة تحفظ داخل نسخة المادة الحالية ولا تظهر للعامة قبل النشر.">

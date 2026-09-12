@@ -1,9 +1,8 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { CmsFieldGroup, CmsFieldShell, cmsInputClassName } from "@/modules/cms/components/form";
+import { CmsFieldGroup, CmsFieldShell, CmsTextarea, cmsInputClassName } from "@/modules/cms/components/form";
 import { CmsRelationSelector } from "@/modules/cms/components/relation-selector";
-import { CmsSlugField } from "@/modules/cms/components/slug-field";
 import { CmsStatusBadge } from "@/modules/cms/components/status-badge";
 import type { CmsRelationOption } from "@/modules/cms/types";
 import { MediaPicker, type MediaPickerItem } from "@/modules/media/components/media-picker";
@@ -57,11 +56,10 @@ export function ProjectForm({ project, media, relationOptions }: { project: { id
         </div>
       </div>
 
-      <CmsFieldGroup title="محتوى المشروع" description="العنوان والرابط والوصف المختصر مطلوبة عند النشر. يمكن حفظ المسودة قبل اكتمالها.">
+      <CmsFieldGroup title="محتوى المشروع" description="العنوان والوصف المختصر مطلوبان عند النشر. يتم إنشاء الرابط المختصر تلقائيًا من العنوان ويمكن حفظ المسودة قبل اكتمالها.">
         <CmsFieldShell id="title" label="عنوان المشروع"><input className={cmsInputClassName} id="title" name="title" defaultValue={draft?.title ?? ""} /></CmsFieldShell>
-        <CmsSlugField defaultValue={draft?.slug} routePrefix="/projects" sourceValue={draft?.title ?? undefined} />
-        <CmsFieldShell id="shortDescription" label="الوصف المختصر"><textarea className={`${cmsInputClassName} min-h-24`} id="shortDescription" name="shortDescription" defaultValue={draft?.shortDescription ?? ""} /></CmsFieldShell>
-        <CmsFieldShell id="content" label="المحتوى"><textarea className={`${cmsInputClassName} min-h-48`} id="content" name="content" defaultValue={draft?.content ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="shortDescription" label="الوصف المختصر"><CmsTextarea id="shortDescription" name="shortDescription" defaultValue={draft?.shortDescription ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="content" label="المحتوى"><CmsTextarea className="min-h-48" id="content" name="content" defaultValue={draft?.content ?? ""} /></CmsFieldShell>
       </CmsFieldGroup>
 
       <CmsFieldGroup title="وقائع المشروع" description="اترك أي معلومة غير موثقة فارغة، ولا تستنتج الموقع أو النطاق أو التفاصيل الفنية.">
@@ -70,9 +68,9 @@ export function ProjectForm({ project, media, relationOptions }: { project: { id
           <CmsFieldShell id="district" label="الحي"><input className={cmsInputClassName} id="district" name="district" defaultValue={draft?.district ?? ""} /></CmsFieldShell>
         </div>
         <CmsFieldShell id="completedAt" label="تاريخ الإنجاز"><input className={cmsInputClassName} dir="ltr" id="completedAt" name="completedAt" type="date" defaultValue={draft?.completedAt ? draft.completedAt.toISOString().slice(0, 10) : ""} /></CmsFieldShell>
-        <CmsFieldShell id="challenge" label="التحدي"><textarea className={`${cmsInputClassName} min-h-32`} id="challenge" name="challenge" defaultValue={draft?.challenge ?? ""} /></CmsFieldShell>
-        <CmsFieldShell id="solutionSummary" label="الحل المنفذ"><textarea className={`${cmsInputClassName} min-h-32`} id="solutionSummary" name="solutionSummary" defaultValue={draft?.solutionSummary ?? ""} /></CmsFieldShell>
-        <CmsFieldShell id="technicalDetails" label="التفاصيل الفنية"><textarea className={`${cmsInputClassName} min-h-32`} id="technicalDetails" name="technicalDetails" defaultValue={draft?.technicalDetails ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="challenge" label="التحدي"><CmsTextarea className="min-h-32" id="challenge" name="challenge" defaultValue={draft?.challenge ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="solutionSummary" label="الحل المنفذ"><CmsTextarea className="min-h-32" id="solutionSummary" name="solutionSummary" defaultValue={draft?.solutionSummary ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="technicalDetails" label="التفاصيل الفنية"><CmsTextarea className="min-h-32" id="technicalDetails" name="technicalDetails" defaultValue={draft?.technicalDetails ?? ""} /></CmsFieldShell>
       </CmsFieldGroup>
 
       <CmsFieldGroup title="الوسائط" description="اختر غلاف المشروع ثم رتب صور المعرض. يمكن إعادة استخدام أي وسيط دائم.">
@@ -90,11 +88,11 @@ export function ProjectForm({ project, media, relationOptions }: { project: { id
 
       <CmsFieldGroup title="SEO" description="حقول اختيارية لتحسين عنوان ووصف صفحة المشروع بعد النشر.">
         <CmsFieldShell id="seoTitle" label="عنوان SEO"><input className={cmsInputClassName} id="seoTitle" name="seoTitle" defaultValue={draft?.seoTitle ?? ""} /></CmsFieldShell>
-        <CmsFieldShell id="seoDescription" label="وصف SEO"><textarea className={`${cmsInputClassName} min-h-24`} id="seoDescription" name="seoDescription" defaultValue={draft?.seoDescription ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="seoDescription" label="وصف SEO"><CmsTextarea id="seoDescription" name="seoDescription" defaultValue={draft?.seoDescription ?? ""} /></CmsFieldShell>
         <CmsFieldShell id="canonicalUrl" label="الرابط القانوني"><input className={cmsInputClassName} dir="ltr" id="canonicalUrl" name="canonicalUrl" defaultValue={draft?.canonicalUrl ?? ""} /></CmsFieldShell>
         <label className="flex items-center gap-3 text-sm font-semibold"><input className="size-4 accent-[oklch(37%_0.075_155)]" name="noIndex" type="checkbox" defaultChecked={draft?.noIndex ?? false} />منع الفهرسة بعد النشر</label>
         <CmsFieldShell id="openGraphTitle" label="عنوان Open Graph"><input className={cmsInputClassName} id="openGraphTitle" name="openGraphTitle" defaultValue={draft?.openGraphTitle ?? ""} /></CmsFieldShell>
-        <CmsFieldShell id="openGraphDescription" label="وصف Open Graph"><textarea className={`${cmsInputClassName} min-h-24`} id="openGraphDescription" name="openGraphDescription" defaultValue={draft?.openGraphDescription ?? ""} /></CmsFieldShell>
+        <CmsFieldShell id="openGraphDescription" label="وصف Open Graph"><CmsTextarea id="openGraphDescription" name="openGraphDescription" defaultValue={draft?.openGraphDescription ?? ""} /></CmsFieldShell>
       </CmsFieldGroup>
     </form>
   );

@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { cmsContentPath, decodeCmsSlug } from "@/modules/cms/slugs";
 import { getPublishedServiceBySlug } from "@/modules/services/queries";
 import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
 import { JsonLd } from "@/modules/seo/components/json-ld";
@@ -16,17 +17,19 @@ type ServicePageProps = {
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: ServicePageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeCmsSlug(rawSlug);
   const service = await getPublishedServiceBySlug(slug);
   const version = service.publishedVersion;
 
   if (!version) notFound();
 
-  return contentMetadata({ version, path: `/services/${slug}`, title: version.title ?? "خدمة", description: version.shortDescription, image: version.heroMedia?.url });
+  return contentMetadata({ version, path: cmsContentPath("/services", slug), title: version.title ?? "خدمة", description: version.shortDescription, image: version.heroMedia?.url });
 }
 
 export default async function ServiceDetailPage({ params }: ServicePageProps) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeCmsSlug(rawSlug);
   const service = await getPublishedServiceBySlug(slug);
   const version = service.publishedVersion;
 
@@ -35,8 +38,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
   return (
     <main className="min-h-screen bg-background px-4 py-10 md:px-8 md:py-16">
       <article className="mx-auto max-w-7xl space-y-14 md:space-y-20">
-        <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الخدمات", href: "/services" }, { label: version.title ?? "خدمة", href: `/services/${slug}` }]} />
-        <JsonLd data={{ "@context": "https://schema.org", "@type": "Service", name: version.title, description: version.shortDescription, url: absoluteUrl(`/services/${slug}`), image: version.heroMedia?.url || undefined }} />
+        <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الخدمات", href: "/services" }, { label: version.title ?? "خدمة", href: cmsContentPath("/services", slug) }]} />
+        <JsonLd data={{ "@context": "https://schema.org", "@type": "Service", name: version.title, description: version.shortDescription, url: absoluteUrl(cmsContentPath("/services", slug)), image: version.heroMedia?.url || undefined }} />
 
         <header className="grid gap-8 lg:grid-cols-12 lg:items-end">
           <div className="space-y-5 lg:col-span-6 lg:pb-8">
@@ -57,10 +60,10 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           <div className="max-w-[72ch] whitespace-pre-line text-lg leading-[1.95] text-text-secondary md:col-span-7 md:col-start-6">{version.content}</div>
         </section>
 
-        <RelatedContent title="حلول مرتبطة" items={version.solutions.map((item) => ({ label: item.solution.publishedVersion?.title, href: `/solutions/${item.solution.publishedVersion?.slug}` })).filter(isRelated)} />
-        <RelatedContent title="مواد مرتبطة" items={version.materials.map((item) => ({ label: item.material.publishedVersion?.name, href: `/materials/${item.material.publishedVersion?.slug}` })).filter(isRelated)} />
-        <RelatedContent title="مشاريع مرتبطة" items={version.projects.map((item) => ({ label: item.project.publishedVersion?.title, href: `/projects/${item.project.publishedVersion?.slug}` })).filter(isRelated)} />
-        <RelatedContent title="أدلة مرتبطة" items={version.articles.map((item) => ({ label: item.article.publishedVersion?.title, href: `/guides/${item.article.publishedVersion?.slug}` })).filter(isRelated)} />
+        <RelatedContent title="حلول مرتبطة" items={version.solutions.map((item) => ({ label: item.solution.publishedVersion?.title, href: item.solution.publishedVersion?.slug ? cmsContentPath("/solutions", item.solution.publishedVersion.slug) : "" })).filter(isRelated)} />
+        <RelatedContent title="مواد مرتبطة" items={version.materials.map((item) => ({ label: item.material.publishedVersion?.name, href: item.material.publishedVersion?.slug ? cmsContentPath("/materials", item.material.publishedVersion.slug) : "" })).filter(isRelated)} />
+        <RelatedContent title="مشاريع مرتبطة" items={version.projects.map((item) => ({ label: item.project.publishedVersion?.title, href: item.project.publishedVersion?.slug ? cmsContentPath("/projects", item.project.publishedVersion.slug) : "" })).filter(isRelated)} />
+        <RelatedContent title="أدلة مرتبطة" items={version.articles.map((item) => ({ label: item.article.publishedVersion?.title, href: item.article.publishedVersion?.slug ? cmsContentPath("/guides", item.article.publishedVersion.slug) : "" })).filter(isRelated)} />
         <RelatedContent title="أسئلة شائعة" items={version.faqs.map((item) => ({ label: item.faq.publishedVersion?.question, href: "" })).filter((item): item is { label: string; href: string } => Boolean(item.label))} />
 
         <section className="bg-primary p-7 text-primary-foreground md:p-10">

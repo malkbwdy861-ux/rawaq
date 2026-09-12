@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { cmsRelationIdsSchema, cmsSeoFieldsSchema, cmsSlugSchema } from "@/modules/cms/validation";
+import { cmsRelationIdsSchema, cmsSeoFieldsSchema } from "@/modules/cms/validation";
 
 const optionalText = z.string().trim().optional().or(z.literal(""));
 const optionalMediaId = z.string().cuid().optional().or(z.literal(""));
@@ -21,7 +21,6 @@ export const solutionDraftSchema = cmsSeoFieldsSchema.extend({
 
 export const solutionPublishSchema = solutionDraftSchema.extend({
   title: z.string().trim().min(1, "أدخل عنوان الحل."),
-  slug: cmsSlugSchema,
   shortDescription: z.string().trim().min(1, "أدخل وصفًا مختصرًا للحل."),
   content: z.string().trim().min(1, "أدخل محتوى الحل."),
 });

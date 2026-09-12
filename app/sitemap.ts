@@ -1,6 +1,7 @@
 import { ContentStatus } from "@prisma/client";
 import type { MetadataRoute } from "next";
 
+import { cmsContentPath } from "@/modules/cms/slugs";
 import { pageDefinitions } from "@/modules/pages/queries";
 import { absoluteUrl } from "@/modules/seo/site-url";
 import { prisma } from "@/server/db/prisma";
@@ -43,7 +44,7 @@ function addEntities(entries: MetadataRoute.Sitemap, entities: SitemapEntity[], 
   for (const entity of entities) {
     const version = entity.publishedVersion;
     if (!version?.slug || version.noIndex) continue;
-    const path = `${prefix}/${version.slug}`;
+    const path = cmsContentPath(prefix, version.slug);
     if (!redirected.has(path)) entries.push({ url: absoluteUrl(path), lastModified: version.updatedAt });
   }
 }

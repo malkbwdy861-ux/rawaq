@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 
+import { Select as UiSelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+
 import { buildWhatsAppUrl } from "../contact";
 
 type Option = { id: string; label: string };
@@ -24,15 +27,15 @@ export function ContactWhatsappForm({ whatsappNumber, defaultMessage, services, 
         <p className="max-w-[55ch] text-sm leading-[1.7] text-[oklch(42%_0.018_150)]">أدخل التفاصيل المتاحة فقط. لن يحفظ الموقع هذه البيانات، وسيتم فتح واتساب برسالة جاهزة.</p>
       </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <Select label="الخدمة" value={values.service} options={services} onChange={(value) => update("service", value)} />
-        <Select label="الحل" value={values.solution} options={solutions} onChange={(value) => update("solution", value)} />
-        <Select label="المادة" value={values.material} options={materials} onChange={(value) => update("material", value)} />
+        <RelatedSelect label="الخدمة" value={values.service} options={services} onChange={(value) => update("service", value)} />
+        <RelatedSelect label="الحل" value={values.solution} options={solutions} onChange={(value) => update("solution", value)} />
+        <RelatedSelect label="المادة" value={values.material} options={materials} onChange={(value) => update("material", value)} />
         <Field label="الأبعاد التقريبية" value={values.dimensions} onChange={(value) => update("dimensions", value)} />
         <Field label="المدينة" value={values.city} onChange={(value) => update("city", value)} />
         <Field label="الحي" value={values.district} onChange={(value) => update("district", value)} />
         <label className="grid gap-2 sm:col-span-2">
           <span className="text-[0.8125rem] font-semibold leading-[1.55]">ملاحظات</span>
-          <textarea className="min-h-28 rounded-[4px] border border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] px-3 py-2 text-base outline-none focus:border-[oklch(37%_0.075_155)] focus:ring-2 focus:ring-[oklch(51%_0.09_155)] focus:ring-offset-2" value={values.notes} onChange={(event) => update("notes", event.target.value)} />
+          <Textarea className="min-h-28 rounded-[4px] border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] text-base focus-visible:border-[oklch(37%_0.075_155)] focus-visible:ring-[oklch(51%_0.09_155)] focus-visible:ring-offset-2" value={values.notes} onChange={(event) => update("notes", event.target.value)} />
         </label>
       </div>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -47,6 +50,6 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
   return <label className="grid gap-2"><span className="text-[0.8125rem] font-semibold leading-[1.55]">{label}</span><input className="min-h-12 rounded-[4px] border border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] px-3 py-2 text-base outline-none focus:border-[oklch(37%_0.075_155)] focus:ring-2 focus:ring-[oklch(51%_0.09_155)] focus:ring-offset-2" value={value} onChange={(event) => onChange(event.target.value)} /></label>;
 }
 
-function Select({ label, value, options, onChange }: { label: string; value: string; options: Option[]; onChange: (value: string) => void }) {
-  return <label className="grid gap-2"><span className="text-[0.8125rem] font-semibold leading-[1.55]">{label}</span><select className="min-h-12 rounded-[4px] border border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] px-3 py-2 text-base outline-none focus:border-[oklch(37%_0.075_155)] focus:ring-2 focus:ring-[oklch(51%_0.09_155)] focus:ring-offset-2" value={value} onChange={(event) => onChange(event.target.value)}><option value="">غير محدد</option>{options.map((option) => <option key={option.id} value={option.label}>{option.label}</option>)}</select></label>;
+function RelatedSelect({ label, value, options, onChange }: { label: string; value: string; options: Option[]; onChange: (value: string) => void }) {
+  return <label className="grid gap-2"><span className="text-[0.8125rem] font-semibold leading-[1.55]">{label}</span><UiSelect value={value || "NONE"} onValueChange={(nextValue) => onChange(nextValue === "NONE" ? "" : nextValue)}><SelectTrigger className="min-h-12 rounded-[4px] border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] text-base focus-visible:border-[oklch(37%_0.075_155)] focus-visible:ring-[oklch(51%_0.09_155)] focus-visible:ring-offset-2"><SelectValue /></SelectTrigger><SelectContent align="end"><SelectItem value="NONE">غير محدد</SelectItem>{options.map((option) => <SelectItem key={option.id} value={option.label}>{option.label}</SelectItem>)}</SelectContent></UiSelect></label>;
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { cmsContentPath } from "@/modules/cms/slugs";
 import { getPublishedSolutions } from "@/modules/solutions/queries";
 import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
 import { listingMetadata } from "@/modules/seo/metadata";
@@ -30,7 +31,7 @@ export default async function SolutionsIndexPage() {
               const version = solution.publishedVersion;
               if (!version) return null;
               return (
-                <Link className="group overflow-hidden rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] transition-colors hover:border-[oklch(37%_0.075_155)]" href={`/solutions/${version.slug}`} key={solution.id}>
+                <Link className="group overflow-hidden rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] transition-colors hover:border-[oklch(37%_0.075_155)]" href={cmsContentPath("/solutions", version.slug ?? "")} key={solution.id}>
                   {version.heroMedia ? <div className="relative aspect-[4/3] bg-[oklch(95%_0.012_110)]"><Image alt={version.heroMedia.altText ?? version.title ?? ""} className="object-cover" fill sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw" src={version.heroMedia.url} /></div> : null}
                   <div className="space-y-3 p-5"><h2 className="text-xl font-bold leading-[1.45] group-hover:text-[oklch(37%_0.075_155)]">{version.title}</h2><p className="text-sm leading-[1.8] text-[oklch(42%_0.018_150)]">{version.shortDescription}</p></div>
                 </Link>

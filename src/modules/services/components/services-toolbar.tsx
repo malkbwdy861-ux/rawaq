@@ -1,7 +1,8 @@
-import { ChevronDown, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cmsStatusLabels } from "@/modules/cms/components/status-badge";
 import type { CmsStatusFilter } from "@/modules/cms/types";
 
@@ -29,12 +30,16 @@ export function ServicesToolbar({ query, status = "ALL", totalItems, statusCount
           <Search aria-hidden="true" className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <input className="h-10 w-full rounded-md border border-border-strong bg-card ps-9 pe-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/25" defaultValue={query} name="q" placeholder="البحث في الخدمات..." type="search" />
         </label>
-        <label className="relative sm:w-48">
+        <label className="grid gap-1 sm:w-48">
           <span className="sr-only">تصفية حسب الحالة</span>
-          <select className="h-10 w-full appearance-none rounded-md border border-border-strong bg-card px-3 pe-9 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/25" defaultValue={status} name="status">
-            {statusOptions.map((option) => <option key={option} value={option}>{cmsStatusLabels[option]}</option>)}
-          </select>
-          <ChevronDown aria-hidden="true" className="pointer-events-none absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Select defaultValue={status} name="status">
+            <SelectTrigger className="h-10 border-border-strong bg-card focus-visible:border-primary focus-visible:ring-ring/25">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              {statusOptions.map((option) => <SelectItem key={option} value={option}>{cmsStatusLabels[option]}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </label>
         <Button className="h-10 min-h-10" type="submit" variant="secondary">تطبيق</Button>
         {filtered ? <Link aria-label="مسح البحث والتصفية" className="inline-flex size-10 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-dashboard-hover hover:text-foreground" href="/dashboard/services"><X className="size-4" /></Link> : null}

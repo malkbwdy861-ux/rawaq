@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { cmsStatusLabels } from "./status-badge";
 import type { CmsStatusFilter } from "../types";
@@ -40,17 +41,18 @@ export function CmsListToolbar({
 
       <label className="grid gap-2">
         <span className="text-[0.8125rem] font-semibold leading-[1.55]">الحالة</span>
-        <select
-          className="min-h-10 rounded-[4px] border border-border-strong bg-background px-3 py-2 text-base outline-none focus:border-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          defaultValue={status}
-          name="status"
-        >
+        <Select defaultValue={status} name="status">
+          <SelectTrigger className="min-h-10 rounded-[4px] border-border-strong bg-background text-base focus-visible:border-primary focus-visible:ring-ring focus-visible:ring-offset-2">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="end">
           {statusOptions.map((option) => (
-            <option key={option} value={option}>
+            <SelectItem key={option} value={option}>
               {cmsStatusLabels[option]}
-            </option>
+            </SelectItem>
           ))}
-        </select>
+          </SelectContent>
+        </Select>
       </label>
 
       <div className="flex items-end">

@@ -13,6 +13,7 @@ import {
 import type { z } from "zod";
 
 import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 
 export function useCmsForm<TValues extends FieldValues>({
   schema,
@@ -106,3 +107,15 @@ export function CmsFieldShell({
 }
 
 export const cmsInputClassName = "min-h-11 w-full max-w-[760px] rounded-md border border-border-strong bg-card px-3 py-2 text-base outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:bg-muted disabled:text-muted-foreground";
+
+export function CmsTextarea({ className, ...props }: React.ComponentProps<typeof Textarea>) {
+  return (
+    <Textarea
+      className={cn(
+        "min-h-24 w-full max-w-[760px] resize-y border-border-strong bg-card text-base focus-visible:border-primary focus-visible:ring-ring focus-visible:ring-offset-2",
+        className,
+      )}
+      {...props}
+    />
+  );
+}

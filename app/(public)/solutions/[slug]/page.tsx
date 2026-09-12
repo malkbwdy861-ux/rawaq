@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { cmsContentPath, decodeCmsSlug } from "@/modules/cms/slugs";
 import { getPublishedSolutionBySlug } from "@/modules/solutions/queries";
 import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
 import { contentMetadata } from "@/modules/seo/metadata";
@@ -14,16 +15,18 @@ type SolutionPageProps = {
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: SolutionPageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeCmsSlug(rawSlug);
   const solution = await getPublishedSolutionBySlug(slug);
   const version = solution.publishedVersion;
   if (!version) notFound();
 
-  return contentMetadata({ version, path: `/solutions/${slug}`, title: version.title ?? "حل", description: version.shortDescription, image: version.heroMedia?.url });
+  return contentMetadata({ version, path: cmsContentPath("/solutions", slug), title: version.title ?? "حل", description: version.shortDescription, image: version.heroMedia?.url });
 }
 
 export default async function SolutionDetailPage({ params }: SolutionPageProps) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeCmsSlug(rawSlug);
   const solution = await getPublishedSolutionBySlug(slug);
   const version = solution.publishedVersion;
   if (!version) notFound();
@@ -31,7 +34,7 @@ export default async function SolutionDetailPage({ params }: SolutionPageProps) 
   return (
     <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-12 md:px-8">
       <article className="mx-auto max-w-5xl space-y-10">
-        <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الحلول", href: "/solutions" }, { label: version.title ?? "حل", href: `/solutions/${slug}` }]} />
+        <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الحلول", href: "/solutions" }, { label: version.title ?? "حل", href: cmsContentPath("/solutions", slug) }]} />
         <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
           <div className="space-y-4">
             <p className="text-sm font-semibold text-[oklch(37%_0.075_155)]">حل</p>
@@ -45,10 +48,10 @@ export default async function SolutionDetailPage({ params }: SolutionPageProps) 
           ) : null}
         </header>
         <section className="rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] p-6 text-base leading-[1.9] text-[oklch(22%_0.018_155)] whitespace-pre-line">{version.content}</section>
-        <RelatedContent title="خدمات مرتبطة" items={version.services.map((item) => ({ label: item.service.publishedVersion?.title, href: `/services/${item.service.publishedVersion?.slug}` })).filter(isRelated)} />
-        <RelatedContent title="مواد مرتبطة" items={version.materials.map((item) => ({ label: item.material.publishedVersion?.name, href: `/materials/${item.material.publishedVersion?.slug}` })).filter(isRelated)} />
-        <RelatedContent title="مشاريع مرتبطة" items={version.projects.map((item) => ({ label: item.project.publishedVersion?.title, href: `/projects/${item.project.publishedVersion?.slug}` })).filter(isRelated)} />
-        <RelatedContent title="أدلة مرتبطة" items={version.articles.map((item) => ({ label: item.article.publishedVersion?.title, href: `/guides/${item.article.publishedVersion?.slug}` })).filter(isRelated)} />
+        <RelatedContent title="خدمات مرتبطة" items={version.services.map((item) => ({ label: item.service.publishedVersion?.title, href: item.service.publishedVersion?.slug ? cmsContentPath("/services", item.service.publishedVersion.slug) : "" })).filter(isRelated)} />
+        <RelatedContent title="مواد مرتبطة" items={version.materials.map((item) => ({ label: item.material.publishedVersion?.name, href: item.material.publishedVersion?.slug ? cmsContentPath("/materials", item.material.publishedVersion.slug) : "" })).filter(isRelated)} />
+        <RelatedContent title="مشاريع مرتبطة" items={version.projects.map((item) => ({ label: item.project.publishedVersion?.title, href: item.project.publishedVersion?.slug ? cmsContentPath("/projects", item.project.publishedVersion.slug) : "" })).filter(isRelated)} />
+        <RelatedContent title="أدلة مرتبطة" items={version.articles.map((item) => ({ label: item.article.publishedVersion?.title, href: item.article.publishedVersion?.slug ? cmsContentPath("/guides", item.article.publishedVersion.slug) : "" })).filter(isRelated)} />
         <RelatedContent title="أسئلة شائعة" items={version.faqs.map((item) => ({ label: item.faq.publishedVersion?.question, href: "" })).filter((item): item is { label: string; href: string } => Boolean(item.label))} />
         <section className="rounded-[8px] bg-[oklch(37%_0.075_155)] p-6 text-[oklch(99%_0.004_100)]">
           <h2 className="text-2xl font-bold">هل يناسبك هذا الحل؟</h2>

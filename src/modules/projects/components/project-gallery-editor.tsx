@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useId, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cmsInputClassName } from "@/modules/cms/components/form";
 import type { MediaPickerItem } from "@/modules/media/components/media-picker";
 
@@ -12,8 +13,8 @@ type GalleryItem = {
 };
 
 export function ProjectGalleryEditor({ media, initialItems }: { media: MediaPickerItem[]; initialItems: GalleryItem[] }) {
-  const selectId = useId();
   const [items, setItems] = useState(initialItems);
+  const [selectedMediaId, setSelectedMediaId] = useState("");
   const availableMedia = media.filter((candidate) => !items.some((item) => item.mediaId === candidate.id));
 
   function move(index: number, offset: number) {
@@ -61,20 +62,24 @@ export function ProjectGalleryEditor({ media, initialItems }: { media: MediaPick
       )}
 
       <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-        <label className="grid gap-2" htmlFor={selectId}>
+        <label className="grid gap-2">
           <span className="text-[0.8125rem] font-semibold leading-[1.55]">إضافة صورة موجودة</span>
-          <select className={cmsInputClassName} id={selectId} defaultValue="">
-            <option value="">اختر صورة من مكتبة الوسائط</option>
-            {availableMedia.map((item) => <option key={item.id} value={item.id}>{item.originalFilename}</option>)}
-          </select>
+          <Select value={selectedMediaId || "NONE"} onValueChange={(value) => setSelectedMediaId(value === "NONE" ? "" : value)}>
+            <SelectTrigger className="min-h-11 max-w-[760px] border-border-strong bg-card text-base focus-visible:border-primary focus-visible:ring-ring focus-visible:ring-offset-2">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="NONE">اختر صورة من مكتبة الوسائط</SelectItem>
+              {availableMedia.map((item) => <SelectItem key={item.id} value={item.id}>{item.originalFilename}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </label>
         <button
           className="min-h-11 rounded-[4px] bg-[oklch(37%_0.075_155)] px-4 py-2 text-[0.8125rem] font-semibold text-[oklch(99%_0.004_100)] hover:bg-[oklch(29%_0.055_155)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[oklch(51%_0.09_155)]"
-          onClick={(event) => {
-            const select = event.currentTarget.previousElementSibling?.querySelector("select");
-            if (select?.value) {
-              setItems((current) => [...current, { mediaId: select.value, caption: "" }]);
-              select.value = "";
+          onClick={() => {
+            if (selectedMediaId) {
+              setItems((current) => [...current, { mediaId: selectedMediaId, caption: "" }]);
+              setSelectedMediaId("");
             }
           }}
           type="button"

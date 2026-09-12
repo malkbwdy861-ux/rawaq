@@ -2,6 +2,7 @@ import { ContentStatus } from "@prisma/client";
 import { notFound } from "next/navigation";
 
 import { getCmsPagination, parseCmsSearchParams } from "@/modules/cms/validation";
+import { decodeCmsSlug } from "@/modules/cms/slugs";
 import { prisma } from "@/server/db/prisma";
 
 export async function getProjectList(searchParams: Record<string, string | string[] | undefined>) {
@@ -58,8 +59,9 @@ export async function getPublishedProjects() {
 }
 
 export async function getPublishedProjectBySlug(slug: string) {
+  const decodedSlug = decodeCmsSlug(slug);
   const project = await prisma.project.findFirst({
-    where: { status: ContentStatus.PUBLISHED, publishedVersion: { slug } },
+    where: { status: ContentStatus.PUBLISHED, publishedVersion: { slug: decodedSlug } },
     include: { publishedVersion: { include: {
       coverMedia: true,
       openGraphImage: true,
