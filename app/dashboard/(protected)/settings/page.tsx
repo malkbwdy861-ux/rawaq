@@ -9,7 +9,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   const [data, messages] = await Promise.all([getSiteSettingsEditorData(), searchParams]);
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto max-w-[880px] space-y-6">
       <CmsPageHeader title="إعدادات الموقع" description="إدارة بيانات الشركة والتواصل والروابط الاجتماعية وافتراضيات SEO وواتساب ضمن الحقول المعتمدة فقط." />
       {messages.success ? <CmsStateBlock tone="success" title="اكتملت العملية" description={messages.success} /> : null}
       {messages.error ? <CmsStateBlock tone="error" title="تعذرت العملية" description={messages.error} /> : null}

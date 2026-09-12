@@ -1,4 +1,5 @@
 import type { PageKey } from "@prisma/client";
+import { Eye, Save, Send } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -16,22 +17,36 @@ type PageFormProps = {
   page: { id: string; key: PageKey; status: "DRAFT" | "PUBLISHED" | "ARCHIVED"; publishedVersionId: string | null; draftVersion: SeoVersion | null };
   draftData: StaticPageData | null;
   media: MediaPickerItem[];
+  path: string;
   relationOptions: { services: CmsRelationOption[]; solutions: CmsRelationOption[]; projects: CmsRelationOption[]; faqs: CmsRelationOption[]; articles: CmsRelationOption[] };
 };
 type SeoVersion = { seoTitle: string | null; seoDescription: string | null; canonicalUrl: string | null; noIndex: boolean; openGraphTitle: string | null; openGraphDescription: string | null; openGraphImageId: string | null };
 
-export function PageForm({ page, draftData, media, relationOptions }: PageFormProps) {
-  return <form className="space-y-8" action={savePageDraftAction}>
+export function PageForm({ page, draftData, media, path, relationOptions }: PageFormProps) {
+  return <form className="grid gap-6 min-[1400px]:grid-cols-[288px_minmax(0,760px)] min-[1400px]:items-start min-[1400px]:[direction:ltr]" action={savePageDraftAction}>
     <input name="pageId" type="hidden" value={page.id} /><input name="key" type="hidden" value={page.key} />
-    <div className="flex flex-col gap-3 rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] p-4 md:flex-row md:items-center md:justify-between">
-      <div className="grid gap-2"><CmsStatusBadge status={{ status: page.status, hasDraftVersion: Boolean(page.draftVersion), hasPublishedVersion: Boolean(page.publishedVersionId) }} /><p className="text-sm leading-[1.6] text-[oklch(42%_0.018_150)]">الحقول والاختيارات تحفظ في مسودة ثابتة المخطط. لن يتغير العرض العام قبل نجاح النشر.</p></div>
-      <div className="flex flex-wrap gap-2"><Button className="min-h-10 rounded-[4px]" type="submit" variant="outline">حفظ المسودة</Button><Button className="min-h-10 rounded-[4px] bg-[oklch(37%_0.075_155)] text-[oklch(99%_0.004_100)] hover:bg-[oklch(29%_0.055_155)]" formAction={publishPageAction} type="submit">نشر الصفحة</Button><Link className="inline-flex min-h-10 items-center justify-center rounded-[4px] border border-[oklch(64%_0.018_145)] px-4 py-2 text-sm font-semibold text-[oklch(37%_0.075_155)]" href={`/preview/pages/${page.key}`}>معاينة</Link></div>
+    <aside className="order-first rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-rest)] min-[1400px]:sticky min-[1400px]:top-20 min-[1400px]:[direction:rtl]" aria-label="النشر والمعاينة">
+      <div className="space-y-3 border-b border-border pb-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold">حالة الصفحة</h2>
+          <CmsStatusBadge status={{ status: page.status, hasDraftVersion: Boolean(page.draftVersion), hasPublishedVersion: Boolean(page.publishedVersionId) }} />
+        </div>
+        <bdi className="block truncate rounded-md bg-secondary px-3 py-2 text-left text-sm text-muted-foreground" dir="ltr">{path}</bdi>
+        <p className="text-sm leading-[1.6] text-text-secondary">تبقى التغييرات في المسودة، ولن يتغير العرض العام قبل نجاح النشر.</p>
+      </div>
+      <div className="grid gap-2 pt-4">
+        <Button className="min-h-11" type="submit" variant="outline"><Save aria-hidden="true" />حفظ المسودة</Button>
+        <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-4 text-sm font-semibold text-foreground outline-none transition-colors hover:border-primary hover:bg-primary-soft focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" href={`/preview/pages/${page.key}`}><Eye className="size-[18px]" aria-hidden="true" />معاينة المسودة</Link>
+        <Button className="min-h-11" formAction={publishPageAction} type="submit"><Send aria-hidden="true" />نشر الصفحة</Button>
+      </div>
+    </aside>
+    <div className="rounded-xl border border-border bg-card px-4 py-6 shadow-[var(--shadow-rest)] sm:px-6 min-[1400px]:[direction:rtl]">
+      {page.key === "HOME" ? <HomeFields data={draftData as HomePageData | null} media={media} options={relationOptions} /> : null}
+      {page.key === "ABOUT" ? <AboutFields data={draftData as AboutPageData | null} media={media} /> : null}
+      {page.key === "CONTACT" ? <ContactFields data={draftData as ContactPageData | null} /> : null}
+      {page.key === "PRICES" ? <PricesFields data={draftData as PricesPageData | null} options={relationOptions} /> : null}
+      <SeoFields version={page.draftVersion} media={media} />
     </div>
-    {page.key === "HOME" ? <HomeFields data={draftData as HomePageData | null} media={media} options={relationOptions} /> : null}
-    {page.key === "ABOUT" ? <AboutFields data={draftData as AboutPageData | null} media={media} /> : null}
-    {page.key === "CONTACT" ? <ContactFields data={draftData as ContactPageData | null} /> : null}
-    {page.key === "PRICES" ? <PricesFields data={draftData as PricesPageData | null} options={relationOptions} /> : null}
-    <SeoFields version={page.draftVersion} media={media} />
   </form>;
 }
 
@@ -53,7 +68,7 @@ function AboutFields({ data, media }: { data: AboutPageData | null; media: Media
 
 function ContactFields({ data }: { data: ContactPageData | null }) {
   const toggles = [["showPhone", "إظهار الهاتف", data?.showPhone], ["showWhatsapp", "إظهار واتساب", data?.showWhatsapp], ["showEmail", "إظهار البريد الإلكتروني", data?.showEmail], ["showAddress", "إظهار العنوان", data?.showAddress], ["showBusinessHours", "إظهار ساعات العمل", data?.showBusinessHours]] as const;
-  return <><CmsFieldGroup title="بطل الصفحة"><Text id="heroTitle" label="العنوان" value={data?.hero.title} /><Area id="heroDescription" label="الوصف" value={data?.hero.description} /></CmsFieldGroup><CmsFieldGroup title="مقدمة التواصل"><Text id="contactIntroTitle" label="العنوان" value={data?.contactIntro.title} /><Area id="contactIntroDescription" label="الوصف" value={data?.contactIntro.description} /></CmsFieldGroup><CmsFieldGroup title="بيانات التواصل الظاهرة" description="القيم الفعلية تأتي من إعدادات الموقع، وهذه الخيارات تتحكم في ظهورها فقط.">{toggles.map(([name, label, checked]) => <label className="flex min-h-11 items-center gap-3 text-sm font-semibold" key={name}><input className="size-4 accent-[oklch(37%_0.075_155)]" name={name} type="checkbox" defaultChecked={checked ?? false} />{label}</label>)}</CmsFieldGroup><CmsFieldGroup title="الإرشاد الختامي"><Text id="finalCtaTitle" label="العنوان" value={data?.finalCta.title} /><Area id="finalCtaDescription" label="الوصف" value={data?.finalCta.description} /></CmsFieldGroup></>;
+  return <><CmsFieldGroup title="بطل الصفحة"><Text id="heroTitle" label="العنوان" value={data?.hero.title} /><Area id="heroDescription" label="الوصف" value={data?.hero.description} /></CmsFieldGroup><CmsFieldGroup title="مقدمة التواصل"><Text id="contactIntroTitle" label="العنوان" value={data?.contactIntro.title} /><Area id="contactIntroDescription" label="الوصف" value={data?.contactIntro.description} /></CmsFieldGroup><CmsFieldGroup title="بيانات التواصل الظاهرة" description="القيم الفعلية تأتي من إعدادات الموقع، وهذه الخيارات تتحكم في ظهورها فقط.">{toggles.map(([name, label, checked]) => <label className="flex min-h-11 items-center gap-3 text-sm font-semibold" key={name}><input className="size-4 accent-primary" name={name} type="checkbox" defaultChecked={checked ?? false} />{label}</label>)}</CmsFieldGroup><CmsFieldGroup title="الإرشاد الختامي"><Text id="finalCtaTitle" label="العنوان" value={data?.finalCta.title} /><Area id="finalCtaDescription" label="الوصف" value={data?.finalCta.description} /></CmsFieldGroup></>;
 }
 
 function PricesFields({ data, options }: { data: PricesPageData | null; options: PageFormProps["relationOptions"] }) {
@@ -63,4 +78,4 @@ function PricesFields({ data, options }: { data: PricesPageData | null; options:
 function FinalCta({ data }: { data?: { title?: string; description?: string; buttonText?: string; target?: string } }) { return <CmsFieldGroup title="الدعوة الختامية"><Text id="finalCtaTitle" label="العنوان" value={data?.title} /><Area id="finalCtaDescription" label="الوصف" value={data?.description} /><div className="grid gap-4 sm:grid-cols-2"><Text id="finalCtaButtonText" label="نص الزر" value={data?.buttonText} /><Text id="finalCtaTarget" label="وجهة الزر" value={data?.target} ltr /></div></CmsFieldGroup>; }
 function Text({ id, label, value, ltr }: { id: string; label: string; value?: string | null; ltr?: boolean }) { return <CmsFieldShell id={id} label={label}><CmsInput dir={ltr ? "ltr" : undefined} id={id} name={id} defaultValue={value ?? ""} /></CmsFieldShell>; }
 function Area({ id, label, value, tall }: { id: string; label: string; value?: string | null; tall?: boolean }) { return <CmsFieldShell id={id} label={label}><CmsTextarea className={tall ? "min-h-48" : undefined} id={id} name={id} defaultValue={value ?? ""} /></CmsFieldShell>; }
-function SeoFields({ version, media }: { version: SeoVersion | null; media: MediaPickerItem[] }) { return <CmsFieldGroup title="SEO" description="حقول اختيارية تخص النسخة المنشورة من هذه الصفحة."><Text id="seoTitle" label="عنوان SEO" value={version?.seoTitle} /><Area id="seoDescription" label="وصف SEO" value={version?.seoDescription} /><Text id="canonicalUrl" label="الرابط القانوني" value={version?.canonicalUrl} ltr /><label className="flex min-h-11 items-center gap-3 text-sm font-semibold"><input className="size-4 accent-[oklch(37%_0.075_155)]" name="noIndex" type="checkbox" defaultChecked={version?.noIndex ?? false} />منع الفهرسة بعد النشر</label><Text id="openGraphTitle" label="عنوان Open Graph" value={version?.openGraphTitle} /><Area id="openGraphDescription" label="وصف Open Graph" value={version?.openGraphDescription} /><MediaPicker items={media} name="openGraphImageId" defaultValue={version?.openGraphImageId} label="صورة Open Graph" /></CmsFieldGroup>; }
+function SeoFields({ version, media }: { version: SeoVersion | null; media: MediaPickerItem[] }) { return <CmsFieldGroup title="SEO" description="حقول اختيارية تخص النسخة المنشورة من هذه الصفحة."><Text id="seoTitle" label="عنوان SEO" value={version?.seoTitle} /><Area id="seoDescription" label="وصف SEO" value={version?.seoDescription} /><Text id="canonicalUrl" label="الرابط القانوني" value={version?.canonicalUrl} ltr /><label className="flex min-h-11 items-center gap-3 text-sm font-semibold"><input className="size-4 accent-primary" name="noIndex" type="checkbox" defaultChecked={version?.noIndex ?? false} />منع الفهرسة بعد النشر</label><Text id="openGraphTitle" label="عنوان Open Graph" value={version?.openGraphTitle} /><Area id="openGraphDescription" label="وصف Open Graph" value={version?.openGraphDescription} /><MediaPicker items={media} name="openGraphImageId" defaultValue={version?.openGraphImageId} label="صورة Open Graph" /></CmsFieldGroup>; }

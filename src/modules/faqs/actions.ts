@@ -7,16 +7,48 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
 
-import { faqDraftSchema, faqIdSchema, faqPublishSchema, type FaqDraftInput } from "./validation";
+import { faqCreateSchema, faqDraftSchema, faqIdSchema, faqPublishSchema, type FaqDraftInput } from "./validation";
 
-export async function createFaqAction() {
+export type CreateFaqValues = { question: string; answer: string; sortOrder: string };
+export type CreateFaqState = {
+  status: "idle" | "error";
+  message?: string;
+  fieldErrors?: Record<string, string[] | undefined>;
+  values: CreateFaqValues;
+  revision: number;
+};
+
+export async function createFaqAction(previousState: CreateFaqState, formData: FormData): Promise<CreateFaqState> {
   await requireAdmin();
-  const faq = await prisma.$transaction(async (tx) => {
-    const created = await tx.fAQ.create({ data: { status: ContentStatus.DRAFT, versions: { create: {} } }, include: { versions: { select: { id: true }, take: 1 } } });
-    return tx.fAQ.update({ where: { id: created.id }, data: { draftVersionId: created.versions[0]?.id } });
-  });
+  const values = readCreateFaqFormData(formData);
+  const parsed = faqCreateSchema.safeParse(values);
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message: "تعذر إنشاء السؤال. راجع الحقول المحددة أدناه.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+      values,
+      revision: previousState.revision + 1,
+    };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const faq = await tx.fAQ.create({ data: { status: ContentStatus.DRAFT }, select: { id: true } });
+      const draft = await tx.fAQVersion.create({ data: { faqId: faq.id, ...toVersionData(parsed.data) }, select: { id: true } });
+      await tx.fAQ.update({ where: { id: faq.id }, data: { draftVersionId: draft.id } });
+    });
+  } catch {
+    return {
+      status: "error",
+      message: "تعذر إنشاء السؤال الآن. بقيت المدخلات محفوظة لتتمكن من المحاولة مرة أخرى.",
+      values,
+      revision: previousState.revision + 1,
+    };
+  }
+
   revalidatePath("/dashboard/faqs");
-  redirect(`/dashboard/faqs/${faq.id}?success=${encodeURIComponent("تم إنشاء مسودة سؤال جديدة.")}`);
+  redirect(`/dashboard/faqs?success=${encodeURIComponent("تم إنشاء السؤال وحفظه كمسودة.")}`);
 }
 
 export async function saveFaqDraftAction(formData: FormData) {
@@ -63,6 +95,14 @@ function readFaqFormData(formData: FormData) {
     question: formData.get("question") ?? "",
     answer: formData.get("answer") ?? "",
     sortOrder: formData.get("sortOrder") ?? "",
+  };
+}
+
+function readCreateFaqFormData(formData: FormData): CreateFaqValues {
+  return {
+    question: String(formData.get("question") ?? ""),
+    answer: String(formData.get("answer") ?? ""),
+    sortOrder: String(formData.get("sortOrder") ?? ""),
   };
 }
 
