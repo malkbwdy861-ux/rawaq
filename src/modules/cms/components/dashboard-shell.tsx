@@ -100,18 +100,18 @@ export function DashboardShell({ children, userLabel, logoutAction }: { children
 
   useEffect(() => {
     if (!profileOpen) return;
-    const handlePointerDown = (event: PointerEvent) => {
+    const handleOutsideClick = (event: MouseEvent) => {
       if (profileRef.current?.contains(event.target as Node)) return;
       setProfileOpen(false);
     };
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setProfileOpen(false);
     };
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("click", handleOutsideClick, true);
+    document.addEventListener("keydown", handleKeyDown, true);
     return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("click", handleOutsideClick, true);
+      document.removeEventListener("keydown", handleKeyDown, true);
     };
   }, [profileOpen]);
 
@@ -142,9 +142,9 @@ export function DashboardShell({ children, userLabel, logoutAction }: { children
       </div>
 
       {open ? (
-        <div className="fixed inset-0 z-300 h-[100dvh] min-h-[100dvh] xl:hidden">
-          <button aria-label="إغلاق قائمة لوحة التحكم" className="absolute inset-0 h-full bg-foreground/35" onClick={() => { setOpen(false); menuButtonRef.current?.focus(); }} type="button" />
-          <aside aria-label="قائمة لوحة التحكم" aria-modal="true" className="absolute inset-block-start-0 inset-inline-start-0 h-[100dvh] max-h-[100dvh] w-[min(88vw,320px)] overflow-y-auto overscroll-contain border-e border-border bg-dashboard-sidebar shadow-[var(--shadow-float)]" ref={drawerRef} role="dialog">
+        <div className="fixed inset-0 z-300 h-screen min-h-screen xl:hidden" style={{ height: "100dvh", minHeight: "100dvh" }}>
+          <button aria-label="إغلاق قائمة لوحة التحكم" className="fixed inset-0 bg-foreground/35" onClick={() => { setOpen(false); menuButtonRef.current?.focus(); }} style={{ height: "100dvh" }} type="button" />
+          <aside aria-label="قائمة لوحة التحكم" aria-modal="true" className="fixed inset-block-start-0 inset-inline-start-0 flex h-screen min-h-screen w-[min(88vw,320px)] flex-col overflow-y-auto overscroll-contain border-e border-border bg-dashboard-sidebar shadow-[var(--shadow-float)]" ref={drawerRef} role="dialog" style={{ height: "100dvh", minHeight: "100dvh", maxHeight: "100dvh" }}>
             <Button aria-label="إغلاق القائمة" className="absolute end-3 top-2.5" onClick={() => { setOpen(false); menuButtonRef.current?.focus(); }} size="icon" variant="ghost"><X /></Button>
             <DashboardNav onNavigate={() => setOpen(false)} pathname={pathname} />
           </aside>
