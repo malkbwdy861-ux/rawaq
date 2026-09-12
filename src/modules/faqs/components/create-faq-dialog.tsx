@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Eye, LoaderCircle, Pencil, Plus, Save, Send, Trash2, X } from "lucide-react";
+import { Eye, LoaderCircle, Pencil, Plus, Save, Send, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useEffect, useId, useRef } from "react";
 
@@ -72,8 +72,43 @@ export function FaqDialog({ faq, compact = false }: { faq?: FaqDialogRecord; com
           </div>
 
           <div className="mt-7 flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col-reverse gap-2 sm:flex-row">{faq ? <><details className="group"><summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-md px-3 text-sm font-semibold text-destructive outline-none hover:bg-danger-soft focus-visible:ring-2 focus-visible:ring-destructive/30"><Trash2 className="size-4" />حذف<ChevronDown className="size-4 transition-transform group-open:rotate-180" /></summary><div className="mt-2 w-full rounded-md border border-destructive/20 bg-danger-soft p-3 sm:w-64"><p className="text-xs leading-5 text-destructive">سيُحذف السؤال نهائياً من المحتوى المرتبط. لا يمكن التراجع عن هذا الإجراء.</p><Button className="mt-3 w-full" disabled={pending} formAction={deleteFaqAction} name="faqId" type="submit" value={faq.id} variant="destructive">تأكيد حذف السؤال</Button></div></details><Link className={cn(buttonVariants({ variant: "secondary" }), "min-h-11")} href={`/preview/faqs/${faq.id}`} target="_blank"><Eye />معاينة</Link></> : null}<Button disabled={pending} onClick={closeDialog} type="button" variant="secondary">إلغاء</Button></div>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">{faq ? <Link className={cn(buttonVariants({ variant: "secondary" }), "min-h-11")} href={`/preview/faqs/${faq.id}`} target="_blank"><Eye />معاينة</Link> : null}<Button disabled={pending} onClick={closeDialog} type="button" variant="secondary">إلغاء</Button></div>
             <div className="flex flex-col-reverse gap-2 sm:flex-row"><Button disabled={pending} name="intent" type="submit" value="draft" variant="outline"><Save />حفظ كمسودة</Button><Button aria-describedby={state.status === "error" ? summaryId : undefined} disabled={pending} name="intent" type="submit" value="publish">{pending ? <LoaderCircle className="animate-spin motion-reduce:animate-none" /> : <Send />}{pending ? "جارٍ الحفظ..." : "نشر"}</Button></div>
+          </div>
+        </form>
+      </dialog>
+    </>
+  );
+}
+
+export function DeleteFaqDialog({ faqId, question }: { faqId: string; question?: string | null }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  const descriptionId = useId();
+
+  function closeDialog() {
+    dialogRef.current?.close();
+  }
+
+  return (
+    <>
+      <Button aria-label={`حذف ${question ?? "السؤال"}`} className="size-9 min-h-9 text-destructive hover:bg-danger-soft hover:text-destructive" onClick={() => dialogRef.current?.showModal()} title="حذف السؤال" type="button" variant="ghost" size="icon">
+        <Trash2 />
+      </Button>
+      <dialog aria-describedby={descriptionId} aria-labelledby={titleId} className="m-auto w-[min(calc(100%-2rem),420px)] rounded-xl border border-border bg-card p-0 text-foreground shadow-[var(--shadow-float)] backdrop:bg-foreground/30" onClick={(event) => { if (event.target === event.currentTarget) closeDialog(); }} ref={dialogRef}>
+        <form action={deleteFaqAction} className="p-5">
+          <input name="faqId" type="hidden" value={faqId} />
+          <div className="grid gap-3">
+            <span className="grid size-10 place-items-center rounded-md bg-danger-soft text-destructive"><Trash2 className="size-5" /></span>
+            <div>
+              <h2 className="text-lg font-semibold" id={titleId}>حذف السؤال</h2>
+              <p className="mt-1.5 text-sm leading-6 text-text-secondary" id={descriptionId}>سيُحذف السؤال نهائياً من المحتوى المرتبط. لا يمكن التراجع عن هذا الإجراء.</p>
+            </div>
+            {question ? <p className="rounded-md border border-border bg-secondary px-3 py-2 text-sm font-medium leading-6">{question}</p> : null}
+          </div>
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button onClick={closeDialog} type="button" variant="secondary">إلغاء</Button>
+            <Button type="submit" variant="destructive">تأكيد حذف السؤال</Button>
           </div>
         </form>
       </dialog>
