@@ -10,9 +10,10 @@ export async function getServiceList(searchParams: Record<string, string | strin
   const params = {
     ...parsedParams,
     status: parsedParams.status === "DRAFT" || parsedParams.status === "PUBLISHED" ? parsedParams.status : "ALL",
+    pageSize: 10,
   } as const;
   const page = params.page ?? 1;
-  const pageSize = params.pageSize ?? 20;
+  const pageSize = 10;
   const where = {
     AND: [
       params.status === "ALL" ? {} : params.status === "PUBLISHED" ? { status: ContentStatus.PUBLISHED } : { status: { not: ContentStatus.PUBLISHED } },

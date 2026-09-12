@@ -61,6 +61,6 @@ function serviceListHref(query: string, status: ServiceStatusFilter, pageSize: n
   const normalizedQuery = query.trim();
   if (normalizedQuery) params.set("q", normalizedQuery);
   if (status !== "ALL") params.set("status", status);
-  if (pageSize !== 20) params.set("pageSize", String(pageSize));
+  if (pageSize !== 10) params.set("pageSize", String(pageSize));
   return params.size ? `/dashboard/services?${params}` : "/dashboard/services";
 }

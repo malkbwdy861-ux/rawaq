@@ -30,14 +30,14 @@ export function ServiceMediaField({ items, name, defaultValue, label, error }: {
   }
 
   return (
-    <fieldset>
+    <fieldset className="w-full min-w-0 max-w-full">
       <legend className="text-xs font-medium text-text-secondary">{label}</legend>
       <input name={name} type="hidden" value={selectedId} />
 
-      <div className="mt-2 overflow-hidden rounded-lg border border-border bg-background">
+      <div className="mt-2 w-full min-w-0 max-w-full overflow-hidden rounded-lg border border-border bg-background">
         {selected ? (
-          <button className="group block w-full text-start outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" onClick={openPicker} type="button">
-            <span className="relative block aspect-[4/3] bg-secondary"><Image alt={selected.altText ?? ""} className="object-cover transition-transform duration-200 group-hover:scale-[1.015] motion-reduce:transition-none" fill sizes="280px" src={selected.url} /></span>
+          <button className="group block w-full min-w-0 max-w-full overflow-hidden text-start outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" onClick={openPicker} type="button">
+            <span className="relative block aspect-[4/3] w-full min-w-0 max-w-full overflow-hidden bg-secondary"><Image alt={selected.altText ?? ""} className="object-cover transition-transform duration-200 group-hover:scale-[1.015] motion-reduce:transition-none" fill sizes="(min-width:1280px) 268px, calc(100vw - 64px)" src={selected.url} /></span>
             <span className="flex items-center gap-2 border-t border-border p-2.5"><span className="min-w-0 flex-1"><bdi className="block truncate text-xs font-medium" dir="ltr">{selected.originalFilename}</bdi>{selected.width && selected.height ? <bdi className="mt-0.5 block text-[11px] text-muted-foreground" dir="ltr">{selected.width} × {selected.height}</bdi> : null}</span><span className="text-xs font-semibold text-primary">تغيير</span></span>
           </button>
         ) : (
@@ -49,7 +49,7 @@ export function ServiceMediaField({ items, name, defaultValue, label, error }: {
       </div>
       {error ? <p className="mt-2 text-xs font-medium leading-5 text-destructive">{error}</p> : null}
 
-      <dialog aria-describedby={descriptionId} aria-labelledby={titleId} className="m-auto h-[min(760px,calc(100dvh-2rem))] w-[min(920px,calc(100%-2rem))] overflow-hidden rounded-xl border border-border bg-card p-0 text-foreground shadow-[var(--shadow-float)] backdrop:bg-foreground/30" ref={dialogRef}>
+      <dialog aria-describedby={descriptionId} aria-labelledby={titleId} className="fixed inset-0 m-auto h-[min(760px,calc(100dvh-2rem))] w-[920px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card p-0 text-foreground shadow-[var(--shadow-float)] backdrop:bg-foreground/30" ref={dialogRef}>
         <div className="flex h-full flex-col">
           <header className="flex items-start justify-between gap-4 border-b border-border px-4 py-4 sm:px-5">
             <div><h2 className="text-lg font-semibold" id={titleId}>اختيار {label}</h2><p className="mt-1 text-xs text-muted-foreground" id={descriptionId}>اختر صورة واحدة ثم أكّد الاختيار.</p></div>
