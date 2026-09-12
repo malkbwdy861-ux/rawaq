@@ -12,41 +12,67 @@ import { requireAdmin } from "@/server/auth";
 
 import { serviceDraftSchema, serviceIdSchema, servicePublishSchema, type ServiceDraftInput, type ServicePublishInput } from "./validation";
 
-export async function saveServiceDraftAction(formData: FormData) {
+export type ServiceFormValues = {
+  serviceId?: string;
+  title: string;
+  shortDescription: string;
+  content: string;
+  heroMediaId: string;
+  seoTitle: string;
+  seoDescription: string;
+  canonicalUrl: string;
+  noIndex: boolean;
+  openGraphTitle: string;
+  openGraphDescription: string;
+  openGraphImageId: string;
+  relatedSolutionIds: string[];
+  relatedMaterialIds: string[];
+  relatedProjectIds: string[];
+  relatedArticleIds: string[];
+  relatedFaqIds: string[];
+};
+
+export type ServiceFormState = {
+  status: "idle" | "error";
+  message?: string;
+  fieldErrors?: Record<string, string[] | undefined>;
+  values?: ServiceFormValues;
+  revision: number;
+};
+
+export async function submitServiceAction(previousState: ServiceFormState, formData: FormData): Promise<ServiceFormState> {
   await requireAdmin();
 
   const input = readServiceFormData(formData);
-  const parsed = serviceDraftSchema.safeParse(input);
+  const intent = formData.get("intent") === "publish" ? "publish" : "saveDraft";
+  const parsed = (intent === "publish" ? servicePublishSchema : serviceDraftSchema).safeParse(input);
   if (!parsed.success) {
-    redirectWithMessage(typeof input.serviceId === "string" ? input.serviceId : undefined, "error", "تعذر حفظ المسودة. راجع الحقول المدخلة.");
+    return {
+      status: "error",
+      message: intent === "publish" ? "تعذر نشر الخدمة. راجع الحقول المحددة أدناه." : "تعذر حفظ المسودة. راجع الحقول المحددة أدناه.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+      values: input,
+      revision: previousState.revision + 1,
+    };
   }
 
-  let serviceId: string;
-  try {
-    serviceId = parsed.data.serviceId ?? await createServiceDraft(parsed.data);
-    if (parsed.data.serviceId) await saveDraft(serviceId, parsed.data);
-  } catch {
-    redirectWithMessage(parsed.data.serviceId, "error", "تعذر حفظ المسودة. حاول مرة أخرى.");
-  }
-  revalidateServiceDraftPaths(serviceId);
-  redirectWithMessage(serviceId, "success", "تم حفظ مسودة الخدمة.");
-}
-
-export async function publishServiceAction(formData: FormData) {
-  await requireAdmin();
-
-  const input = readServiceFormData(formData);
-  const parsed = servicePublishSchema.safeParse(input);
-  if (!parsed.success) {
-    redirectWithMessage(typeof input.serviceId === "string" ? input.serviceId : undefined, "error", "تعذر النشر. أكمل العنوان والوصف والمحتوى.");
+  if (intent === "saveDraft") {
+    let serviceId: string;
+    try {
+      serviceId = parsed.data.serviceId ?? await createServiceDraft(parsed.data);
+      if (parsed.data.serviceId) await saveDraft(serviceId, parsed.data);
+    } catch (error) {
+      return mutationErrorState(previousState, input, error, "saveDraft");
+    }
+    revalidateServiceDraftPaths(serviceId);
+    redirectWithMessage(serviceId, "success", "تم حفظ مسودة الخدمة.");
   }
 
   let published: Awaited<ReturnType<typeof publishService>>;
   try {
-    published = await publishService(parsed.data.serviceId, parsed.data);
+    published = await publishService(parsed.data.serviceId, parsed.data as ServicePublishInput);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "فشل نشر الخدمة. بقيت النسخة المنشورة الحالية كما هي.";
-    redirectWithMessage(parsed.data.serviceId, "error", message);
+    return mutationErrorState(previousState, input, error, "publish");
   }
   revalidateServicePaths(published.serviceId, published.slug, published.oldPath);
   redirectWithMessage(published.serviceId, "success", "تم نشر الخدمة وتحديث الصفحة العامة.");
@@ -84,26 +110,45 @@ export async function deleteServiceAction(formData: FormData) {
   redirect(`/dashboard/services?success=${encodeURIComponent("تم حذف الخدمة نهائياً.")}`);
 }
 
-function readServiceFormData(formData: FormData) {
+function readServiceFormData(formData: FormData): ServiceFormValues {
   return {
-    serviceId: formData.get("serviceId") || undefined,
-    title: formData.get("title") ?? "",
-    shortDescription: formData.get("shortDescription") ?? "",
-    content: formData.get("content") ?? "",
-    heroMediaId: formData.get("heroMediaId") ?? "",
-    seoTitle: formData.get("seoTitle") ?? "",
-    seoDescription: formData.get("seoDescription") ?? "",
-    canonicalUrl: formData.get("canonicalUrl") ?? "",
+    serviceId: readText(formData, "serviceId") || undefined,
+    title: readText(formData, "title"),
+    shortDescription: readText(formData, "shortDescription"),
+    content: readText(formData, "content"),
+    heroMediaId: readText(formData, "heroMediaId"),
+    seoTitle: readText(formData, "seoTitle"),
+    seoDescription: readText(formData, "seoDescription"),
+    canonicalUrl: readText(formData, "canonicalUrl"),
     noIndex: formData.get("noIndex") === "on",
-    openGraphTitle: formData.get("openGraphTitle") ?? "",
-    openGraphDescription: formData.get("openGraphDescription") ?? "",
-    openGraphImageId: formData.get("openGraphImageId") ?? "",
+    openGraphTitle: readText(formData, "openGraphTitle"),
+    openGraphDescription: readText(formData, "openGraphDescription"),
+    openGraphImageId: readText(formData, "openGraphImageId"),
     relatedSolutionIds: readStringArray(formData, "relatedSolutionIds"),
     relatedMaterialIds: readStringArray(formData, "relatedMaterialIds"),
     relatedProjectIds: readStringArray(formData, "relatedProjectIds"),
     relatedArticleIds: readStringArray(formData, "relatedArticleIds"),
     relatedFaqIds: readStringArray(formData, "relatedFaqIds"),
   };
+}
+
+function readText(formData: FormData, fieldName: string) {
+  const value = formData.get(fieldName);
+  return typeof value === "string" ? value : "";
+}
+
+function mutationErrorState(previousState: ServiceFormState, values: ServiceFormValues, error: unknown, intent: "saveDraft" | "publish"): ServiceFormState {
+  console.error(`Service ${intent} failed`, error);
+  const code = typeof error === "object" && error && "code" in error ? error.code : undefined;
+  let message = intent === "publish"
+    ? "تعذر نشر الخدمة بسبب خطأ في قاعدة البيانات. بقيت بيانات النموذج والنسخة المنشورة الحالية كما هي."
+    : "تعذر حفظ المسودة بسبب خطأ في قاعدة البيانات. بقيت بيانات النموذج كما هي.";
+
+  if (error instanceof Error && /^[\u0600-\u06ff]/u.test(error.message)) message = error.message;
+  if (code === "P2003") message = "تعذر الحفظ لأن أحد العناصر المرتبطة أو الصور لم يعد موجوداً. حدّث اختياراتك ثم حاول مرة أخرى.";
+  if (code === "P2025") message = "الخدمة لم تعد موجودة. ارجع إلى قائمة الخدمات وحدّث الصفحة.";
+
+  return { status: "error", message, values, revision: previousState.revision + 1 };
 }
 
 async function saveDraft(serviceId: string, input: ServiceDraftInput) {

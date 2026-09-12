@@ -2,9 +2,9 @@ import { FilePlus2, ImageIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { CmsStateBlock } from "@/modules/cms/components/state-blocks";
 import { CreateServiceButton } from "@/modules/services/components/create-service-button";
 import { ServiceActions } from "@/modules/services/components/service-actions";
+import { ServiceRouteToast } from "@/modules/services/components/service-route-toast";
 import { ServicesPagination } from "@/modules/services/components/services-pagination";
 import { ServicesToolbar } from "@/modules/services/components/services-toolbar";
 import { getServiceList } from "@/modules/services/queries";
@@ -22,8 +22,7 @@ export default async function ServicesPage({ searchParams }: ServicesPageProps) 
         <CreateServiceButton />
       </header>
 
-      {typeof rawParams.success === "string" ? <CmsStateBlock tone="success" title="اكتملت العملية" description={rawParams.success} /> : null}
-      {typeof rawParams.error === "string" ? <CmsStateBlock tone="error" title="تعذرت العملية" description={rawParams.error} /> : null}
+      <ServiceRouteToast cleanHref="/dashboard/services" error={typeof rawParams.error === "string" ? rawParams.error : undefined} success={typeof rawParams.success === "string" ? rawParams.success : undefined} />
 
       <section aria-label="مجموعة الخدمات" className="rounded-xl border border-border bg-card shadow-[var(--shadow-rest)]">
         <ServicesToolbar key={`${params.q ?? ""}-${params.status}`} pageSize={params.pageSize ?? 20} query={params.q} status={params.status} statusCounts={statusCounts} totalItems={pagination.totalItems} />

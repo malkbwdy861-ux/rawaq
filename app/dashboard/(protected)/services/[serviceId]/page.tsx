@@ -1,5 +1,5 @@
-import { CmsStateBlock } from "@/modules/cms/components/state-blocks";
 import { ServiceForm } from "@/modules/services/components/service-form";
+import { ServiceRouteToast } from "@/modules/services/components/service-route-toast";
 import { getServiceEditorData } from "@/modules/services/queries";
 
 type ServiceEditorPageProps = { params: Promise<{ serviceId: string }>; searchParams: Promise<{ success?: string; error?: string }> };
@@ -10,8 +10,7 @@ export default async function ServiceEditorPage({ params, searchParams }: Servic
 
   return (
     <div className="mx-auto w-full max-w-[1200px]">
-      {messages.success ? <div className="mb-4"><CmsStateBlock tone="success" title="اكتملت العملية" description={messages.success} /></div> : null}
-      {messages.error ? <div className="mb-4"><CmsStateBlock tone="error" title="تعذرت العملية" description={messages.error} /></div> : null}
+      <ServiceRouteToast cleanHref={`/dashboard/services/${serviceId}`} error={messages.error} success={messages.success} />
       <ServiceForm service={service} media={media} relationOptions={relationOptions} />
     </div>
   );
