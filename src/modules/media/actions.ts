@@ -72,7 +72,7 @@ export async function updateMediaMetadataAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirectWithMessage("error", "تعذر حفظ بيانات الوسيط. راجع النصوص المدخلة.");
+    redirectWithMessage("error", "تعذر حفظ بيانات الصورة. راجع النصوص المدخلة.");
   }
 
   await prisma.media.update({
@@ -84,7 +84,7 @@ export async function updateMediaMetadataAction(formData: FormData) {
   });
 
   revalidatePath("/dashboard/media");
-  redirectWithMessage("success", "تم تحديث وصف الوسيط.");
+  redirectWithMessage("success", "تم تحديث بيانات الصورة.");
 }
 
 export async function deleteMediaAction(formData: FormData) {
@@ -93,19 +93,19 @@ export async function deleteMediaAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
 
   if (!id) {
-    redirectWithMessage("error", "لم يتم تحديد الوسيط المطلوب حذفه.");
+    redirectWithMessage("error", "لم يتم تحديد الصورة المطلوب حذفها.");
   }
 
   const media = await prisma.media.findUnique({ where: { id } });
 
   if (!media) {
-    redirectWithMessage("error", "الوسيط غير موجود.");
+    redirectWithMessage("error", "الصورة غير موجودة.");
   }
 
   const referenceCount = await countMediaReferences(id);
 
   if (referenceCount > 0) {
-    redirectWithMessage("error", "لا يمكن حذف وسيط مستخدم في المحتوى أو الإعدادات.");
+    redirectWithMessage("error", "لا يمكن حذف صورة مستخدمة في المحتوى أو الإعدادات.");
   }
 
   await prisma.media.delete({ where: { id } });
@@ -115,11 +115,11 @@ export async function deleteMediaAction(formData: FormData) {
   });
 
   revalidatePath("/dashboard/media");
-  redirectWithMessage("success", "تم حذف الوسيط والملف المرتبط به.");
+  redirectWithMessage("success", "تم حذف الصورة والملف المرتبط بها.");
 }
 
 async function countMediaReferences(id: string) {
-  const counts = await Promise.all([
+  const [counts, pageVersions] = await Promise.all([Promise.all([
     prisma.serviceVersion.count({ where: { OR: [{ heroMediaId: id }, { openGraphImageId: id }] } }),
     prisma.solutionVersion.count({ where: { OR: [{ heroMediaId: id }, { openGraphImageId: id }] } }),
     prisma.materialVersion.count({ where: { OR: [{ heroMediaId: id }, { openGraphImageId: id }] } }),
@@ -128,9 +128,16 @@ async function countMediaReferences(id: string) {
     prisma.pageVersion.count({ where: { openGraphImageId: id } }),
     prisma.siteSettings.count({ where: { OR: [{ logoMediaId: id }, { defaultOpenGraphImageId: id }] } }),
     prisma.projectVersionGallery.count({ where: { mediaId: id } }),
-  ]);
+  ]), prisma.pageVersion.findMany({ select: { data: true } })]);
 
-  return counts.reduce((total, count) => total + count, 0);
+  return counts.reduce((total, count) => total + count, 0) + pageVersions.filter(({ data }) => jsonContainsId(data, id)).length;
+}
+
+function jsonContainsId(value: unknown, id: string): boolean {
+  if (value === id) return true;
+  if (Array.isArray(value)) return value.some((item) => jsonContainsId(item, id));
+  if (value && typeof value === "object") return Object.values(value).some((item) => jsonContainsId(item, id));
+  return false;
 }
 
 function redirectWithMessage(type: "success" | "error", message: string): never {

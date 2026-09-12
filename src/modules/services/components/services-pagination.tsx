@@ -4,14 +4,14 @@ import Link from "next/link";
 import type { CmsPagination } from "@/modules/cms/types";
 import { getCmsPagination } from "@/modules/cms/validation";
 
-export function ServicesPagination({ pagination, query, basePath = "/dashboard/services" }: { pagination: CmsPagination; query: Record<string, string | number | undefined>; basePath?: string }) {
+export function ServicesPagination({ pagination, query, basePath = "/dashboard/services", ariaLabel = "صفحات الخدمات" }: { pagination: CmsPagination; query: Record<string, string | number | undefined>; basePath?: string; ariaLabel?: string }) {
   const page = getCmsPagination(pagination);
   if (!page.totalItems) return null;
   const first = (page.page - 1) * page.pageSize + 1;
   const last = Math.min(page.page * page.pageSize, page.totalItems);
 
   return (
-    <nav aria-label="صفحات الخدمات" className="flex flex-col gap-3 border-t border-border bg-card px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+    <nav aria-label={ariaLabel} className="flex flex-col gap-3 border-t border-border bg-card px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
       <p className="tabular-nums text-muted-foreground"><bdi>{first.toLocaleString("ar-SA")}–{last.toLocaleString("ar-SA")}</bdi> من {page.totalItems.toLocaleString("ar-SA")}</p>
       <div className="flex items-center gap-1">
         <PageLink disabled={!page.hasPreviousPage} href={pageHref(basePath, { ...query, page: page.page - 1 })} label="الصفحة السابقة"><ChevronRight /></PageLink>
