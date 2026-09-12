@@ -6,7 +6,7 @@ import { cmsRelationIdsSchema, cmsSeoFieldsSchema } from "@/modules/cms/validati
 const text = z.string().trim();
 const optionalText = text.optional().or(z.literal(""));
 const optionalMediaId = z.string().cuid().optional().or(z.literal(""));
-const itemSchema = z.object({ title: optionalText, description: optionalText });
+const itemSchema = z.object({ title: optionalText, description: optionalText, icon: z.enum(["location", "shield", "team", "settings"]).optional() });
 const safeTarget = text.refine(
   (value) => /^(\/(?!\/)|https:\/\/|tel:|mailto:)/i.test(value),
   "استخدم مسارًا داخليًا أو رابط https أو tel أو mailto.",
@@ -14,7 +14,7 @@ const safeTarget = text.refine(
 const optionalSafeTarget = z.union([z.literal(""), safeTarget]).optional();
 
 export const homePageDraftSchema = z.object({
-  hero: z.object({ title: optionalText, description: optionalText, primaryCtaText: optionalText, primaryCtaTarget: optionalText, secondaryCtaText: optionalText, secondaryCtaTarget: optionalText, mediaId: optionalMediaId }),
+  hero: z.object({ eyebrow: optionalText, title: optionalText, description: optionalText, primaryCtaText: optionalText, primaryCtaTarget: optionalText, secondaryCtaText: optionalText, secondaryCtaTarget: optionalText, mediaId: optionalMediaId, imageAlt: optionalText }),
   featuredServices: z.object({ title: optionalText, description: optionalText, selectedServiceIds: cmsRelationIdsSchema }),
   featuredSolutions: z.object({ title: optionalText, description: optionalText, selectedSolutionIds: cmsRelationIdsSchema }),
   featuredProjects: z.object({ title: optionalText, description: optionalText, selectedProjectIds: cmsRelationIdsSchema }),

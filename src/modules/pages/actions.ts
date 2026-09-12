@@ -126,10 +126,15 @@ function readPageData(formData: FormData, key: PageKey): StaticPageData {
   const items = (prefix: string) => {
     const titles = formData.getAll(`${prefix}Titles`);
     const descriptions = formData.getAll(`${prefix}Descriptions`);
-    return titles.map((title, index) => ({ title: String(title), description: String(descriptions[index] ?? "") })).filter((item) => item.title || item.description);
+    const icons = formData.getAll(`${prefix}Icons`);
+    const supportedIcons = ["location", "shield", "team", "settings"] as const;
+    return titles.map((title, index) => {
+      const icon = String(icons[index] ?? "");
+      return { title: String(title), description: String(descriptions[index] ?? ""), ...(supportedIcons.includes(icon as typeof supportedIcons[number]) ? { icon: icon as typeof supportedIcons[number] } : {}) };
+    }).filter((item) => item.title || item.description);
   };
   if (key === "HOME") return {
-    hero: { title: value("heroTitle"), description: value("heroDescription"), primaryCtaText: value("primaryCtaText"), primaryCtaTarget: value("primaryCtaTarget"), secondaryCtaText: value("secondaryCtaText"), secondaryCtaTarget: value("secondaryCtaTarget"), mediaId: value("heroMediaId") },
+    hero: { eyebrow: value("heroEyebrow"), title: value("heroTitle"), description: value("heroDescription"), primaryCtaText: value("primaryCtaText"), primaryCtaTarget: value("primaryCtaTarget"), secondaryCtaText: value("secondaryCtaText"), secondaryCtaTarget: value("secondaryCtaTarget"), mediaId: value("heroMediaId"), imageAlt: value("heroImageAlt") },
     featuredServices: { title: value("servicesTitle"), description: value("servicesDescription"), selectedServiceIds: readStringArray(formData, "selectedServiceIds") },
     featuredSolutions: { title: value("solutionsTitle"), description: value("solutionsDescription"), selectedSolutionIds: readStringArray(formData, "selectedSolutionIds") },
     featuredProjects: { title: value("projectsTitle"), description: value("projectsDescription"), selectedProjectIds: readStringArray(formData, "selectedProjectIds") },
