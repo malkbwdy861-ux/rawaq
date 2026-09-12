@@ -6,10 +6,6 @@ export const faqDraftSchema = z.object({
   faqId: z.string().cuid().optional(),
   question: optionalText,
   answer: optionalText,
-  sortOrder: z.preprocess(
-    (value) => (value === "" || value === undefined ? undefined : value),
-    z.coerce.number().int().min(0).optional(),
-  ),
 });
 
 export const faqCreateSchema = faqDraftSchema.omit({ faqId: true }).extend({

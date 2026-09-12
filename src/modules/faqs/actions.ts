@@ -1,6 +1,6 @@
 "use server";
 
-import { ContentStatus } from "@prisma/client";
+import { ContentStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -9,23 +9,25 @@ import { prisma } from "@/server/db/prisma";
 
 import { faqCreateSchema, faqDraftSchema, faqIdSchema, faqPublishSchema, type FaqDraftInput } from "./validation";
 
-export type CreateFaqValues = { question: string; answer: string; sortOrder: string };
-export type CreateFaqState = {
+export type FaqDialogValues = { question: string; answer: string };
+export type FaqDialogState = {
   status: "idle" | "error";
   message?: string;
   fieldErrors?: Record<string, string[] | undefined>;
-  values: CreateFaqValues;
+  values: FaqDialogValues;
   revision: number;
 };
 
-export async function createFaqAction(previousState: CreateFaqState, formData: FormData): Promise<CreateFaqState> {
+export async function submitFaqDialogAction(previousState: FaqDialogState, formData: FormData): Promise<FaqDialogState> {
   await requireAdmin();
+  const faqId = String(formData.get("faqId") ?? "") || undefined;
+  const intent = formData.get("intent") === "publish" ? "publish" : "draft";
   const values = readCreateFaqFormData(formData);
-  const parsed = faqCreateSchema.safeParse(values);
+  const parsed = (faqId ? intent === "publish" ? faqPublishSchema : faqDraftSchema : faqCreateSchema).safeParse({ ...values, faqId });
   if (!parsed.success) {
     return {
       status: "error",
-      message: "تعذر إنشاء السؤال. راجع الحقول المحددة أدناه.",
+      message: `${faqId ? "تعذر تحديث" : "تعذر إنشاء"} السؤال. راجع الحقول المحددة أدناه.`,
       fieldErrors: parsed.error.flatten().fieldErrors,
       values,
       revision: previousState.revision + 1,
@@ -34,93 +36,90 @@ export async function createFaqAction(previousState: CreateFaqState, formData: F
 
   try {
     await prisma.$transaction(async (tx) => {
-      const faq = await tx.fAQ.create({ data: { status: ContentStatus.DRAFT }, select: { id: true } });
-      const draft = await tx.fAQVersion.create({ data: { faqId: faq.id, ...toVersionData(parsed.data) }, select: { id: true } });
-      await tx.fAQ.update({ where: { id: faq.id }, data: { draftVersionId: draft.id } });
+      const versionData = toVersionData(parsed.data);
+      const faq = faqId
+        ? await tx.fAQ.findUnique({ where: { id: faqId }, select: { id: true, draftVersionId: true, status: true } })
+        : await tx.fAQ.create({ data: { status: ContentStatus.DRAFT }, select: { id: true, draftVersionId: true, status: true } });
+      if (!faq) throw new Error("السؤال غير موجود.");
+
+      const draft = faq.draftVersionId
+        ? await tx.fAQVersion.update({ where: { id: faq.draftVersionId }, data: versionData, select: { id: true } })
+        : await tx.fAQVersion.create({ data: { faqId: faq.id, ...versionData }, select: { id: true } });
+
+      if (intent === "publish") {
+        const published = await tx.fAQVersion.create({ data: { faqId: faq.id, ...versionData }, select: { id: true } });
+        await tx.fAQ.update({ where: { id: faq.id }, data: { draftVersionId: draft.id, publishedVersionId: published.id, publishedAt: new Date(), status: ContentStatus.PUBLISHED } });
+        return;
+      }
+
+      await tx.fAQ.update({ where: { id: faq.id }, data: { draftVersionId: draft.id, status: faq.status === ContentStatus.PUBLISHED ? ContentStatus.PUBLISHED : ContentStatus.DRAFT } });
     });
-  } catch {
+  } catch (error) {
     return {
       status: "error",
-      message: "تعذر إنشاء السؤال الآن. بقيت المدخلات محفوظة لتتمكن من المحاولة مرة أخرى.",
+      message: error instanceof Error ? error.message : "تعذر حفظ السؤال الآن. بقيت المدخلات محفوظة لتتمكن من المحاولة مرة أخرى.",
       values,
       revision: previousState.revision + 1,
     };
   }
 
-  revalidatePath("/dashboard/faqs");
-  redirect(`/dashboard/faqs?success=${encodeURIComponent("تم إنشاء السؤال وحفظه كمسودة.")}`);
+  if (faqId) revalidateFaqPaths(faqId);
+  else revalidatePath("/dashboard/faqs");
+  const message = intent === "publish" ? "تم نشر السؤال وتحديث الصفحات المرتبطة." : `تم ${faqId ? "تحديث" : "إنشاء"} السؤال وحفظه كمسودة.`;
+  redirect(`/dashboard/faqs?success=${encodeURIComponent(message)}`);
 }
 
-export async function saveFaqDraftAction(formData: FormData) {
-  await requireAdmin();
-  const parsed = faqDraftSchema.safeParse(readFaqFormData(formData));
-  if (!parsed.success || !parsed.data.faqId) redirectWithMessage(parsed.data?.faqId, "error", "تعذر حفظ المسودة. راجع الحقول المدخلة.");
-  await saveDraft(parsed.data.faqId, parsed.data);
-  revalidateFaqDraftPaths(parsed.data.faqId);
-  redirectWithMessage(parsed.data.faqId, "success", "تم حفظ مسودة السؤال دون تغيير النسخة المنشورة.");
-}
-
-export async function publishFaqAction(formData: FormData) {
-  await requireAdmin();
-  const parsed = faqPublishSchema.safeParse(readFaqFormData(formData));
-  if (!parsed.success || !parsed.data.faqId) redirectWithMessage(parsed.data?.faqId, "error", "تعذر النشر. أدخل السؤال والإجابة.");
-  const faqId = parsed.data.faqId;
-  try {
-    await prisma.$transaction(async (tx) => {
-      const faq = await tx.fAQ.findUnique({ where: { id: faqId }, select: { draftVersionId: true } });
-      if (!faq?.draftVersionId) throw new Error("لا توجد مسودة قابلة للنشر.");
-      await tx.fAQVersion.update({ where: { id: faq.draftVersionId }, data: toVersionData(parsed.data) });
-      const published = await tx.fAQVersion.create({ data: { faqId, ...toVersionData(parsed.data) } });
-      await tx.fAQ.update({ where: { id: faqId }, data: { status: ContentStatus.PUBLISHED, publishedVersionId: published.id, publishedAt: new Date() } });
-    });
-  } catch (error) {
-    redirectWithMessage(faqId, "error", error instanceof Error ? error.message : "فشل نشر السؤال. بقيت النسخة المنشورة الحالية كما هي.");
-  }
-  revalidateFaqPaths(faqId);
-  redirectWithMessage(faqId, "success", "تم نشر السؤال وتحديث الصفحات المرتبطة.");
-}
-
-export async function archiveFaqAction(formData: FormData) {
+export async function deleteFaqAction(formData: FormData) {
   await requireAdmin();
   const parsed = faqIdSchema.safeParse({ faqId: formData.get("faqId") });
-  if (!parsed.success) redirect("/dashboard/faqs?error=تعذر تحديد السؤال المطلوب أرشفته.");
-  await prisma.fAQ.update({ where: { id: parsed.data.faqId }, data: { status: ContentStatus.ARCHIVED } });
+  if (!parsed.success) redirect("/dashboard/faqs?error=تعذر تحديد السؤال المطلوب حذفه.");
+
+  let result: "missing" | "referenced" | "deleted";
+  try {
+    result = await prisma.$transaction(async (tx) => {
+      const faq = await tx.fAQ.findUnique({ where: { id: parsed.data.faqId }, select: { id: true } });
+      if (!faq) return "missing" as const;
+      const pageVersions = await tx.pageVersion.findMany({ select: { data: true } });
+      if (pageVersions.some(({ data }) => pageReferencesFaq(data, faq.id))) return "referenced" as const;
+
+      await Promise.all([
+        tx.serviceVersionFAQ.deleteMany({ where: { faqId: faq.id } }),
+        tx.solutionVersionFAQ.deleteMany({ where: { faqId: faq.id } }),
+        tx.materialVersionFAQ.deleteMany({ where: { faqId: faq.id } }),
+        tx.articleVersionFAQ.deleteMany({ where: { faqId: faq.id } }),
+      ]);
+      await tx.fAQ.delete({ where: { id: faq.id } });
+      return "deleted" as const;
+    });
+
+  } catch (error) {
+    console.error("FAQ delete failed", error);
+    redirect(`/dashboard/faqs?error=${encodeURIComponent("تعذر حذف السؤال. حاول مرة أخرى.")}`);
+  }
+
+  if (result === "referenced") redirect(`/dashboard/faqs?error=${encodeURIComponent("لا يمكن حذف السؤال لأنه مختار في صفحة ثابتة. أزله من الصفحة أولاً ثم أعد المحاولة.")}`);
+  if (result === "missing") redirect(`/dashboard/faqs?error=${encodeURIComponent("السؤال غير موجود أو تم حذفه مسبقاً.")}`);
   revalidateFaqPaths(parsed.data.faqId);
-  redirectWithMessage(parsed.data.faqId, "success", "تمت أرشفة السؤال وإزالته من الصفحات العامة.");
+  redirect(`/dashboard/faqs?success=${encodeURIComponent("تم حذف السؤال وإزالة روابطه من المحتوى.")}`);
 }
 
-function readFaqFormData(formData: FormData) {
-  return {
-    faqId: formData.get("faqId") || undefined,
-    question: formData.get("question") ?? "",
-    answer: formData.get("answer") ?? "",
-    sortOrder: formData.get("sortOrder") ?? "",
-  };
-}
-
-function readCreateFaqFormData(formData: FormData): CreateFaqValues {
+function readCreateFaqFormData(formData: FormData): FaqDialogValues {
   return {
     question: String(formData.get("question") ?? ""),
     answer: String(formData.get("answer") ?? ""),
-    sortOrder: String(formData.get("sortOrder") ?? ""),
   };
 }
 
-async function saveDraft(faqId: string, input: FaqDraftInput) {
-  await prisma.$transaction(async (tx) => {
-    const faq = await tx.fAQ.findUnique({ where: { id: faqId }, select: { draftVersionId: true } });
-    if (!faq) throw new Error("السؤال غير موجود.");
-    if (faq.draftVersionId) {
-      await tx.fAQVersion.update({ where: { id: faq.draftVersionId }, data: toVersionData(input) });
-      return;
-    }
-    const draft = await tx.fAQVersion.create({ data: { faqId, ...toVersionData(input) } });
-    await tx.fAQ.update({ where: { id: faqId }, data: { draftVersionId: draft.id } });
-  });
+function toVersionData(input: FaqDraftInput) {
+  return { question: input.question || null, answer: input.answer || null };
 }
 
-function toVersionData(input: FaqDraftInput) {
-  return { question: input.question || null, answer: input.answer || null, sortOrder: input.sortOrder ?? null };
+function pageReferencesFaq(data: Prisma.JsonValue, faqId: string) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+  const faqSection = (data as Record<string, Prisma.JsonValue>).faqSection;
+  if (!faqSection || typeof faqSection !== "object" || Array.isArray(faqSection)) return false;
+  const selectedIds = (faqSection as Record<string, Prisma.JsonValue>).selectedFaqIds;
+  return Array.isArray(selectedIds) && selectedIds.includes(faqId);
 }
 
 function revalidateFaqPaths(faqId: string) {
@@ -132,14 +131,4 @@ function revalidateFaqPaths(faqId: string) {
   revalidatePath("/solutions/[slug]", "page");
   revalidatePath("/materials/[slug]", "page");
   revalidatePath("/guides/[slug]", "page");
-}
-
-function revalidateFaqDraftPaths(faqId: string) {
-  revalidatePath("/dashboard/faqs");
-  revalidatePath(`/dashboard/faqs/${faqId}`);
-  revalidatePath(`/preview/faqs/${faqId}`);
-}
-
-function redirectWithMessage(faqId: string | undefined, type: "success" | "error", message: string): never {
-  redirect(`${faqId ? `/dashboard/faqs/${faqId}` : "/dashboard/faqs"}?${type}=${encodeURIComponent(message)}`);
 }
