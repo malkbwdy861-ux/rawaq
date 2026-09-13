@@ -10,7 +10,7 @@ import type { CmsRelationOption } from "@/modules/cms/types";
 import { MediaPicker, type MediaPickerItem } from "@/modules/media/components/media-picker";
 
 import { publishPageAction } from "../actions";
-import type { AboutPageData, ContactPageData, HomePageData, ListingPageData, PricesPageData, StaticPageData } from "../validation";
+import type { AboutPageData, ContactPageData, FaqPageData, HomePageData, ListingPageData, PricesPageData, StaticPageData } from "../validation";
 import { RepeatableItems } from "./repeatable-items";
 
 type PageFormProps = {
@@ -33,6 +33,7 @@ export function PageForm({ page, draftData, media, path, relationOptions }: Page
         {page.key === "ABOUT" ? <AboutFields data={draftData as AboutPageData | null} media={media} /> : null}
         {page.key === "CONTACT" ? <ContactFields data={draftData as ContactPageData | null} /> : null}
         {page.key === "PRICES" ? <PricesFields data={draftData as PricesPageData | null} options={relationOptions} /> : null}
+        {page.key === "FAQS" ? <FaqFields data={draftData as FaqPageData | null} options={relationOptions} /> : null}
         {page.key === "PROJECTS" || page.key === "SERVICES" || page.key === "SOLUTIONS" ? <ListingFields data={draftData as ListingPageData | null} media={media} pageKey={page.key} /> : null}
         <SeoFields version={page.draftVersion} media={media} />
       </div>
@@ -52,6 +53,20 @@ export function PageForm({ page, draftData, media, path, relationOptions }: Page
         </div>
       </div>
     </form>
+  );
+}
+
+function FaqFields({ data, options }: { data: FaqPageData | null; options: PageFormProps["relationOptions"] }) {
+  return (
+    <>
+      <PageSection title="القسم الرئيسي" description="يظهر العنوان والوصف في منتصف أعلى صفحة الأسئلة الشائعة." defaultOpen>
+        <Text id="heroTitle" label="عنوان الصفحة" required value={data?.hero.title} />
+        <Area id="heroDescription" label="وصف الصفحة" required value={data?.hero.description} />
+      </PageSection>
+      <PageSection title="الأسئلة المعروضة" description="اختر الأسئلة المنشورة ورتبها كما تريد أن تظهر في الصفحة." defaultOpen>
+        <CmsRelationSelector editBasePath="/dashboard/faqs" name="selectedFaqIds" label="الأسئلة الشائعة" options={options.faqs} selectedIds={data?.faqSection.selectedFaqIds} />
+      </PageSection>
+    </>
   );
 }
 

@@ -22,13 +22,14 @@ import { buildWhatsAppUrl, digitsOnly, phoneHref } from "@/modules/settings/cont
 import { ContactWhatsappForm } from "@/modules/settings/components/contact-whatsapp-form";
 import { WhatsappQuickDialog } from "@/modules/settings/components/whatsapp-quick-dialog";
 
-import type { AboutPageData, ContactPageData, ListingPageData, PricesPageData } from "../validation";
+import type { AboutPageData, ContactPageData, FaqPageData, ListingPageData, PricesPageData } from "../validation";
 import { ArchivePageHero } from "./archive-page-hero";
 import { ArchivePageIntro } from "./archive-page-intro";
+import { HomeFaqAccordion } from "./home-faq-accordion";
 import type { ResolvedPageData } from "./public-page";
 
-type StaticPageKey = "ABOUT" | "CONTACT" | "PRICES" | "PROJECTS" | "SERVICES" | "SOLUTIONS";
-type StaticData = AboutPageData | ContactPageData | PricesPageData | ListingPageData;
+type StaticPageKey = "ABOUT" | "CONTACT" | "PRICES" | "FAQS" | "PROJECTS" | "SERVICES" | "SOLUTIONS";
+type StaticData = AboutPageData | ContactPageData | PricesPageData | FaqPageData | ListingPageData;
 type Entity = ResolvedPageData["articles"][number];
 
 const valueIcons = {
@@ -45,7 +46,26 @@ export function StaticPublicPage({ pageKey, data, resolved, preview }: { pageKey
     {pageKey === "ABOUT" ? <AboutPageContent data={data as AboutPageData} resolved={resolved} /> : null}
     {pageKey === "CONTACT" ? <ContactPageContent data={data as ContactPageData} resolved={resolved} /> : null}
     {pageKey === "PRICES" ? <PricesPageContent data={data as PricesPageData} preview={preview} resolved={resolved} /> : null}
+    {pageKey === "FAQS" ? <FaqPageContent data={data as FaqPageData} preview={preview} resolved={resolved} /> : null}
     {pageKey === "PROJECTS" || pageKey === "SERVICES" || pageKey === "SOLUTIONS" ? <ListingPagePreview data={data as ListingPageData} pageKey={pageKey} resolved={resolved} /> : null}
+  </>;
+}
+
+function FaqPageContent({ data, resolved, preview }: { data: FaqPageData; resolved: ResolvedPageData; preview: boolean }) {
+  const faqs = faqItems(data.faqSection.selectedFaqIds, resolved.faqs, preview);
+  return <>
+    <section className="relative overflow-hidden border-b border-border bg-muted px-4 pb-16 pt-9 md:px-8 md:pb-20 md:pt-12">
+      <ArchitecturalGrid />
+      <div className="relative mx-auto max-w-7xl">
+        <PageBreadcrumb current="الأسئلة الشائعة" />
+        <header className="mx-auto mt-10 max-w-3xl text-center md:mt-14">
+          <h1 className="text-[clamp(2.35rem,4.7vw,3.6rem)] font-bold leading-[1.2] text-pretty">{data.hero.title}</h1>
+          <p className="mx-auto mt-5 max-w-[60ch] text-[clamp(1.0625rem,1.6vw,1.25rem)] leading-[1.8] text-text-secondary">{data.hero.description}</p>
+        </header>
+      </div>
+    </section>
+    {faqs.length ? <section className="bg-background px-4 py-14 md:px-8 md:py-20 lg:py-24" aria-label="الأسئلة الشائعة"><div className="mx-auto max-w-4xl"><HomeFaqAccordion items={faqs} /></div></section> : null}
+    {!preview && faqs.length ? <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.flatMap((item) => item.question && item.answer ? [{ "@type": "Question", name: item.question, acceptedAnswer: { "@type": "Answer", text: item.answer } }] : []) }} /> : null}
   </>;
 }
 
@@ -144,7 +164,7 @@ function PageIntro({ eyebrow, title, description, current }: { eyebrow: string; 
 
 function ArchitecturalGrid() { return <div aria-hidden="true" className="absolute inset-y-0 start-0 hidden w-[32%] bg-[repeating-linear-gradient(90deg,transparent_0,transparent_47px,var(--border)_48px)] opacity-50 lg:block" />; }
 function Eyebrow({ children }: { children: string }) { return <p className="flex items-center gap-3 text-sm font-semibold text-clay-strong before:h-px before:w-9 before:bg-clay">{children}</p>; }
-function PageBreadcrumb({ current }: { current: string }) { const paths: Record<string, string> = { "من نحن": "/about", "التواصل": "/contact", "الأسعار": "/prices" }; return <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: current, href: paths[current] ?? "/" }]} />; }
+function PageBreadcrumb({ current }: { current: string }) { const paths: Record<string, string> = { "من نحن": "/about", "التواصل": "/contact", "الأسعار": "/prices", "الأسئلة الشائعة": "/faqs" }; return <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: current, href: paths[current] ?? "/" }]} />; }
 
 function ContactCard({ term, value, href }: { term: string; value: string; href?: string }) {
   const Icon = term === "واتساب" ? MessageCircle : term.includes("هاتف") || term === "الهاتف" ? Phone : term === "البريد الإلكتروني" ? Mail : term === "العنوان" ? MapPin : Clock3;

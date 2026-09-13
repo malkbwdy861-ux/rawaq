@@ -41,7 +41,7 @@ export function PublicHeader({ settings }: { settings: PublicSettings | null }) 
 
         <nav aria-label="التنقل الرئيسي" className="hidden min-w-0 items-center justify-center gap-0.5 lg:flex">
           {publicNavigationLinks.map(([label, href]) => {
-            const active = href === "/" ? isHome : href !== "/#faq" && pathname === href;
+            const active = href === "/" ? isHome : pathname === href;
             return <Link aria-current={active ? "page" : undefined} className={`relative inline-flex min-h-11 items-center px-2.5 text-[0.8125rem] font-semibold transition-colors duration-150 hover:text-primary ${active ? "text-primary" : "text-text-secondary"}`} href={href} key={href}>{label}{active ? <span aria-hidden="true" className="absolute inset-x-3 bottom-1 h-px bg-primary" /> : null}</Link>;
           })}
         </nav>
@@ -57,7 +57,7 @@ export function PublicHeader({ settings }: { settings: PublicSettings | null }) 
           <div className="flex items-center justify-between border-b border-border pb-5"><strong className="text-base">{name}</strong><button aria-label="إغلاق القائمة" className="grid size-11 place-items-center rounded-full text-foreground hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setMenuOpen(false)} type="button"><X aria-hidden="true" className="size-5" /></button></div>
           <nav aria-label="التنقل الرئيسي" className="mt-5 grid">
             {publicNavigationLinks.map(([label, href]) => {
-              const active = href === "/" ? isHome : href !== "/#faq" && pathname === href;
+              const active = href === "/" ? isHome : pathname === href;
               return <Link aria-current={active ? "page" : undefined} className={`flex min-h-12 items-center border-b border-border text-sm font-semibold transition-colors ${active ? "text-primary" : "text-foreground hover:text-primary"}`} href={href} key={href} onClick={() => setMenuOpen(false)}>{label}</Link>;
             })}
           </nav>

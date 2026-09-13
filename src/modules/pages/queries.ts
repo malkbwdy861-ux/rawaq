@@ -15,6 +15,7 @@ export const pageDefinitions = [
   { key: "ABOUT", label: "من نحن", path: "/about" },
   { key: "CONTACT", label: "التواصل", path: "/contact" },
   { key: "PRICES", label: "الأسعار", path: "/prices" },
+  { key: "FAQS", label: "الأسئلة الشائعة", path: "/faqs" },
   { key: "PROJECTS", label: "المشاريع", path: "/projects" },
   { key: "SERVICES", label: "الخدمات", path: "/services" },
   { key: "SOLUTIONS", label: "الحلول", path: "/solutions" },
@@ -68,6 +69,10 @@ async function getPageRelationOptions(key: PageKey) {
     const [articles, faqs] = await Promise.all([prisma.article.findMany({ where: { OR: [{ draftVersion: { articleType: "PRICING" } }, { publishedVersion: { articleType: "PRICING" } }] }, select: { id: true, status: true, draftVersion: { select: { title: true } }, publishedVersion: { select: { title: true } } }, orderBy: { updatedAt: "desc" } }), faqsPromise]);
     return { services: [], solutions: [], projects: [], faqs: faqOptions(faqs), articles: options(articles, "title", "مقال بدون عنوان") };
   }
+  if (key === "FAQS") {
+    const faqs = await faqsPromise;
+    return { services: [], solutions: [], projects: [], faqs: faqOptions(faqs), articles: [] };
+  }
   return { services: [], solutions: [], projects: [], faqs: [], articles: [] } as { services: CmsRelationOption[]; solutions: CmsRelationOption[]; projects: CmsRelationOption[]; faqs: CmsRelationOption[]; articles: CmsRelationOption[] };
 }
 
@@ -108,6 +113,7 @@ async function resolveSelections(key: PageKey, data: StaticPageData, preview: bo
     homeData.finalCta.backgroundMediaId,
   ].filter((id): id is string => Boolean(id)) : [];
   const pricesData = key === "PRICES" ? data as Extract<StaticPageData, { selectedPricingArticleIds: unknown }> : null;
+  const faqPageData = key === "FAQS" ? data as Extract<StaticPageData, { faqSection: unknown }> : null;
   const [heroMedia, valuePropositionMedia, sectionMedia, services, solutions, materials, projects, articles, faqs, settings] = await Promise.all([
     heroMediaId ? prisma.media.findFirst({ where: { id: heroMediaId, type: "IMAGE" }, select: { id: true, url: true, altText: true } }) : null,
     valuePropositionMediaId ? prisma.media.findUnique({ where: { id: valuePropositionMediaId }, select: { id: true, url: true, altText: true } }) : null,
@@ -117,10 +123,10 @@ async function resolveSelections(key: PageKey, data: StaticPageData, preview: bo
     key === "CONTACT" ? prisma.material.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, select: { id: true, publishedVersion: { select: { name: true } } }, orderBy: [{ updatedAt: "desc" }, { id: "desc" }], take: 80 }) : [],
     homeData ? prisma.project.findMany({ where: { id: { in: homeData.featuredProjects.selectedProjectIds }, ...statusWhere }, include: { ...versionInclude, publishedVersion: { include: projectRelationsInclude }, ...(preview ? { draftVersion: { include: projectRelationsInclude } } : {}) } }) : [],
     pricesData ? prisma.article.findMany({ where: { id: { in: pricesData.selectedPricingArticleIds }, ...statusWhere, ...(preview ? {} : { publishedVersion: { articleType: "PRICING" } }) }, include: versionInclude }) : [],
-    (homeData || pricesData) ? prisma.fAQ.findMany({ where: { id: { in: (homeData ?? pricesData)!.faqSection.selectedFaqIds }, ...statusWhere }, include: versionInclude }) : [],
+    (homeData || pricesData || faqPageData) ? prisma.fAQ.findMany({ where: { id: { in: (homeData ?? pricesData ?? faqPageData)!.faqSection.selectedFaqIds }, ...statusWhere }, include: versionInclude }) : [],
     key === "CONTACT" || key === "HOME" ? prisma.siteSettings.findFirst({ include: { defaultOpenGraphImage: true }, orderBy: { createdAt: "asc" } }) : null,
   ]);
-  const faqIds = (homeData ?? pricesData)?.faqSection.selectedFaqIds ?? [];
+  const faqIds = (homeData ?? pricesData ?? faqPageData)?.faqSection.selectedFaqIds ?? [];
   return {
     heroMedia,
     valuePropositionMedia,

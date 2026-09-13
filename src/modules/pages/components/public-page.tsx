@@ -29,6 +29,7 @@ import { ContactWhatsappForm } from "@/modules/settings/components/contact-whats
 import type {
   AboutPageData,
   ContactPageData,
+  FaqPageData,
   HomePageData,
   PricesPageData,
   ListingPageData,
@@ -103,7 +104,7 @@ export function PublicPage({
   resolved,
   preview = false,
 }: {
-  pageKey: "HOME" | "ABOUT" | "CONTACT" | "PRICES" | "PROJECTS" | "SERVICES" | "SOLUTIONS";
+  pageKey: "HOME" | "ABOUT" | "CONTACT" | "PRICES" | "FAQS" | "PROJECTS" | "SERVICES" | "SOLUTIONS";
   data: StaticPageData;
   resolved: ResolvedPageData;
   preview?: boolean;
@@ -124,7 +125,7 @@ export function PublicPage({
       ) : null}
       {pageKey !== "HOME" ? (
         <StaticPublicPage
-          data={data as AboutPageData | ContactPageData | PricesPageData | ListingPageData}
+          data={data as AboutPageData | ContactPageData | PricesPageData | FaqPageData | ListingPageData}
           pageKey={pageKey}
           preview={preview}
           resolved={resolved}

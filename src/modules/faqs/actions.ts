@@ -127,6 +127,7 @@ function revalidateFaqPaths(faqId: string) {
   revalidatePath(`/dashboard/faqs/${faqId}`);
   revalidatePath("/");
   revalidatePath("/prices");
+  revalidatePath("/faqs");
   revalidatePath("/services/[slug]", "page");
   revalidatePath("/solutions/[slug]", "page");
   revalidatePath("/materials/[slug]", "page");

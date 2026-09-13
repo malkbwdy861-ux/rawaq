@@ -8,7 +8,7 @@ import { readStringArray } from "@/modules/cms/validation";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
 
-import { listingPageDefaults, pageDraftSchemas, pageIdSchema, pageKeySchema, pagePublishSchemas, pageSeoSchema, type StaticPageData } from "./validation";
+import { faqPageDefaults, listingPageDefaults, pageDraftSchemas, pageIdSchema, pageKeySchema, pagePublishSchemas, pageSeoSchema, type StaticPageData } from "./validation";
 
 export async function createPageDraftAction(formData: FormData) {
   await requireAdmin();
@@ -121,6 +121,11 @@ async function validatePublishedSelections(tx: Prisma.TransactionClient, key: Pa
     if (!validCount(pricesData.selectedPricingArticleIds, articles)) throw new Error("توجد مقالات أسعار مختارة غير منشورة.");
     if (!validCount(pricesData.faqSection.selectedFaqIds, faqs)) throw new Error("توجد أسئلة مختارة غير منشورة.");
   }
+  if (key === "FAQS") {
+    const faqData = data as Extract<StaticPageData, { faqSection: unknown }>;
+    const faqs = await tx.fAQ.findMany({ where: { id: { in: faqData.faqSection.selectedFaqIds }, status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, select: { id: true } });
+    if (!validCount(faqData.faqSection.selectedFaqIds, faqs)) throw new Error("توجد أسئلة مختارة غير منشورة.");
+  }
 }
 
 function readPageData(formData: FormData, key: PageKey): StaticPageData {
@@ -175,6 +180,10 @@ function readPageData(formData: FormData, key: PageKey): StaticPageData {
     showPhone: formData.get("showPhone") === "on", showWhatsapp: formData.get("showWhatsapp") === "on", showEmail: formData.get("showEmail") === "on", showAddress: formData.get("showAddress") === "on", showBusinessHours: formData.get("showBusinessHours") === "on",
     finalCta: { title: value("finalCtaTitle"), description: value("finalCtaDescription") },
   };
+  if (key === "FAQS") return {
+    hero: { title: value("heroTitle"), description: value("heroDescription") },
+    faqSection: { selectedFaqIds: readStringArray(formData, "selectedFaqIds") },
+  };
   if (key === "PROJECTS" || key === "SERVICES" || key === "SOLUTIONS") return {
     hero: { pageTitle: value("pageTitle"), eyebrow: value("heroEyebrow"), shortDescription: value("shortDescription"), mediaId: value("heroMediaId"), imageAlt: value("heroImageAlt") },
     intro: { title: "", description: value("description") },
@@ -190,6 +199,7 @@ function readPageData(formData: FormData, key: PageKey): StaticPageData {
 }
 
 function initialPageData(key: PageKey) {
+  if (key === "FAQS") return faqPageDefaults;
   return key === "PROJECTS" || key === "SERVICES" || key === "SOLUTIONS" ? listingPageDefaults[key] : null;
 }
 

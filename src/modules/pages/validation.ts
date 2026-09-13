@@ -144,6 +144,19 @@ export const pricesPageDraftSchema = z.object({
   finalCta: z.object({ title: optionalText, description: optionalText, buttonText: optionalText, target: optionalText }),
 });
 
+export const faqPageDraftSchema = z.object({
+  hero: z.object({ title: optionalText, description: optionalText }),
+  faqSection: z.object({ selectedFaqIds: cmsRelationIdsSchema }),
+});
+
+export const faqPageDefaults = {
+  hero: {
+    title: "الأسئلة الشائعة",
+    description: "إجابات واضحة عن أكثر الأسئلة شيوعاً حول خدمات المظلات والتظليل وآلية التنفيذ.",
+  },
+  faqSection: { selectedFaqIds: [] },
+};
+
 export const listingPageDraftSchema = z.object({
   hero: z.object({
     pageTitle: optionalLimitedText(120),
@@ -197,6 +210,12 @@ export const pricesPagePublishSchema = pricesPageDraftSchema.extend({
   pricingFactors: pricesPageDraftSchema.shape.pricingFactors.extend({ title: required("أدخل عنوان عوامل التسعير.") }),
   finalCta: pricesPageDraftSchema.shape.finalCta.extend({ title: required("أدخل عنوان الدعوة الختامية."), buttonText: required("أدخل نص زر الدعوة الختامية."), target: safeTarget }),
 });
+export const faqPagePublishSchema = faqPageDraftSchema.extend({
+  hero: faqPageDraftSchema.shape.hero.extend({
+    title: required("أدخل عنوان الصفحة."),
+    description: required("أدخل وصف الصفحة."),
+  }),
+});
 export const listingPagePublishSchema = listingPageDraftSchema.extend({
   hero: listingPageDraftSchema.shape.hero.extend({
     pageTitle: required("أدخل عنوان الصفحة.").max(120),
@@ -213,12 +232,13 @@ export const projectsListingPagePublishSchema = listingPageDraftSchema.extend({
   }),
 });
 
-export const pageDraftSchemas = { HOME: homePageDraftSchema, ABOUT: aboutPageDraftSchema, CONTACT: contactPageDraftSchema, PRICES: pricesPageDraftSchema, PROJECTS: listingPageDraftSchema, SERVICES: listingPageDraftSchema, SOLUTIONS: listingPageDraftSchema } as const;
-export const pagePublishSchemas = { HOME: homePagePublishSchema, ABOUT: aboutPagePublishSchema, CONTACT: contactPagePublishSchema, PRICES: pricesPagePublishSchema, PROJECTS: projectsListingPagePublishSchema, SERVICES: listingPagePublishSchema, SOLUTIONS: listingPagePublishSchema } as const;
+export const pageDraftSchemas = { HOME: homePageDraftSchema, ABOUT: aboutPageDraftSchema, CONTACT: contactPageDraftSchema, PRICES: pricesPageDraftSchema, FAQS: faqPageDraftSchema, PROJECTS: listingPageDraftSchema, SERVICES: listingPageDraftSchema, SOLUTIONS: listingPageDraftSchema } as const;
+export const pagePublishSchemas = { HOME: homePagePublishSchema, ABOUT: aboutPagePublishSchema, CONTACT: contactPagePublishSchema, PRICES: pricesPagePublishSchema, FAQS: faqPagePublishSchema, PROJECTS: projectsListingPagePublishSchema, SERVICES: listingPagePublishSchema, SOLUTIONS: listingPagePublishSchema } as const;
 
 export type HomePageData = z.infer<typeof homePageDraftSchema>;
 export type AboutPageData = z.infer<typeof aboutPageDraftSchema>;
 export type ContactPageData = z.infer<typeof contactPageDraftSchema>;
 export type PricesPageData = z.infer<typeof pricesPageDraftSchema>;
+export type FaqPageData = z.infer<typeof faqPageDraftSchema>;
 export type ListingPageData = z.infer<typeof listingPageDraftSchema>;
-export type StaticPageData = HomePageData | AboutPageData | ContactPageData | PricesPageData | ListingPageData;
+export type StaticPageData = HomePageData | AboutPageData | ContactPageData | PricesPageData | FaqPageData | ListingPageData;
