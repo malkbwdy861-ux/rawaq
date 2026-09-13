@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { CmsPageHeader } from "@/modules/cms/components/page-header";
-import { CmsStateBlock } from "@/modules/cms/components/state-blocks";
+import { CmsRouteToast } from "@/modules/cms/components/route-toast";
 import { PageForm } from "@/modules/pages/components/page-form";
 import { getPageEditorData, pageDefinitions } from "@/modules/pages/queries";
 import { pageKeySchema } from "@/modules/pages/validation";
@@ -17,8 +17,7 @@ export default async function PageEditor({ params, searchParams }: PageEditorPro
   return (
     <div className="mx-auto max-w-[1120px] space-y-6">
       <CmsPageHeader title={`تحرير صفحة ${definition.label}`} description="حدّث محتوى الصفحة الثابتة، ثم احفظ التغييرات للواجهة العامة مباشرة." />
-      {messages.success ? <CmsStateBlock tone="success" title="اكتملت العملية" description={messages.success} /> : null}
-      {messages.error ? <CmsStateBlock tone="error" title="تعذرت العملية" description={messages.error} /> : null}
+      <CmsRouteToast cleanHref={`/dashboard/pages/${key.data}`} error={messages.error} success={messages.success} />
       <PageForm {...data} path={definition.path} />
     </div>
   );

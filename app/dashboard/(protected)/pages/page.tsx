@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowUpLeft, FilePlus2, FileText, Pencil, Route } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { CmsStateBlock } from "@/modules/cms/components/state-blocks";
+import { CmsRouteToast } from "@/modules/cms/components/route-toast";
 import { createPageDraftAction } from "@/modules/pages/actions";
 import { getPageList, pageDefinitions } from "@/modules/pages/queries";
 
@@ -34,8 +34,7 @@ export default async function PagesPage({ searchParams }: PagesPageProps) {
         </div>
       </header>
 
-      {messages.success ? <CmsStateBlock tone="success" title="اكتملت العملية" description={messages.success} /> : null}
-      {messages.error ? <CmsStateBlock tone="error" title="تعذرت العملية" description={messages.error} /> : null}
+      <CmsRouteToast cleanHref="/dashboard/pages" error={messages.error} success={messages.success} />
 
       <section aria-label="الوجهات الثابتة" className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-rest)]">
         <div className="flex flex-col gap-3 border-b border-border bg-dashboard-canvas/65 px-4 py-4 md:flex-row md:items-center md:justify-between">
