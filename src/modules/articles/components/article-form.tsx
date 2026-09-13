@@ -53,7 +53,6 @@ export function ArticleForm({ article, media, relationOptions }: { article?: { i
         <Link className="inline-flex min-h-8 items-center text-xs font-medium text-muted-foreground outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring" href="/dashboard/articles">المقالات <span aria-hidden="true" className="mx-1.5">/</span> <span className="text-foreground">{title}</span></Link>
         <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex min-w-0 items-center gap-3"><h1 className="truncate text-2xl font-bold leading-10 sm:text-[1.75rem]">{title}</h1>{article ? <ArticleStatus status={article.status} /> : null}</div>
-          <div className="flex flex-wrap items-center gap-2">{article ? <Link className={cn(buttonVariants({ variant: "outline" }), "min-h-10")} href={`/preview/articles/${article.id}`} target="_blank">معاينة<ExternalLink /></Link> : null}<ServiceEditorSubmit kind="save" /><ServiceEditorSubmit kind="publish" /></div>
         </div>
       </header>
 
@@ -91,6 +90,15 @@ export function ArticleForm({ article, media, relationOptions }: { article?: { i
           <details className="group rounded-xl border border-border bg-card" open={hasSeoError(state) || undefined}><summary className="flex min-h-12 cursor-pointer list-none items-center justify-between rounded-xl px-4 text-sm font-semibold outline-none transition-colors hover:bg-dashboard-hover focus-visible:ring-2 focus-visible:ring-ring marker:content-none">محركات البحث<ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" /></summary><div className="grid gap-4 border-t border-border p-4"><CmsFieldShell error={fieldError(state, "seoTitle")} id="seoTitle" label="عنوان محركات البحث"><CmsInput aria-invalid={Boolean(fieldError(state, "seoTitle"))} id="seoTitle" name="seoTitle" defaultValue={values.seoTitle} /></CmsFieldShell><CmsFieldShell error={fieldError(state, "seoDescription")} id="seoDescription" label="وصف محركات البحث"><CmsTextarea aria-invalid={Boolean(fieldError(state, "seoDescription"))} id="seoDescription" name="seoDescription" defaultValue={values.seoDescription} /></CmsFieldShell><CmsFieldShell error={fieldError(state, "canonicalUrl")} id="canonicalUrl" label="الرابط الأساسي"><CmsInput aria-invalid={Boolean(fieldError(state, "canonicalUrl"))} dir="ltr" id="canonicalUrl" name="canonicalUrl" defaultValue={values.canonicalUrl} /></CmsFieldShell><label className="flex min-h-10 items-center gap-2 text-xs font-medium"><input className="size-4 accent-primary" name="noIndex" type="checkbox" defaultChecked={values.noIndex} />منع الفهرسة</label><CmsFieldShell error={fieldError(state, "openGraphTitle")} id="openGraphTitle" label="عنوان المشاركة"><CmsInput aria-invalid={Boolean(fieldError(state, "openGraphTitle"))} id="openGraphTitle" name="openGraphTitle" defaultValue={values.openGraphTitle} /></CmsFieldShell><CmsFieldShell error={fieldError(state, "openGraphDescription")} id="openGraphDescription" label="وصف المشاركة"><CmsTextarea aria-invalid={Boolean(fieldError(state, "openGraphDescription"))} className="min-h-20" id="openGraphDescription" name="openGraphDescription" defaultValue={values.openGraphDescription} /></CmsFieldShell></div></details>
 
         </aside>
+      </div>
+
+      <div className="sticky bottom-4 z-10 mt-5 flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-float)] sm:flex-row sm:items-center sm:justify-between">
+        <p className="hidden text-sm leading-6 text-text-secondary sm:block">احفظ المقال كمسودة للمراجعة، أو انشره عند اكتمال المحتوى والصور.</p>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+          {article ? <Link className={cn(buttonVariants({ variant: "outline" }), "min-h-11 w-full px-5 sm:w-auto")} href={`/preview/articles/${article.id}`} target="_blank">معاينة<ExternalLink /></Link> : null}
+          <ServiceEditorSubmit className="min-h-11 w-full px-5 sm:w-auto" kind="save" />
+          <ServiceEditorSubmit className="min-h-11 w-full px-5 sm:w-auto" kind="publish" />
+        </div>
       </div>
     </form>
   );

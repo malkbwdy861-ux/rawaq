@@ -78,7 +78,6 @@ export function SolutionForm({ solution, media, relationOptions }: SolutionFormP
         <Link className="inline-flex min-h-8 items-center text-xs font-medium text-muted-foreground outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring" href="/dashboard/solutions">الحلول <span aria-hidden="true" className="mx-1.5">/</span> <span className="text-foreground">{title}</span></Link>
         <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex min-w-0 items-center gap-3"><h1 className="truncate text-2xl font-bold leading-10 sm:text-[1.75rem]">{title}</h1>{solution ? <SolutionStatus status={solution.status} /> : null}</div>
-          <div className="flex flex-wrap items-center gap-2">{solution ? <Link className={cn(buttonVariants({ variant: "outline" }), "min-h-10")} href={`/preview/solutions/${solution.id}`} target="_blank">معاينة<ExternalLink /></Link> : null}<ServiceEditorSubmit kind="save" /><ServiceEditorSubmit kind="publish" /></div>
         </div>
       </header>
 
@@ -124,6 +123,15 @@ export function SolutionForm({ solution, media, relationOptions }: SolutionFormP
             </div>
           </details>
         </aside>
+      </div>
+
+      <div className="sticky bottom-4 z-10 mt-5 flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-float)] sm:flex-row sm:items-center sm:justify-between">
+        <p className="hidden text-sm leading-6 text-text-secondary sm:block">احفظ الحل كمسودة للمراجعة، أو انشره عند اكتمال المحتوى والصور.</p>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+          {solution ? <Link className={cn(buttonVariants({ variant: "outline" }), "min-h-11 w-full px-5 sm:w-auto")} href={`/preview/solutions/${solution.id}`} target="_blank">معاينة<ExternalLink /></Link> : null}
+          <ServiceEditorSubmit className="min-h-11 w-full px-5 sm:w-auto" kind="save" />
+          <ServiceEditorSubmit className="min-h-11 w-full px-5 sm:w-auto" kind="publish" />
+        </div>
       </div>
     </form>
   );

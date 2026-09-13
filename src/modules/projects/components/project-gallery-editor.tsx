@@ -50,11 +50,9 @@ export function ProjectGalleryEditor({ media, initialItems, error }: { media: Me
 
   return (
     <fieldset className="min-w-0">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <legend className="text-xs font-medium text-text-secondary">معرض المشروع</legend>
-          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">أضف عدة صور، ثم رتّبها وأضف تعليقاً اختيارياً لكل صورة.</p>
-        </div>
+      <legend className="text-xs font-medium text-text-secondary">معرض المشروع</legend>
+      <div className="mt-1 flex items-start justify-between gap-3">
+        <p className="text-[11px] leading-5 text-muted-foreground">أضف عدة صور، ثم رتّبها وأضف تعليقاً اختيارياً لكل صورة.</p>
         <span className="shrink-0 rounded-full bg-secondary px-2 py-1 text-[11px] font-medium text-text-secondary">{items.length} صورة</span>
       </div>
       {items.length ? <ol className="mt-3 grid gap-2">{items.map((item, index) => {

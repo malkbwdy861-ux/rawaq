@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { cmsContentPath } from "@/modules/cms/slugs";
-import { buildWhatsAppUrl, phoneHref } from "@/modules/settings/contact";
+import { buildWhatsAppUrl, phoneHref, type WhatsAppMessageInput } from "@/modules/settings/contact";
 
 type Media = { url: string; altText: string | null; caption?: string | null };
 
@@ -123,8 +123,8 @@ export function ArticleCard({ item }: { item: ArticleCardItem }) {
   </Link>;
 }
 
-export function DetailCta({ title, description, settings, secondaryHref = "/contact" }: { title: string; description: string; settings: DetailSettings; secondaryHref?: string }) {
-  const whatsappHref = settings ? buildWhatsAppUrl(settings.whatsappNumber, settings.defaultWhatsappText) : "/contact";
+export function DetailCta({ title, description, settings, secondaryHref = "/contact", whatsappInput }: { title: string; description: string; settings: DetailSettings; secondaryHref?: string; whatsappInput?: WhatsAppMessageInput }) {
+  const whatsappHref = settings ? buildWhatsAppUrl(settings.whatsappNumber, settings.defaultWhatsappText, whatsappInput) : "/contact";
   return <section className="relative isolate overflow-hidden rounded-[22px] bg-primary-active px-5 py-8 text-primary-foreground shadow-[var(--shadow-project)] sm:px-8 md:px-10 md:py-11">
     <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(ellipse_70%_70%_at_10%_10%,color-mix(in_oklch,var(--primary)_58%,transparent),transparent_65%),linear-gradient(135deg,color-mix(in_oklch,var(--primary)_30%,var(--primary-active)),var(--primary-active))]" />
     <div aria-hidden="true" className="absolute inset-0 opacity-30 [background-image:linear-gradient(120deg,color-mix(in_oklch,var(--primary-soft)_12%,transparent)_1px,transparent_1px),linear-gradient(30deg,color-mix(in_oklch,var(--clay)_9%,transparent)_1px,transparent_1px)] [background-size:84px_84px,126px_126px]" />

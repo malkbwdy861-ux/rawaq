@@ -1,48 +1,42 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 
 import { cmsContentPath } from "@/modules/cms/slugs";
 import { CmsPaginationControls } from "@/modules/cms/components/pagination";
 import { parsePublicPage } from "@/modules/cms/validation";
 import { getPublishedMaterials } from "@/modules/materials/queries";
-import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
+import { ArchivePageHero } from "@/modules/pages/components/archive-page-hero";
+import { ArchivePageIntro } from "@/modules/pages/components/archive-page-intro";
+import { selectArchiveHeroImage } from "@/modules/pages/components/archive-page-media";
+import { ListingCta } from "@/modules/pages/components/listing-cta";
+import { MaterialArchiveCard } from "@/modules/pages/components/material-archive-card";
 import { listingMetadata } from "@/modules/seo/metadata";
+import { buildWhatsAppUrl } from "@/modules/settings/contact";
+import { getSiteSettings } from "@/modules/settings/queries";
 
 export const metadata: Metadata = listingMetadata("المواد", "تصفح المواد والخيارات المنشورة والمدعومة في أعمال جده شيدنج.", "/materials");
 
 export const revalidate = 300;
 
 export default async function MaterialsIndexPage({ searchParams }: { searchParams: Promise<{ page?: string | string[] }> }) {
-  const result = await getPublishedMaterials(parsePublicPage((await searchParams).page));
+  const page = parsePublicPage((await searchParams).page);
+  const [result, settings] = await Promise.all([getPublishedMaterials(page), getSiteSettings()]);
   const materials = result.items;
+  const items = materials.flatMap((material) => {
+    const version = material.publishedVersion;
+    if (!version?.name || !version.slug) return [];
+    return [{ id: material.id, name: version.name, description: version.shortDescription ?? "", href: cmsContentPath("/materials", version.slug), image: version.heroMedia ? { url: version.heroMedia.url, altText: version.heroMedia.altText || version.name } : null }];
+  });
+  const heroImage = selectArchiveHeroImage({ configured: null, title: "المواد", fallbacks: [...materials.map((material) => material.publishedVersion?.heroMedia), settings?.defaultOpenGraphImage] });
+  const whatsappHref = settings?.whatsappNumber ? buildWhatsAppUrl(settings.whatsappNumber, settings.defaultWhatsappText, { notes: "أرغب في معرفة المادة الأنسب لمشروعي." }) : "/contact";
 
   return (
-    <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-12 md:px-8">
-      <div className="mx-auto max-w-6xl space-y-10">
-        <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "المواد", href: "/materials" }]} />
-        <header className="space-y-4">
-          <p className="text-sm font-semibold text-[oklch(37%_0.075_155)]">المواد</p>
-          <h1 className="max-w-3xl text-3xl font-bold leading-[1.35] md:text-5xl">مواد وخيارات منشورة ومدعومة فعليًا</h1>
-          <p className="max-w-2xl text-base leading-[1.8] text-[oklch(42%_0.018_150)]">قارن خصائص المواد واستخداماتها وحدودها قبل اختيار ما يلائم الموقع وظروفه.</p>
-        </header>
-        {materials.length === 0 ? (
-          <section className="border-y border-border py-10"><h2 className="text-xl font-semibold">نعمل على توثيق المواد المتاحة</h2><p className="mt-2 text-text-secondary">يمكنك التواصل معنا للسؤال عن مادة أو استخدام محدد.</p></section>
-        ) : (
-          <><section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" aria-label="قائمة المواد">
-            {materials.map((material) => {
-              const version = material.publishedVersion;
-              if (!version) return null;
-              return (
-                <Link className="group overflow-hidden rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] transition-colors hover:border-[oklch(37%_0.075_155)]" href={cmsContentPath("/materials", version.slug ?? "")} key={material.id}>
-                  {version.heroMedia ? <div className="relative aspect-[4/3] bg-[oklch(95%_0.012_110)]"><Image alt={version.heroMedia.altText ?? version.name ?? ""} className="object-cover" fill sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw" src={version.heroMedia.url} /></div> : null}
-                  <div className="space-y-3 p-5"><h2 className="text-xl font-bold leading-[1.45] group-hover:text-[oklch(37%_0.075_155)]">{version.name}</h2><p className="text-sm leading-[1.8] text-[oklch(42%_0.018_150)]">{version.shortDescription}</p></div>
-                </Link>
-              );
-            })}
-          </section><CmsPaginationControls basePath="/materials" pagination={result.pagination} /></>
-        )}
+    <main className="min-h-screen bg-background">
+      <ArchivePageHero currentHref="/materials" currentLabel="المواد" description="قارن خصائص المواد واستخداماتها وحدودها قبل اختيار ما يلائم الموقع وظروفه." eyebrow="دليل المواد" image={heroImage} imagePosition="center 52%" title="مواد واضحة لاختيارات تدوم" />
+      <ArchivePageIntro description="اختيار المادة لا يعتمد على الشكل وحده. الحرارة، التعرض للشمس، الاستخدام، والصيانة المطلوبة كلها عوامل تساعد على تحديد الخيار الأنسب للموقع." />
+      <div className="public-container pb-16 md:pb-20 lg:pb-24">
+        {items.length ? <><section aria-label="قائمة المواد" className="divide-y divide-border border-y border-border">{items.map((item, index) => <MaterialArchiveCard index={index} item={item} key={item.id} />)}</section><div className="mt-10"><CmsPaginationControls basePath="/materials" pagination={result.pagination} /></div></> : <section className="border-y border-border py-12"><h2 className="text-2xl font-semibold">نعمل على توثيق المواد المتاحة</h2><p className="mt-3 text-text-secondary">يمكنك التواصل معنا للسؤال عن مادة أو استخدام محدد.</p></section>}
       </div>
+      <ListingCta description="صف لنا الموقع والاستخدام المتوقع، ونساعدك في مقارنة الخيارات المناسبة قبل التنفيذ." href={whatsappHref} label="اسأل عن المادة المناسبة" title="تحتاج مساعدة في اختيار المادة؟" />
     </main>
   );
 }
