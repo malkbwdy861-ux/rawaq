@@ -41,7 +41,7 @@ export function PublicHeader({ settings }: { settings: PublicSettings | null }) 
   }, [menuOpen]);
 
   return (
-    <header className={`${isHome ? "absolute" : "sticky"} inset-x-0 top-0 z-100 px-3 pt-3 sm:px-5 sm:pt-5 lg:px-8`}>
+    <header className={`${isHome ? "fixed" : "sticky"} inset-x-0 top-0 z-100 px-3 pt-3 sm:px-5 sm:pt-5 lg:px-8`}>
       <div className="mx-auto flex h-[64px] w-full max-w-[1100px] items-center justify-between gap-3 rounded-full border border-[color-mix(in_oklch,var(--border)_78%,transparent)] bg-[color-mix(in_oklch,var(--card)_96%,transparent)] px-3 shadow-[var(--shadow-float)] sm:px-4 lg:h-[72px] lg:max-w-[1280px] lg:px-5">
         <Link aria-label={`${name}، الرئيسية`} className="flex min-w-0 shrink-0 items-center gap-2.5" href="/">
           {settings?.logoMedia ? <Image alt={settings.logoMedia.altText || name} className="h-9 w-auto max-w-28 object-contain lg:h-10 lg:max-w-36" height={40} src={settings.logoMedia.url} width={144} /> : null}
