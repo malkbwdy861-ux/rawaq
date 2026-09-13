@@ -6,9 +6,9 @@ type ProjectEditorPageProps = { params: Promise<{ projectId: string }>; searchPa
 
 export default async function ProjectEditorPage({ params, searchParams }: ProjectEditorPageProps) {
   const [{ projectId }, messages] = await Promise.all([params, searchParams]);
-  const { project, media, relationOptions } = await getProjectEditorData(projectId);
+  const { project, media, relationOptions, categoryOptions } = await getProjectEditorData(projectId);
   return <div className="mx-auto w-full max-w-[1200px]">
     <ServiceRouteToast cleanHref={`/dashboard/projects/${projectId}`} error={messages.error} success={messages.success} />
-    <ProjectForm project={project} media={media} relationOptions={relationOptions} />
+    <ProjectForm project={project} media={media} relationOptions={relationOptions} categoryOptions={categoryOptions} />
   </div>;
 }

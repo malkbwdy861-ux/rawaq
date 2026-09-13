@@ -109,15 +109,73 @@ function HomeFields({ data, media, options }: { data: HomePageData | null; media
         </SubPanel>
       </PageSection>
       <PageSection title="المشاريع المختارة" description="اعرض أدلة تنفيذ حقيقية تدعم ثقة الزائر.">
+        <SectionToggle name="projectsEnabled" checked={data?.featuredProjects.enabled ?? true} />
+        <Text id="projectsEyebrow" label="السطر التمهيدي" value={data?.featuredProjects.eyebrow} />
         <Text id="projectsTitle" label="عنوان القسم" value={data?.featuredProjects.title} />
         <Area id="projectsDescription" label="وصف القسم" value={data?.featuredProjects.description} />
-        <CmsRelationSelector name="selectedProjectIds" label="المشاريع" options={options.projects} selectedIds={data?.featuredProjects.selectedProjectIds} />
+        <TwoColumns>
+          <Text id="projectsCtaLabel" label="نص رابط جميع المشاريع" value={data?.featuredProjects.ctaLabel} />
+          <Text id="projectsCtaHref" label="وجهة الرابط" value={data?.featuredProjects.ctaHref} ltr />
+        </TwoColumns>
+        <CmsRelationSelector editBasePath="/dashboard/projects" maxSelections={5} name="selectedProjectIds" label="المشاريع" options={options.projects} selectedIds={data?.featuredProjects.selectedProjectIds} />
       </PageSection>
-      <PageSection title="الأسئلة المختارة" description="اختر الأسئلة التي تعالج تردد الزائر قبل التواصل.">
+      <PageSection title="كيف نعمل" description="أربع خطوات تحريرية تشرح رحلة المشروع من التواصل حتى التسليم.">
+        <SectionToggle name="howWeWorkEnabled" checked={data?.howWeWork.enabled ?? true} />
+        <Text id="howWeWorkEyebrow" label="السطر التمهيدي" value={data?.howWeWork.eyebrow} />
+        <Text id="howWeWorkTitle" label="عنوان القسم" value={data?.howWeWork.title} />
+        <Area id="howWeWorkDescription" label="الوصف" value={data?.howWeWork.description} />
+        <SubPanel title="خطوات العمل" description="رتب الخطوات بالأرقام، ويمكن إخفاء خطوة دون حذف محتواها.">
+          <RepeatableItems name="processStep" initialItems={data?.howWeWork.steps} addLabel="إضافة خطوة" maxItems={4} minimumRows={4} showEnabled showOrder showMedia media={media} />
+        </SubPanel>
+      </PageSection>
+      <PageSection title="الثقة والإثبات" description="رسالة رئيسية وأدلة مرنة، ويمكن ترك القيمة الرقمية فارغة.">
+        <SectionToggle name="trustSectionEnabled" checked={data?.trustSection.enabled ?? true} />
+        <Text id="trustEyebrow" label="السطر التمهيدي" value={data?.trustSection.eyebrow} />
+        <Text id="trustTitle" label="عنوان القسم" value={data?.trustSection.title} />
+        <Area id="trustDescription" label="الوصف" value={data?.trustSection.description} />
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+          <div className="grid gap-4">
+            <Text id="featuredProofTitle" label="عنوان الإثبات الرئيسي" value={data?.trustSection.featuredProof.title} />
+            <Area id="featuredProofDescription" label="وصف الإثبات الرئيسي" value={data?.trustSection.featuredProof.description} />
+          </div>
+          <MediaPicker items={media} name="featuredProofMediaId" defaultValue={data?.trustSection.featuredProof.mediaId} label="صورة الإثبات الرئيسية" />
+        </div>
+        <SubPanel title="أدلة الثقة" description="أضف قيمة حقيقية عند توفرها، أو استخدم عنوانا غير رقمي.">
+          <RepeatableItems name="proofMetric" initialItems={data?.trustSection.metrics} addLabel="إضافة دليل" maxItems={4} showEnabled showOrder showIcon showValue />
+        </SubPanel>
+        <SubPanel title="شريط الثقة" description="ثلاث نقاط مختصرة تظهر أسفل القسم.">
+          <RepeatableItems name="trustStripItem" initialItems={data?.trustSection.stripItems} addLabel="إضافة نقطة" maxItems={3} showEnabled showOrder showIcon />
+        </SubPanel>
+      </PageSection>
+      <PageSection title="الأسئلة المختارة" description="اختر حتى عشرة أسئلة منشورة تعالج تردد الزائر قبل التواصل.">
+        <SectionToggle name="faqSectionEnabled" checked={data?.faqSection.enabled ?? true} />
+        <Text id="faqEyebrow" label="السطر التمهيدي" value={data?.faqSection.eyebrow} />
         <Text id="faqTitle" label="عنوان القسم" value={data?.faqSection.title} />
-        <CmsRelationSelector name="selectedFaqIds" label="الأسئلة الشائعة" options={options.faqs} selectedIds={data?.faqSection.selectedFaqIds} />
+        <Area id="faqDescription" label="الوصف" value={data?.faqSection.description} />
+        <CmsRelationSelector maxSelections={10} name="selectedFaqIds" label="الأسئلة الشائعة" options={options.faqs} selectedIds={data?.faqSection.selectedFaqIds} />
+        <TwoColumns>
+          <Text id="allFaqsLabel" label="نص رابط جميع الأسئلة (اختياري)" value={data?.faqSection.allFaqsLabel} />
+          <Text id="allFaqsHref" label="وجهة الرابط" value={data?.faqSection.allFaqsHref} ltr />
+        </TwoColumns>
       </PageSection>
-      <FinalCta data={data?.finalCta} />
+      <PageSection title="الدعوة الختامية" description="لا تحفظ أرقام التواصل هنا، فالروابط تُنشأ من إعدادات الموقع.">
+        <SectionToggle name="finalCtaEnabled" checked={data?.finalCta.enabled ?? true} />
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+          <div className="grid gap-4">
+            <Text id="finalCtaEyebrow" label="السطر التمهيدي" value={data?.finalCta.eyebrow} />
+            <Text id="finalCtaTitle" label="العنوان" value={data?.finalCta.title} />
+            <Area id="finalCtaDescription" label="الوصف" value={data?.finalCta.description} />
+          </div>
+          <MediaPicker items={media} name="finalCtaBackgroundMediaId" defaultValue={data?.finalCta.backgroundMediaId} label="صورة خلفية اختيارية" />
+        </div>
+        <TwoColumns>
+          <Text id="finalCtaPrimaryLabel" label="نص زر واتساب" value={data?.finalCta.primaryCtaLabel || data?.finalCta.buttonText} />
+          <Text id="finalCtaSecondaryLabel" label="نص زر الاتصال" value={data?.finalCta.secondaryCtaLabel} />
+        </TwoColumns>
+        <SubPanel title="إشارات الثقة" description="نقاط قصيرة اختيارية أسفل أزرار التواصل.">
+          <RepeatableItems name="finalCtaTrustItem" initialItems={data?.finalCta.trustItems} addLabel="إضافة إشارة" maxItems={3} showEnabled showOrder showIcon />
+        </SubPanel>
+      </PageSection>
     </>
   );
 }
@@ -283,4 +341,8 @@ function SubPanel({ title, description, children }: { title: string; description
       {children}
     </div>
   );
+}
+
+function SectionToggle({ name, checked }: { name: string; checked: boolean }) {
+  return <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border bg-dashboard-canvas/45 px-3 text-sm font-semibold transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-soft/45"><input className="size-4 accent-primary" defaultChecked={checked} name={name} type="checkbox" />إظهار القسم في الصفحة الرئيسية</label>;
 }

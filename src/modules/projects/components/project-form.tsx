@@ -6,9 +6,12 @@ import { useActionState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 
 import { buttonVariants } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { CmsFieldShell, CmsInput, CmsTextarea } from "@/modules/cms/components/form";
 import type { CmsRelationOption } from "@/modules/cms/types";
+import { ProjectCategoryIcon } from "@/modules/project-categories/icons";
+import type { ProjectCategoryOption } from "@/modules/project-categories/queries";
 import type { MediaPickerItem } from "@/modules/media/components/media-picker";
 import { ServiceEditorSubmit } from "@/modules/services/components/service-editor-submit";
 import { ServiceMediaField } from "@/modules/services/components/service-media-field";
@@ -21,7 +24,7 @@ import { ProjectGalleryEditor } from "./project-gallery-editor";
 type ProjectFormVersion = {
   title: string | null; slug: string | null; shortDescription: string | null; content: string | null;
   challenge: string | null; solutionSummary: string | null; technicalDetails: string | null; completedAt: Date | null;
-  city: string | null; district: string | null; coverMediaId: string | null; seoTitle: string | null;
+  city: string | null; district: string | null; categoryId: string | null; coverMediaId: string | null; seoTitle: string | null;
   seoDescription: string | null; canonicalUrl: string | null; noIndex: boolean; openGraphTitle: string | null;
   openGraphDescription: string | null; openGraphImageId: string | null; updatedAt: Date;
   gallery: { mediaId: string; caption: string | null }[]; services: { serviceId: string }[];
@@ -30,7 +33,7 @@ type ProjectFormVersion = {
 
 type RelationOptions = { services: CmsRelationOption[]; solutions: CmsRelationOption[]; materials: CmsRelationOption[]; articles: CmsRelationOption[] };
 
-export function ProjectForm({ project, media, relationOptions }: { project?: { id: string; status: "DRAFT" | "PUBLISHED" | "ARCHIVED"; publishedVersionId: string | null; publishedAt: Date | null; updatedAt: Date; draftVersion: ProjectFormVersion | null }; media: MediaPickerItem[]; relationOptions: RelationOptions }) {
+export function ProjectForm({ project, media, relationOptions, categoryOptions }: { project?: { id: string; status: "DRAFT" | "PUBLISHED" | "ARCHIVED"; publishedVersionId: string | null; publishedAt: Date | null; updatedAt: Date; draftVersion: ProjectFormVersion | null }; media: MediaPickerItem[]; relationOptions: RelationOptions; categoryOptions: ProjectCategoryOption[] }) {
   const draft = project?.draftVersion;
   const initialValues = getInitialValues(project?.id, draft);
   const [state, formAction] = useActionState(submitProjectAction, { status: "idle", revision: 0 } satisfies ProjectFormState);
@@ -61,6 +64,7 @@ export function ProjectForm({ project, media, relationOptions }: { project?: { i
           <EditorSection title="المعلومات الأساسية">
             <CmsFieldShell error={fieldError(state, "title")} id="title" label="عنوان المشروع"><CmsInput aria-describedby={fieldError(state, "title") ? "title-error" : undefined} aria-invalid={Boolean(fieldError(state, "title"))} autoFocus className="min-h-12 text-lg font-semibold" defaultValue={values.title} id="title" name="title" placeholder="مثال: مظلات مواقف في حي الروضة" /></CmsFieldShell>
             <CmsFieldShell error={fieldError(state, "shortDescription")} id="shortDescription" label="الوصف المختصر"><CmsTextarea aria-invalid={Boolean(fieldError(state, "shortDescription"))} className="min-h-28" defaultValue={values.shortDescription} id="shortDescription" name="shortDescription" /></CmsFieldShell>
+            <CmsFieldShell error={fieldError(state, "categoryId")} id="categoryId" label="تصنيف المشروع"><Select defaultValue={values.categoryId || "NONE"} name="categoryId"><SelectTrigger aria-invalid={Boolean(fieldError(state, "categoryId"))} className="min-h-11 border-border-strong bg-card" id="categoryId"><SelectValue placeholder="بدون تصنيف" /></SelectTrigger><SelectContent><SelectItem value="NONE">بدون تصنيف</SelectItem>{categoryOptions.map((category) => <SelectItem key={category.id} value={category.id}><ProjectCategoryIcon iconKey={category.iconKey} />{category.name}{!category.isActive ? <span className="text-xs text-muted-foreground">(غير نشط)</span> : null}</SelectItem>)}</SelectContent></Select><p className="text-xs leading-5 text-muted-foreground">اختياري، ويظهر كشارة تعريفية في بطاقات المشروع.</p></CmsFieldShell>
           </EditorSection>
 
           <EditorSection title="المحتوى">
@@ -118,6 +122,7 @@ function getInitialValues(projectId: string | undefined, draft: ProjectFormVersi
     completedAt: draft?.completedAt?.toISOString().slice(0, 10) ?? "",
     city: draft?.city ?? "",
     district: draft?.district ?? "",
+    categoryId: draft?.categoryId ?? "",
     coverMediaId: draft?.coverMediaId ?? "",
     gallery: draft?.gallery.map((item) => ({ mediaId: item.mediaId, caption: item.caption ?? "" })) ?? [],
     seoTitle: draft?.seoTitle ?? "",

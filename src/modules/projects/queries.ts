@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 
 import { decodeCmsSlug } from "@/modules/cms/slugs";
 import { getCmsPagination, parseCmsSearchParams } from "@/modules/cms/validation";
+import { getProjectCategoryOptions } from "@/modules/project-categories/queries";
 import { prisma } from "@/server/db/prisma";
+
+const projectCategoryPublicSelect = { id: true, name: true, slug: true, iconKey: true, isActive: true } as const;
 
 export async function getProjectList(searchParams: Record<string, string | string[] | undefined>) {
   const parsedParams = parseCmsSearchParams(searchParams);
@@ -33,8 +36,8 @@ export async function getProjectList(searchParams: Record<string, string | strin
   const projects = await prisma.project.findMany({
     where,
     include: {
-      draftVersion: { include: { coverMedia: true } },
-      publishedVersion: { include: { coverMedia: true } },
+      draftVersion: { include: { coverMedia: true, category: { select: projectCategoryPublicSelect } } },
+      publishedVersion: { include: { coverMedia: true, category: { select: projectCategoryPublicSelect } } },
     },
     orderBy: { updatedAt: "desc" },
     skip: pagination.skip,
@@ -49,7 +52,7 @@ export async function getProjectList(searchParams: Record<string, string | strin
 }
 
 export async function getProjectEditorData(projectId: string) {
-  const [project, recentMedia, relationOptions] = await Promise.all([
+  const [project, recentMedia, relationOptions, categoryOptions] = await Promise.all([
     prisma.project.findUnique({
       where: { id: projectId },
       include: {
@@ -59,25 +62,27 @@ export async function getProjectEditorData(projectId: string) {
     }),
     prisma.media.findMany({ where: { type: "IMAGE" }, orderBy: { createdAt: "desc" }, take: 80 }),
     getRelationOptions(),
+    getProjectCategoryOptions(),
   ]);
   if (!project) notFound();
 
   const selectedMedia = [project.draftVersion?.coverMedia, project.draftVersion?.openGraphImage, ...(project.draftVersion?.gallery.map((item) => item.media) ?? [])]
     .flatMap((item) => item?.type === "IMAGE" ? [item] : []);
   const media = Array.from(new Map([...recentMedia, ...selectedMedia].map((item) => [item.id, item])).values());
-  return { project, media, relationOptions };
+  return { project, media, relationOptions, categoryOptions };
 }
 
 export async function getNewProjectEditorData() {
-  const [media, relationOptions] = await Promise.all([
+  const [media, relationOptions, categoryOptions] = await Promise.all([
     prisma.media.findMany({ where: { type: "IMAGE" }, orderBy: { createdAt: "desc" }, take: 80 }),
     getRelationOptions(),
+    getProjectCategoryOptions(),
   ]);
-  return { media, relationOptions };
+  return { media, relationOptions, categoryOptions };
 }
 
 export async function getPublishedProjects() {
-  return prisma.project.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: { include: { coverMedia: true } } }, orderBy: { publishedAt: "desc" } });
+  return prisma.project.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: { include: { coverMedia: true, category: { select: projectCategoryPublicSelect } } } }, orderBy: { publishedAt: "desc" } });
 }
 
 export async function getPublishedProjectBySlug(slug: string) {
@@ -86,6 +91,7 @@ export async function getPublishedProjectBySlug(slug: string) {
     where: { status: ContentStatus.PUBLISHED, publishedVersion: { slug: decodedSlug } },
     include: { publishedVersion: { include: {
       coverMedia: true,
+      category: { select: projectCategoryPublicSelect },
       openGraphImage: true,
       gallery: { include: { media: true }, orderBy: { sortOrder: "asc" } },
       services: { where: { service: { status: ContentStatus.PUBLISHED } }, include: { service: { include: { publishedVersion: true } } } },
@@ -101,6 +107,7 @@ export async function getPublishedProjectBySlug(slug: string) {
 export async function getProjectPreview(projectId: string) {
   const project = await prisma.project.findUnique({ where: { id: projectId }, include: { draftVersion: { include: {
     coverMedia: true,
+    category: { select: projectCategoryPublicSelect },
     gallery: { include: { media: true }, orderBy: { sortOrder: "asc" } },
     services: { include: { service: { include: { draftVersion: true, publishedVersion: true } } } },
     solutions: { include: { solution: { include: { draftVersion: true, publishedVersion: true } } } },

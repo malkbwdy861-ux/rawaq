@@ -25,6 +25,7 @@ export type ProjectFormValues = {
   completedAt: string;
   city: string;
   district: string;
+  categoryId: string;
   coverMediaId: string;
   gallery: ProjectGalleryValue[];
   seoTitle: string;
@@ -131,6 +132,7 @@ function readProjectFormData(formData: FormData): ProjectFormValues {
     completedAt: readText(formData, "completedAt"),
     city: readText(formData, "city"),
     district: readText(formData, "district"),
+    categoryId: readText(formData, "categoryId") === "NONE" ? "" : readText(formData, "categoryId"),
     coverMediaId: readText(formData, "coverMediaId"),
     gallery: formData.getAll("galleryMediaIds").map((mediaId, index) => ({ mediaId: String(mediaId), caption: String(galleryCaptions[index] ?? "") })),
     seoTitle: readText(formData, "seoTitle"),
@@ -168,6 +170,7 @@ function mutationErrorState(previousState: ProjectFormState, values: ProjectForm
 async function createProjectDraft(input: ProjectDraftInput) {
   return prisma.$transaction(async (tx) => {
     await lockPublishingNamespace(tx, "projects");
+    await validateProjectCategory(tx, input.categoryId);
     const project = await tx.project.create({ data: { status: ContentStatus.DRAFT } });
     const slug = input.title ? await resolveProjectSlug(tx, project.id, input) : null;
     const draft = await tx.projectVersion.create({ data: { projectId: project.id, ...toVersionData({ ...input, slug: slug ?? undefined }) } });
@@ -185,6 +188,7 @@ async function saveDraft(projectId: string, input: ProjectDraftInput) {
 }
 
 async function saveDraftInTransaction(tx: Prisma.TransactionClient, projectId: string, input: ProjectDraftInput) {
+  await validateProjectCategory(tx, input.categoryId);
   const project = await tx.project.findUnique({ where: { id: projectId }, include: { publishedVersion: { select: { slug: true } } } });
   if (!project) throw new Error("المشروع غير موجود.");
   const slug = input.title ? await resolveProjectSlug(tx, projectId, input, project.publishedVersion?.slug) : project.publishedVersion?.slug ?? null;
@@ -204,6 +208,7 @@ async function saveDraftInTransaction(tx: Prisma.TransactionClient, projectId: s
 async function publishProject(existingProjectId: string | undefined, input: ProjectPublishInput) {
   return prisma.$transaction(async (tx) => {
     await lockPublishingNamespace(tx, "projects");
+    await validateProjectCategory(tx, input.categoryId);
     const project = existingProjectId
       ? await tx.project.findUnique({ where: { id: existingProjectId }, include: { publishedVersion: { select: { slug: true } } } })
       : await tx.project.create({ data: { status: ContentStatus.DRAFT }, include: { publishedVersion: { select: { slug: true } } } });
@@ -247,6 +252,7 @@ function toVersionData(input: ProjectDraftInput) {
     completedAt: input.completedAt ?? null,
     city: input.city || null,
     district: input.district || null,
+    categoryId: input.categoryId || null,
     coverMediaId: input.coverMediaId || null,
     seoTitle: input.seoTitle || null,
     seoDescription: input.seoDescription || null,
@@ -256,6 +262,12 @@ function toVersionData(input: ProjectDraftInput) {
     openGraphDescription: input.openGraphDescription || null,
     openGraphImageId: input.openGraphImageId || null,
   };
+}
+
+async function validateProjectCategory(tx: Prisma.TransactionClient, categoryId?: string) {
+  if (!categoryId) return;
+  const category = await tx.projectCategory.findUnique({ where: { id: categoryId }, select: { id: true } });
+  if (!category) throw new Error("تصنيف المشروع المحدد لم يعد موجوداً.");
 }
 
 async function replaceVersionCollections(tx: Prisma.TransactionClient, projectVersionId: string, input: ProjectDraftInput) {

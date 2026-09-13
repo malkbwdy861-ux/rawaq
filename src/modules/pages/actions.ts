@@ -124,31 +124,41 @@ async function validatePublishedSelections(tx: Prisma.TransactionClient, key: Pa
 function readPageData(formData: FormData, key: PageKey): StaticPageData {
   const value = (name: string) => String(formData.get(name) ?? "");
   const items = (prefix: string) => {
+    const ids = formData.getAll(`${prefix}Ids`);
     const titles = formData.getAll(`${prefix}Titles`);
     const descriptions = formData.getAll(`${prefix}Descriptions`);
     const icons = formData.getAll(`${prefix}Icons`);
+    const values = formData.getAll(`${prefix}Values`);
+    const mediaIds = formData.getAll(`${prefix}MediaIds`);
+    const imageAlts = formData.getAll(`${prefix}ImageAlts`);
     const supportedIcons = ["location", "shield", "team", "settings", "climate", "design"] as const;
     return titles.map((title, index) => {
       const icon = String(icons[index] ?? "");
       const order = Number.parseInt(value(`${prefix}Order-${index}`), 10);
+      const enabledValues = formData.getAll(`${prefix}Enabled-${index}`).map(String);
       return {
+        id: String(ids[index] ?? `${prefix}-${index + 1}`),
         title: String(title),
         description: String(descriptions[index] ?? ""),
+        value: String(values[index] ?? ""),
+        mediaId: String(mediaIds[index] ?? ""),
+        imageAlt: String(imageAlts[index] ?? ""),
         ...(supportedIcons.includes(icon as typeof supportedIcons[number]) ? { icon: icon as typeof supportedIcons[number] } : {}),
-        enabled: !formData.has(`${prefix}Enabled-${index}`) || formData.get(`${prefix}Enabled-${index}`) === "on",
+        enabled: !enabledValues.length || enabledValues.includes("on"),
         order: Number.isFinite(order) ? order : index + 1,
       };
-    }).filter((item) => item.title || item.description);
+    }).filter((item) => item.title || item.description || item.value || item.mediaId);
   };
   if (key === "HOME") return {
     hero: { eyebrow: value("heroEyebrow"), title: value("heroTitle"), description: value("heroDescription"), primaryCtaText: value("primaryCtaText"), primaryCtaTarget: value("primaryCtaTarget"), secondaryCtaText: value("secondaryCtaText"), secondaryCtaTarget: value("secondaryCtaTarget"), mediaId: value("heroMediaId"), imageAlt: value("heroImageAlt") },
     featuredServices: { title: value("servicesTitle"), description: value("servicesDescription"), selectedServiceIds: readStringArray(formData, "selectedServiceIds") },
     featuredSolutions: { title: value("solutionsTitle"), description: value("solutionsDescription"), selectedSolutionIds: readStringArray(formData, "selectedSolutionIds") },
     valueProposition: { enabled: formData.get("valuePropositionEnabled") === "on", eyebrow: value("valuePropositionEyebrow"), heading: value("valuePropositionHeading"), description: value("valuePropositionDescription"), mediaId: value("valuePropositionMediaId"), ctaLabel: value("valuePropositionCtaLabel"), ctaUrl: value("valuePropositionCtaUrl"), items: items("valuePropositionItem") },
-    featuredProjects: { title: value("projectsTitle"), description: value("projectsDescription"), selectedProjectIds: readStringArray(formData, "selectedProjectIds") },
-    trustSection: { title: value("trustTitle"), description: value("trustDescription"), items: items("trustItem") },
-    faqSection: { title: value("faqTitle"), selectedFaqIds: readStringArray(formData, "selectedFaqIds") },
-    finalCta: { title: value("finalCtaTitle"), description: value("finalCtaDescription"), buttonText: value("finalCtaButtonText"), target: value("finalCtaTarget") },
+    featuredProjects: { enabled: formData.get("projectsEnabled") === "on", eyebrow: value("projectsEyebrow"), title: value("projectsTitle"), description: value("projectsDescription"), ctaLabel: value("projectsCtaLabel"), ctaHref: value("projectsCtaHref"), selectedProjectIds: readStringArray(formData, "selectedProjectIds") },
+    howWeWork: { enabled: formData.get("howWeWorkEnabled") === "on", eyebrow: value("howWeWorkEyebrow"), title: value("howWeWorkTitle"), description: value("howWeWorkDescription"), steps: items("processStep").slice(0, 4) },
+    trustSection: { enabled: formData.get("trustSectionEnabled") === "on", eyebrow: value("trustEyebrow"), title: value("trustTitle"), description: value("trustDescription"), items: items("trustItem"), featuredProof: { title: value("featuredProofTitle"), description: value("featuredProofDescription"), mediaId: value("featuredProofMediaId") }, metrics: items("proofMetric").slice(0, 4), stripItems: items("trustStripItem").slice(0, 3) },
+    faqSection: { enabled: formData.get("faqSectionEnabled") === "on", eyebrow: value("faqEyebrow"), title: value("faqTitle"), description: value("faqDescription"), allFaqsLabel: value("allFaqsLabel"), allFaqsHref: value("allFaqsHref"), selectedFaqIds: readStringArray(formData, "selectedFaqIds") },
+    finalCta: { enabled: formData.get("finalCtaEnabled") === "on", eyebrow: value("finalCtaEyebrow"), title: value("finalCtaTitle"), description: value("finalCtaDescription"), backgroundMediaId: value("finalCtaBackgroundMediaId"), primaryCtaLabel: value("finalCtaPrimaryLabel"), secondaryCtaLabel: value("finalCtaSecondaryLabel"), trustItems: items("finalCtaTrustItem").slice(0, 3), buttonText: value("finalCtaButtonText"), target: value("finalCtaTarget") },
   };
   if (key === "ABOUT") return {
     hero: { title: value("heroTitle"), description: value("heroDescription"), mediaId: value("heroMediaId") },

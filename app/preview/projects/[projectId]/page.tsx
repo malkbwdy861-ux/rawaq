@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getProjectPreview } from "@/modules/projects/queries";
+import { ProjectCategoryIcon } from "@/modules/project-categories/icons";
 import { requireAdmin } from "@/server/auth";
 
 export const metadata: Metadata = { title: "معاينة مشروع", robots: { index: false, follow: false } };
@@ -17,7 +18,7 @@ export default async function ProjectPreviewPage({ params }: ProjectPreviewPageP
   if (!draft) notFound();
   return <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-10 md:px-8"><article className="mx-auto max-w-6xl space-y-10">
     <div className="rounded-[8px] border border-[oklch(47%_0.10_75)] bg-[oklch(94%_0.035_80)] p-4 text-[oklch(47%_0.10_75)]"><p className="font-semibold">معاينة محمية لمسودة غير منشورة</p><Link className="mt-2 inline-flex text-sm font-semibold underline" href={`/dashboard/projects/${project.id}`}>العودة للتحرير</Link></div>
-    <header className="space-y-4"><p className="text-sm font-semibold text-[oklch(58%_0.11_45)]">دراسة حالة</p><h1 className="text-4xl font-bold leading-[1.24] md:text-6xl">{draft.title ?? "مشروع بدون عنوان"}</h1>{draft.shortDescription ? <p className="max-w-[62ch] text-lg leading-[1.78] text-[oklch(42%_0.018_150)]">{draft.shortDescription}</p> : null}<p className="text-sm text-[oklch(34%_0.065_42)]">{[draft.city, draft.district].filter(Boolean).join("، ")}</p></header>
+    <header className="space-y-4">{draft.category ? <p className="inline-flex items-center gap-2 text-sm font-semibold text-[oklch(58%_0.11_45)]"><ProjectCategoryIcon iconKey={draft.category.iconKey} />{draft.category.name}</p> : <p className="text-sm font-semibold text-[oklch(58%_0.11_45)]">دراسة حالة</p>}<h1 className="text-4xl font-bold leading-[1.24] md:text-6xl">{draft.title ?? "مشروع بدون عنوان"}</h1>{draft.shortDescription ? <p className="max-w-[62ch] text-lg leading-[1.78] text-[oklch(42%_0.018_150)]">{draft.shortDescription}</p> : null}{[draft.city, draft.district].filter(Boolean).length ? <p className="text-sm text-[oklch(34%_0.065_42)]">{[draft.city, draft.district].filter(Boolean).join("، ")}</p> : null}</header>
     {draft.coverMedia ? <div className="relative aspect-[3/2] overflow-hidden rounded-[2px] bg-[oklch(95%_0.012_110)]"><Image alt={draft.coverMedia.altText ?? draft.title ?? ""} className="object-cover" fill sizes="100vw" src={draft.coverMedia.url} /></div> : null}
     {draft.content ? <PreviewSection title="تفاصيل المشروع" content={draft.content} /> : null}
     {draft.challenge ? <PreviewSection title="التحدي" content={draft.challenge} /> : null}

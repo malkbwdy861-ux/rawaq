@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { buildWhatsAppUrl, phoneHref } from "@/modules/settings/contact";
+import { publicNavigationLinks } from "@/modules/public/navigation";
 
 type PublicSettings = {
   companyName: string;
@@ -15,16 +16,6 @@ type PublicSettings = {
   defaultWhatsappText: string | null;
   logoMedia: { url: string; altText: string | null } | null;
 };
-
-const links = [
-  ["الرئيسية", "/"],
-  ["خدماتنا", "/services"],
-  ["حلولنا", "/solutions"],
-  ["مشاريعنا", "/projects"],
-  ["من نحن", "/about"],
-  ["الأسئلة الشائعة", "/#faq"],
-  ["اتصل بنا", "/contact"],
-] as const;
 
 export function PublicHeader({ settings }: { settings: PublicSettings | null }) {
   const pathname = usePathname();
@@ -49,7 +40,7 @@ export function PublicHeader({ settings }: { settings: PublicSettings | null }) 
         </Link>
 
         <nav aria-label="التنقل الرئيسي" className="hidden min-w-0 items-center justify-center gap-0.5 lg:flex">
-          {links.map(([label, href]) => {
+          {publicNavigationLinks.map(([label, href]) => {
             const active = href === "/" ? isHome : href !== "/#faq" && pathname === href;
             return <Link aria-current={active ? "page" : undefined} className={`relative inline-flex min-h-11 items-center px-2.5 text-[0.8125rem] font-semibold transition-colors duration-150 hover:text-primary ${active ? "text-primary" : "text-text-secondary"}`} href={href} key={href}>{label}{active ? <span aria-hidden="true" className="absolute inset-x-3 bottom-1 h-px bg-primary" /> : null}</Link>;
           })}
@@ -65,7 +56,7 @@ export function PublicHeader({ settings }: { settings: PublicSettings | null }) 
         <aside aria-label="قائمة التنقل" className="absolute inset-y-0 end-0 flex w-[min(88vw,360px)] flex-col bg-card px-5 pb-6 pt-5 shadow-[0_16px_48px_oklch(22%_0.018_155_/_0.16)]" id="public-menu" onClick={(event) => event.stopPropagation()}>
           <div className="flex items-center justify-between border-b border-border pb-5"><strong className="text-base">{name}</strong><button aria-label="إغلاق القائمة" className="grid size-11 place-items-center rounded-full text-foreground hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setMenuOpen(false)} type="button"><X aria-hidden="true" className="size-5" /></button></div>
           <nav aria-label="التنقل الرئيسي" className="mt-5 grid">
-            {links.map(([label, href]) => {
+            {publicNavigationLinks.map(([label, href]) => {
               const active = href === "/" ? isHome : href !== "/#faq" && pathname === href;
               return <Link aria-current={active ? "page" : undefined} className={`flex min-h-12 items-center border-b border-border text-sm font-semibold transition-colors ${active ? "text-primary" : "text-foreground hover:text-primary"}`} href={href} key={href} onClick={() => setMenuOpen(false)}>{label}</Link>;
             })}

@@ -272,6 +272,7 @@ model ProjectVersion {
   completedAt          DateTime?
   city                 String?
   district             String?
+  categoryId           String?
   coverMediaId         String?
   seoTitle             String?
   seoDescription       String?
@@ -285,6 +286,7 @@ model ProjectVersion {
   project              Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   publishedFor         Project?                 @relation("ProjectPublishedVersion")
   draftFor             Project?                 @relation("ProjectDraftVersion")
+  category             ProjectCategory?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   coverMedia           Media?                   @relation("ProjectVersionCoverMedia", fields: [coverMediaId], references: [id], onDelete: Restrict)
   openGraphImage       Media?                   @relation("ProjectVersionOpenGraphImage", fields: [openGraphImageId], references: [id], onDelete: Restrict)
   gallery              ProjectVersionGallery[]
@@ -294,9 +296,25 @@ model ProjectVersion {
   articles             ProjectVersionArticle[]
 
   @@index([projectId])
+  @@index([categoryId])
   @@index([slug])
   @@index([city])
   @@index([district])
+}
+
+model ProjectCategory {
+  id              String           @id @default(cuid())
+  name            String
+  slug            String           @unique
+  iconKey         String
+  description     String?
+  isActive        Boolean          @default(true)
+  sortOrder       Int              @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  projectVersions ProjectVersion[]
+
+  @@index([isActive, sortOrder])
 }
 
 model Article {

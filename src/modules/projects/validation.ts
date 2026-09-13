@@ -4,6 +4,7 @@ import { cmsRelationIdsSchema, cmsSeoFieldsSchema } from "@/modules/cms/validati
 
 const optionalText = (maximum: number, message: string) => z.string().trim().max(maximum, message).optional().or(z.literal(""));
 const optionalMediaId = z.string().cuid("اختيار الصورة غير صالح.").optional().or(z.literal(""));
+const optionalRelationId = z.string().cuid("اختيار التصنيف غير صالح.").optional().or(z.literal(""));
 const optionalDate = z.preprocess(
   (value) => (value === "" ? undefined : value),
   z.coerce.date({ error: "أدخل تاريخ إنجاز صالحاً." }).optional(),
@@ -30,6 +31,7 @@ export const projectDraftSchema = cmsSeoFieldsSchema.extend({
   completedAt: optionalDate,
   city: optionalText(100, "يجب ألا يتجاوز اسم المدينة 100 حرف."),
   district: optionalText(120, "يجب ألا يتجاوز اسم الحي 120 حرفاً."),
+  categoryId: optionalRelationId,
   coverMediaId: optionalMediaId,
   gallery: projectGallerySchema.default([]),
   relatedServiceIds: cmsRelationIdsSchema,
