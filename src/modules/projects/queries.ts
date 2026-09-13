@@ -10,14 +10,19 @@ const projectCategoryPublicSelect = { id: true, name: true, slug: true, iconKey:
 
 export async function getProjectList(searchParams: Record<string, string | string[] | undefined>) {
   const parsedParams = parseCmsSearchParams(searchParams);
+  const categoryOptions = await getProjectCategoryOptions();
+  const categoryId = firstParam(searchParams.categoryId);
+  const selectedCategoryId = categoryOptions.some((category) => category.id === categoryId) ? categoryId : "ALL";
   const params = {
     ...parsedParams,
     status: parsedParams.status === "DRAFT" || parsedParams.status === "PUBLISHED" ? parsedParams.status : "ALL",
+    categoryId: selectedCategoryId,
     pageSize: 10,
   } as const;
   const where = {
     AND: [
       params.status === "ALL" ? {} : params.status === "PUBLISHED" ? { status: ContentStatus.PUBLISHED } : { status: { not: ContentStatus.PUBLISHED } },
+      params.categoryId === "ALL" ? {} : { OR: [{ draftVersion: { categoryId: params.categoryId } }, { publishedVersion: { categoryId: params.categoryId } }] },
       params.q ? { OR: [
         { draftVersion: { title: { contains: params.q, mode: "insensitive" as const } } },
         { publishedVersion: { title: { contains: params.q, mode: "insensitive" as const } } },
@@ -48,7 +53,11 @@ export async function getProjectList(searchParams: Record<string, string | strin
     DRAFT: groupedStatuses.filter((item) => item.status !== ContentStatus.PUBLISHED).reduce((sum, item) => sum + item._count._all, 0),
     PUBLISHED: groupedStatuses.find((item) => item.status === ContentStatus.PUBLISHED)?._count._all ?? 0,
   };
-  return { params, pagination, projects, statusCounts };
+  return { params, pagination, projects, statusCounts, categoryOptions };
+}
+
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 export async function getProjectEditorData(projectId: string) {

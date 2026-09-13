@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 type ServiceStatusFilter = "ALL" | "DRAFT" | "PUBLISHED";
 const statusLabels: Record<ServiceStatusFilter, string> = { ALL: "كل الخدمات", DRAFT: "مسودة", PUBLISHED: "منشور" };
 const statusOptions: ServiceStatusFilter[] = ["ALL", "DRAFT", "PUBLISHED"];
+type CategoryOption = { id: string; name: string };
 
-export function ServicesToolbar({ query = "", status = "ALL", pageSize, totalItems, statusCounts, basePath = "/dashboard/services", allLabel = "كل الخدمات", itemLabel = "خدمة", searchLabel = "الخدمات" }: { query?: string; status?: ServiceStatusFilter; pageSize: number; totalItems: number; statusCounts: Record<ServiceStatusFilter, number>; basePath?: string; allLabel?: string; itemLabel?: string; searchLabel?: string }) {
+export function ServicesToolbar({ query = "", status = "ALL", categoryId = "ALL", categoryOptions = [], categoryAllLabel = "كل التصنيفات", pageSize, totalItems, statusCounts, basePath = "/dashboard/services", allLabel = "كل الخدمات", itemLabel = "خدمة", searchLabel = "الخدمات" }: { query?: string; status?: ServiceStatusFilter; categoryId?: string; categoryOptions?: CategoryOption[]; categoryAllLabel?: string; pageSize: number; totalItems: number; statusCounts: Record<ServiceStatusFilter, number>; basePath?: string; allLabel?: string; itemLabel?: string; searchLabel?: string }) {
   const router = useRouter();
   const [search, setSearch] = useState(query);
   const [pending, startTransition] = useTransition();
@@ -20,14 +21,14 @@ export function ServicesToolbar({ query = "", status = "ALL", pageSize, totalIte
   useEffect(() => {
     if (search.trim() === query) return;
     debounceRef.current = window.setTimeout(() => {
-      startTransition(() => router.replace(serviceListHref(basePath, search, status, pageSize), { scroll: false }));
+      startTransition(() => router.replace(serviceListHref(basePath, search, status, categoryId, pageSize), { scroll: false }));
     }, 400);
     return () => window.clearTimeout(debounceRef.current);
-  }, [basePath, pageSize, query, router, search, status]);
+  }, [basePath, categoryId, pageSize, query, router, search, status]);
 
-  function navigate(nextQuery: string, nextStatus: ServiceStatusFilter) {
+  function navigate(nextQuery: string, nextStatus: ServiceStatusFilter, nextCategoryId = categoryId) {
     window.clearTimeout(debounceRef.current);
-    startTransition(() => router.replace(serviceListHref(basePath, nextQuery, nextStatus, pageSize), { scroll: false }));
+    startTransition(() => router.replace(serviceListHref(basePath, nextQuery, nextStatus, nextCategoryId, pageSize), { scroll: false }));
   }
 
   return (
@@ -50,17 +51,30 @@ export function ServicesToolbar({ query = "", status = "ALL", pageSize, totalIte
             </SelectContent>
           </Select>
         </label>
+        {categoryOptions.length ? <label className="grid gap-1 sm:w-52">
+          <span className="sr-only">تصفية حسب التصنيف</span>
+          <Select onValueChange={(value) => navigate(search, status, value)} value={categoryId}>
+            <SelectTrigger className="h-10 border-border-strong bg-card focus-visible:border-primary focus-visible:ring-ring/25">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="ALL">{categoryAllLabel}</SelectItem>
+              {categoryOptions.map((option) => <SelectItem key={option.id} value={option.id}>{option.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </label> : null}
       </div>
       <p aria-live="polite" className="shrink-0 text-xs tabular-nums text-muted-foreground">{totalItems.toLocaleString("ar-SA")} {itemLabel}</p>
     </div>
   );
 }
 
-function serviceListHref(basePath: string, query: string, status: ServiceStatusFilter, pageSize: number) {
+function serviceListHref(basePath: string, query: string, status: ServiceStatusFilter, categoryId: string, pageSize: number) {
   const params = new URLSearchParams();
   const normalizedQuery = query.trim();
   if (normalizedQuery) params.set("q", normalizedQuery);
   if (status !== "ALL") params.set("status", status);
+  if (categoryId !== "ALL") params.set("categoryId", categoryId);
   if (pageSize !== 10) params.set("pageSize", String(pageSize));
   return params.size ? `${basePath}?${params}` : basePath;
 }
