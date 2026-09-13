@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1200" viewBox="0 0 1800 1200" role="img" aria-label="Sample completed project cover image">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e9eadf"/>
+      <stop offset="1" stop-color="#cfc2ab"/>
+    </linearGradient>
+  </defs>
+  <rect width="1800" height="1200" fill="url(#g)"/>
+  <rect x="0" y="760" width="1800" height="440" fill="#d8c6ad"/>
+  <rect x="230" y="540" width="1340" height="390" fill="#f5efe2"/>
+  <g fill="#314f43">
+    <path d="M205 500 C560 300 1080 292 1590 500 L1532 610 C1050 455 595 462 260 612 Z"/>
+    <path d="M315 610 H1480 V675 H315 Z" opacity=".78"/>
+  </g>
+  <g stroke="#263b34" stroke-width="22">
+    <path d="M380 655 V1005"/>
+    <path d="M900 630 V1005"/>
+    <path d="M1425 655 V1005"/>
+  </g>
+  <g fill="#8b583d" opacity=".75">
+    <rect x="480" y="790" width="205" height="92" rx="8"/>
+    <rect x="1080" y="790" width="240" height="92" rx="8"/>
+  </g>
+</svg>

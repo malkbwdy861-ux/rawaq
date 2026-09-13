@@ -1,30 +1,46 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 
 import { cmsContentPath } from "@/modules/cms/slugs";
-import { ProjectCategoryIcon } from "@/modules/project-categories/icons";
+import { ListingCta } from "@/modules/pages/components/listing-cta";
+import { ListingHero } from "@/modules/pages/components/listing-hero";
+import { ProjectFilterGrid } from "@/modules/pages/components/project-filter-grid";
+import { getProjectCategoryOptions } from "@/modules/project-categories/queries";
 import { getPublishedProjects } from "@/modules/projects/queries";
-import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
 import { listingMetadata } from "@/modules/seo/metadata";
+import { buildWhatsAppUrl } from "@/modules/settings/contact";
+import { getSiteSettings } from "@/modules/settings/queries";
 
 export const metadata: Metadata = listingMetadata("المشاريع", "مشاريع ودراسات حالة منشورة من أعمال جده شيدنج.", "/projects");
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsIndexPage() {
-  const projects = await getPublishedProjects();
-  return <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-16 md:px-8 md:py-20 lg:py-24">
-    <div className="mx-auto max-w-7xl space-y-12">
-      <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "المشاريع", href: "/projects" }]} />
-      <header className="max-w-3xl space-y-4"><p className="text-sm font-semibold text-[oklch(58%_0.11_45)]">أدلة التنفيذ</p><h1 className="text-4xl font-bold leading-[1.24] md:text-6xl">مشاريع حقيقية، موثقة بتفاصيلها</h1><p className="max-w-2xl text-lg leading-[1.78] text-[oklch(42%_0.018_150)]">استعرض دراسات الحالة المنشورة وما توفر لها من موقع وصور وتفاصيل تنفيذ فعلية.</p></header>
-      {projects.length === 0 ? <section className="border-y border-border py-10"><h2 className="text-2xl font-semibold">نعمل على توثيق المشاريع</h2><p className="mt-2 text-text-secondary">ستضاف دراسات الحالة عند اكتمال صورها وتفاصيلها.</p></section> : (
-        <section className="grid gap-x-8 gap-y-12 md:grid-cols-2" aria-label="قائمة المشاريع">
-          {projects.map((project, index) => { const version = project.publishedVersion; if (!version) return null; return <Link className={`group grid gap-5 ${index % 3 === 0 ? "md:col-span-2 md:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.6fr)] md:items-end" : ""}`} href={cmsContentPath("/projects", version.slug ?? "")} key={project.id}>
-            {version.coverMedia ? <div className="relative aspect-[3/2] overflow-hidden rounded-[2px] bg-[oklch(95%_0.012_110)]"><Image alt={version.coverMedia.altText ?? version.title ?? ""} className="object-cover transition-transform duration-300 group-hover:scale-[1.015] motion-reduce:transition-none" fill priority={index === 0} sizes={index % 3 === 0 ? "(min-width: 768px) 65vw, 100vw" : "(min-width: 768px) 50vw, 100vw"} src={version.coverMedia.url} /></div> : null}
-            <div className="space-y-3 border-t border-[oklch(82%_0.012_145)] pt-4"><div className="flex flex-wrap items-center gap-3 text-sm text-[oklch(34%_0.065_42)]">{version.category?.isActive ? <span className="inline-flex items-center gap-1.5 font-semibold"><ProjectCategoryIcon iconKey={version.category.iconKey} />{version.category.name}</span> : null}{[version.city, version.district].filter(Boolean).length ? <span>{[version.city, version.district].filter(Boolean).join("، ")}</span> : null}</div><h2 className="text-2xl font-bold leading-[1.4] group-hover:text-[oklch(37%_0.075_155)]">{version.title}</h2><p className="leading-[1.8] text-[oklch(42%_0.018_150)]">{version.shortDescription}</p><span className="inline-flex min-h-11 items-center text-sm font-semibold text-[oklch(37%_0.075_155)] underline">عرض دراسة الحالة</span></div>
-          </Link>; })}
-        </section>
-      )}
-    </div>
-  </main>;
+  const [projects, categoryOptions, settings] = await Promise.all([getPublishedProjects(), getProjectCategoryOptions(), getSiteSettings()]);
+  const items = projects.flatMap((project) => {
+    const version = project.publishedVersion;
+    if (!version?.title) return [];
+    const location = [version.city, version.district].filter(Boolean).join(" · ");
+    return [{
+      id: project.id,
+      title: version.title,
+      shortDescription: version.shortDescription ?? "",
+      href: version.slug ? cmsContentPath("/projects", version.slug) : null,
+      image: version.coverMedia ? { url: version.coverMedia.url, altText: version.coverMedia.altText || version.title } : null,
+      location: location || undefined,
+      categoryId: version.category?.isActive ? version.category.id : null,
+      category: version.category?.isActive ? { name: version.category.name, iconKey: version.category.iconKey } : undefined,
+    }];
+  });
+  const heroProject = items.find((item) => item.image);
+  const heroImage = heroProject?.image ?? (settings?.defaultOpenGraphImage ? { url: settings.defaultOpenGraphImage.url, altText: "" } : null);
+  const whatsappHref = settings?.whatsappNumber ? buildWhatsAppUrl(settings.whatsappNumber, settings.defaultWhatsappText, { notes: "أرغب في مناقشة مشروع مشابه لأحد مشاريعكم." }) : "/contact";
+
+  return (
+    <main className="min-h-screen bg-background">
+      <ListingHero currentHref="/projects" currentLabel="مشاريعنا" description="نماذج من أعمالنا في المظلات والتظليل الخارجي في جدة." eyebrow="مشاريعنا" image={heroImage} title="مشاريع نفذناها على أرض الواقع" />
+      <div className="public-container py-12 md:py-16 lg:py-20">
+        {items.length ? <ProjectFilterGrid categories={categoryOptions.filter((category) => category.isActive).map(({ id, name }) => ({ id, name }))} items={items} /> : <section className="border-y border-border py-10"><h2 className="text-2xl font-semibold">نعمل على توثيق المشاريع</h2><p className="mt-2 text-text-secondary">ستضاف دراسات الحالة عند اكتمال صورها وتفاصيلها.</p></section>}
+      </div>
+      <ListingCta description="شاركنا تفاصيل الموقع والمساحة، وسنناقش معك نطاق التنفيذ والخيار المناسب." href={whatsappHref} title="لديك مشروع مشابه؟" />
+    </main>
+  );
 }

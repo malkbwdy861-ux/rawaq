@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200" role="img" aria-label="Sample shade structure service image">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d8e3dc"/>
+      <stop offset="1" stop-color="#f5efe2"/>
+    </linearGradient>
+    <linearGradient id="fabric" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#315d4a"/>
+      <stop offset="1" stop-color="#6f7f64"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1200" fill="url(#sky)"/>
+  <rect y="820" width="1600" height="380" fill="#ded1bd"/>
+  <path d="M115 345 C410 230 760 228 1115 335 L1490 448 L1534 548 C1025 440 530 436 67 548 Z" fill="url(#fabric)"/>
+  <path d="M67 548 C530 436 1025 440 1534 548 L1504 610 C1008 520 548 518 98 610 Z" fill="#243f35" opacity=".82"/>
+  <g stroke="#243f35" stroke-width="20" stroke-linecap="round">
+    <path d="M265 583 V970"/>
+    <path d="M785 522 V970"/>
+    <path d="M1320 583 V970"/>
+  </g>
+  <g fill="#f9f6ef" opacity=".72">
+    <rect x="320" y="705" width="260" height="120" rx="10"/>
+    <rect x="970" y="700" width="295" height="130" rx="10"/>
+  </g>
+  <g stroke="#9b6242" stroke-width="10" opacity=".7">
+    <path d="M130 980 H1480"/>
+    <path d="M195 1042 H1390"/>
+  </g>
+</svg>

@@ -42,6 +42,7 @@ import {
   type FeaturedSolutionItem,
 } from "./featured-solutions";
 import { HomeFaqAccordion } from "./home-faq-accordion";
+import { ServiceCard, serviceTileClasses } from "./service-card";
 import { StaticPublicPage } from "./static-public-pages";
 
 type Media = { url: string; altText: string | null; caption?: string | null };
@@ -222,7 +223,7 @@ function HomeContent({
     : data.featuredProjects.description;
   return (
     <>
-      <section className="relative isolate min-h-[620px] overflow-hidden bg-primary-active text-primary-foreground sm:min-h-[680px] lg:min-h-[clamp(760px,90vh,850px)]">
+      <section className="relative isolate min-h-svh overflow-hidden bg-primary-active text-primary-foreground">
         {resolved.heroMedia ? (
           <Image
             alt={
@@ -247,7 +248,7 @@ function HomeContent({
           aria-hidden="true"
           className="absolute inset-0 -z-10 bg-[linear-gradient(to_left,color-mix(in_oklch,var(--primary-active)_72%,transparent)_0%,color-mix(in_oklch,var(--primary-active)_52%,transparent)_24%,color-mix(in_oklch,var(--primary)_24%,transparent)_48%,color-mix(in_oklch,var(--primary)_5%,transparent)_70%,transparent_100%)]"
         />
-        <div className="mx-auto grid min-h-[620px] max-w-[1280px] grid-rows-[1fr_auto] px-4 pb-8 pt-32 sm:min-h-[680px] sm:px-6 sm:pb-10 sm:pt-36 lg:min-h-[clamp(760px,90vh,850px)] lg:px-10 lg:pb-14 lg:pt-48">
+        <div className="mx-auto grid min-h-svh max-w-[1280px] grid-rows-[1fr_auto] px-4 pb-8 pt-32 sm:px-6 sm:pb-10 sm:pt-36 lg:px-10 lg:pb-14 lg:pt-48">
           <div className="grid items-center lg:grid-cols-12">
             <div className="max-w-[780px] self-center lg:col-span-7 lg:col-start-1 lg:pb-10">
               {data.hero.eyebrow ? (
@@ -1117,14 +1118,6 @@ const serviceSubtitles: Record<string, string> = {
   "مظلات مدارس": "بيئة مريحة وآمنة للمساحات التعليمية",
 };
 
-const serviceTileClasses = [
-  "min-h-[420px] md:col-span-6 md:min-h-[460px] lg:col-span-6 lg:row-span-2 lg:min-h-0",
-  "min-h-[330px] md:col-span-3 md:min-h-[300px] lg:col-span-3 lg:min-h-0",
-  "min-h-[300px] md:col-span-3 md:min-h-[300px] lg:col-span-3 lg:min-h-0",
-  "min-h-[270px] md:col-span-4 md:min-h-[260px] lg:col-span-4 lg:min-h-0",
-  "min-h-[245px] md:col-span-2 md:min-h-[260px] lg:col-span-2 lg:min-h-0",
-] as const;
-
 function FeaturedServices({
   items,
   preview,
@@ -1172,80 +1165,7 @@ function FeaturedServices({
               serviceSubtitles[version.title!] ??
               version.shortDescription ??
               "حلول مصممة بعناية لتناسب احتياج مساحتك";
-            const panel = (
-              <>
-                {version.heroMedia ? (
-                  <Image
-                    alt={version.heroMedia.altText || version.title || ""}
-                    className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.035]"
-                    fill
-                    sizes={
-                      index === 0
-                        ? "(min-width: 1024px) 50vw, 100vw"
-                        : "(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
-                    }
-                    src={version.heroMedia.url}
-                  />
-                ) : (
-                  <div
-                    aria-hidden="true"
-                    className="absolute inset-0 bg-primary [background-image:linear-gradient(125deg,transparent_0%,color-mix(in_oklch,var(--primary-active)_48%,transparent)_100%),linear-gradient(90deg,color-mix(in_oklch,var(--primary-soft)_12%,transparent)_1px,transparent_1px)] [background-size:auto,48px_100%]"
-                  />
-                )}
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 bg-[linear-gradient(to_top,color-mix(in_oklch,var(--primary-active)_90%,transparent)_0%,color-mix(in_oklch,var(--primary-active)_62%,transparent)_38%,color-mix(in_oklch,var(--primary)_9%,transparent)_76%)] transition-opacity duration-300 group-hover:opacity-90"
-                />
-                <div className="relative z-10 flex h-full flex-col justify-end p-5 text-primary-foreground md:p-6">
-                  <div
-                    className={`flex gap-4 ${index === 4 ? "items-end md:flex-col md:items-start" : "items-end justify-between"}`}
-                  >
-                    <div className="min-w-0">
-                      <div className="mb-2 flex items-center gap-3 text-primary-soft">
-                        <span className="h-px w-6 bg-clay" />
-                        <span
-                          className="text-xs font-semibold tabular-nums"
-                          dir="ltr"
-                        >
-                          {String(index + 1).padStart(2, "0")}
-                        </span>
-                      </div>
-                      <h3
-                        className={`${index === 0 ? "text-[clamp(1.75rem,3vw,2.5rem)]" : "text-[clamp(1.25rem,2vw,1.75rem)]"} font-bold leading-[1.35]`}
-                      >
-                        {version.title}
-                      </h3>
-                      <p
-                        className={`mt-2 max-w-[38ch] leading-[1.7] text-primary-soft ${index === 4 ? "text-xs md:text-sm" : "text-sm md:text-[0.9375rem]"}`}
-                      >
-                        {subtitle}
-                      </p>
-                    </div>
-                    <span
-                      aria-hidden="true"
-                      className="grid size-11 shrink-0 place-items-center rounded-full border border-primary-soft/60 bg-primary-active/50 transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:-translate-x-1 group-hover:bg-primary-active"
-                    >
-                      <ArrowLeft className="size-[18px]" />
-                    </span>
-                  </div>
-                </div>
-              </>
-            );
-            const className = `group relative isolate overflow-hidden rounded-[12px] outline-none ring-offset-2 ring-offset-background focus-visible:ring-2 focus-visible:ring-ring ${serviceTileClasses[index]}`;
-            return !preview && version.slug ? (
-              <Link
-                aria-label={`${version.title}: ${subtitle}`}
-                className={className}
-                href={cmsContentPath("/services", version.slug)}
-                key={item.id}
-              >
-                {panel}
-              </Link>
-            ) : (
-              <article className={className} key={item.id}>
-                {panel}
-              </article>
-            );
+            return <ServiceCard className={serviceTileClasses[index]} featured index={index} item={{ id: item.id, title: version.title!, description: subtitle, href: !preview && version.slug ? cmsContentPath("/services", version.slug) : null, image: version.heroMedia ? { url: version.heroMedia.url, altText: version.heroMedia.altText || version.title || "" } : null }} key={item.id} />;
           })}
         </div>
 

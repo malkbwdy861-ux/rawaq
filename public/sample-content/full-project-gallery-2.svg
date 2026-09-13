@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200" role="img" aria-label="Sample project fabric detail">
+  <rect width="1600" height="1200" fill="#dce3d8"/>
+  <path d="M-60 385 C385 175 865 155 1660 380 V665 C1040 495 505 505 -60 690 Z" fill="#315d4a"/>
+  <path d="M-60 665 C505 505 1040 495 1660 665 V752 C1010 615 506 620 -60 790 Z" fill="#263f36" opacity=".86"/>
+  <g stroke="#f5efe2" stroke-width="6" opacity=".35">
+    <path d="M85 604 C520 470 1020 455 1510 604"/>
+    <path d="M150 562 C548 448 995 440 1440 562"/>
+    <path d="M235 520 C590 430 950 425 1350 520"/>
+  </g>
+  <rect y="780" width="1600" height="420" fill="#d2c0a8"/>
+</svg>

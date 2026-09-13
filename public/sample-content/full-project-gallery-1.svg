@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1067" viewBox="0 0 1600 1067" role="img" aria-label="Sample project steel frame detail">
+  <rect width="1600" height="1067" fill="#eee6d8"/>
+  <rect y="705" width="1600" height="362" fill="#d1c0a8"/>
+  <g stroke="#284239" stroke-width="34" stroke-linecap="round">
+    <path d="M180 720 L820 300 L1440 720"/>
+    <path d="M270 720 V965"/>
+    <path d="M810 335 V965"/>
+    <path d="M1350 720 V965"/>
+    <path d="M365 645 H1268"/>
+  </g>
+  <g stroke="#9b6242" stroke-width="12" opacity=".75">
+    <path d="M415 605 L810 356 L1210 605"/>
+    <path d="M520 645 L810 470 L1100 645"/>
+  </g>
+</svg>

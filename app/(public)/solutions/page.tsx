@@ -1,45 +1,35 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 
 import { cmsContentPath } from "@/modules/cms/slugs";
-import { getPublishedSolutions } from "@/modules/solutions/queries";
-import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
+import { ListingCta } from "@/modules/pages/components/listing-cta";
+import { ListingHero } from "@/modules/pages/components/listing-hero";
+import { SolutionCard, type FeaturedSolutionItem } from "@/modules/pages/components/featured-solutions";
 import { listingMetadata } from "@/modules/seo/metadata";
+import { getPublishedSolutions } from "@/modules/solutions/queries";
+import { buildWhatsAppUrl } from "@/modules/settings/contact";
+import { getSiteSettings } from "@/modules/settings/queries";
 
 export const metadata: Metadata = listingMetadata("الحلول", "تصفح حلول جده شيدنج المنشورة لاحتياجات التظليل والاستخدامات الخارجية.", "/solutions");
-
 export const dynamic = "force-dynamic";
 
 export default async function SolutionsIndexPage() {
-  const solutions = await getPublishedSolutions();
+  const [solutions, settings] = await Promise.all([getPublishedSolutions(), getSiteSettings()]);
+  const items = solutions.flatMap((solution): FeaturedSolutionItem[] => {
+    const version = solution.publishedVersion;
+    if (!version?.title) return [];
+    return [{ id: solution.id, title: version.title, shortDescription: version.shortDescription ?? "", href: version.slug ? cmsContentPath("/solutions", version.slug) : null, image: version.heroMedia ? { url: version.heroMedia.url, altText: version.heroMedia.altText || version.title } : null }];
+  });
+  const heroSolution = items.find((item) => item.image);
+  const heroImage = heroSolution?.image ?? (settings?.defaultOpenGraphImage ? { url: settings.defaultOpenGraphImage.url, altText: "" } : null);
+  const whatsappHref = settings?.whatsappNumber ? buildWhatsAppUrl(settings.whatsappNumber, settings.defaultWhatsappText, { notes: "أحتاج مساعدة في اختيار حل التظليل المناسب للموقع." }) : "/contact";
 
   return (
-    <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-12 md:px-8">
-      <div className="mx-auto max-w-6xl space-y-10">
-        <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الحلول", href: "/solutions" }]} />
-        <header className="space-y-4">
-          <p className="text-sm font-semibold text-[oklch(37%_0.075_155)]">الحلول</p>
-          <h1 className="max-w-3xl text-3xl font-bold leading-[1.35] md:text-5xl">حلول منشورة حسب احتياجات العملاء</h1>
-          <p className="max-w-2xl text-base leading-[1.8] text-[oklch(42%_0.018_150)]">ابدأ من تحدي الموقع، ثم تعرّف على خيارات التنفيذ والخدمات والمواد المرتبطة به.</p>
-        </header>
-        {solutions.length === 0 ? (
-          <section className="border-y border-border py-10"><h2 className="text-xl font-semibold">نعمل على إضافة حلول تفصيلية</h2><p className="mt-2 text-text-secondary">تواصل معنا لمناقشة ظروف موقعك والنتيجة المطلوبة.</p></section>
-        ) : (
-          <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" aria-label="قائمة الحلول">
-            {solutions.map((solution) => {
-              const version = solution.publishedVersion;
-              if (!version) return null;
-              return (
-                <Link className="group overflow-hidden rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)] transition-colors hover:border-[oklch(37%_0.075_155)]" href={cmsContentPath("/solutions", version.slug ?? "")} key={solution.id}>
-                  {version.heroMedia ? <div className="relative aspect-[4/3] bg-[oklch(95%_0.012_110)]"><Image alt={version.heroMedia.altText ?? version.title ?? ""} className="object-cover" fill sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw" src={version.heroMedia.url} /></div> : null}
-                  <div className="space-y-3 p-5"><h2 className="text-xl font-bold leading-[1.45] group-hover:text-[oklch(37%_0.075_155)]">{version.title}</h2><p className="text-sm leading-[1.8] text-[oklch(42%_0.018_150)]">{version.shortDescription}</p></div>
-                </Link>
-              );
-            })}
-          </section>
-        )}
+    <main className="min-h-screen bg-background">
+      <ListingHero currentHref="/solutions" currentLabel="حلولنا" description="نساعدك في اختيار الحل المناسب حسب استخدام المساحة وطبيعة المشروع." eyebrow="حلولنا" image={heroImage} title="حلول تظليل مصممة حسب احتياج الموقع" />
+      <div className="public-container py-12 md:py-16 lg:py-20">
+        {items.length ? <section aria-label="قائمة الحلول" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">{items.map((item, index) => <SolutionCard index={index} item={item} key={item.id} total={items.length} />)}</section> : <section className="border-y border-border py-10"><h2 className="text-xl font-semibold">نعمل على إضافة حلول تفصيلية</h2><p className="mt-2 text-text-secondary">تواصل معنا لمناقشة ظروف موقعك والنتيجة المطلوبة.</p></section>}
       </div>
+      <ListingCta description="شاركنا استخدام المساحة وظروف الموقع، وسنرشدك إلى الحل الأقرب لاحتياجك." href={whatsappHref} label="ناقش احتياجك" title="غير متأكد من الحل المناسب؟" />
     </main>
   );
 }

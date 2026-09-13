@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200" role="img" aria-label="Sample outdoor privacy solution image">
+  <rect width="1600" height="1200" fill="#efe7d8"/>
+  <rect x="0" y="0" width="1600" height="430" fill="#d7e0d5"/>
+  <path d="M0 480 C280 410 520 410 760 480 C1040 560 1280 520 1600 430 V1200 H0 Z" fill="#d8cbb7"/>
+  <g transform="translate(178 250)">
+    <rect x="0" y="300" width="1240" height="420" fill="#314f43"/>
+    <g fill="#f6f0e4" opacity=".92">
+      <rect x="78" y="355" width="70" height="310"/>
+      <rect x="210" y="355" width="70" height="310"/>
+      <rect x="342" y="355" width="70" height="310"/>
+      <rect x="474" y="355" width="70" height="310"/>
+      <rect x="606" y="355" width="70" height="310"/>
+      <rect x="738" y="355" width="70" height="310"/>
+      <rect x="870" y="355" width="70" height="310"/>
+      <rect x="1002" y="355" width="70" height="310"/>
+    </g>
+    <path d="M-45 284 H1285" stroke="#9b6242" stroke-width="24" stroke-linecap="round"/>
+    <path d="M80 206 C405 85 780 98 1110 206 L1190 292 H0 Z" fill="#6d7d62"/>
+  </g>
+  <circle cx="1260" cy="245" r="86" fill="#c68455" opacity=".36"/>
+</svg>

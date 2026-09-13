@@ -5,7 +5,7 @@ import { JsonLd } from "./json-ld";
 
 type BreadcrumbItem = { label: string; href: string };
 
-export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
+export function Breadcrumbs({ items, className = "text-text-secondary" }: { items: BreadcrumbItem[]; className?: string }) {
   const structuredItems = items.map((item, index) => ({
     "@type": "ListItem",
     position: index + 1,
@@ -14,7 +14,7 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
   }));
 
   return <>
-    <nav aria-label="مسار التنقل" className="text-sm text-[oklch(42%_0.018_150)]">
+    <nav aria-label="مسار التنقل" className={`text-sm ${className}`}>
       <ol className="flex flex-wrap items-center gap-2">
         {items.map((item, index) => <li className="flex items-center gap-2" key={`${item.label}-${index}`}>
           {index ? <span aria-hidden="true">‹</span> : null}
