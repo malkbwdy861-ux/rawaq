@@ -6,6 +6,7 @@ import { cmsRelationIdsSchema, cmsSeoFieldsSchema } from "@/modules/cms/validati
 const text = z.string().trim();
 const optionalText = text.optional().or(z.literal(""));
 const optionalMediaId = z.string().cuid().optional().or(z.literal(""));
+const optionalLimitedText = (maximum: number) => text.max(maximum).optional().or(z.literal(""));
 const itemIconSchema = z.enum(["location", "shield", "team", "settings", "climate", "design"]);
 const itemSchema = z.object({ title: optionalText, description: optionalText, icon: itemIconSchema.optional() });
 const valuePropositionItemSchema = itemSchema.extend({ enabled: z.boolean(), order: z.number().int().min(0).max(99) });
@@ -143,6 +144,35 @@ export const pricesPageDraftSchema = z.object({
   finalCta: z.object({ title: optionalText, description: optionalText, buttonText: optionalText, target: optionalText }),
 });
 
+export const listingPageDraftSchema = z.object({
+  hero: z.object({
+    pageTitle: optionalLimitedText(120),
+    eyebrow: optionalLimitedText(60),
+    shortDescription: optionalLimitedText(240),
+    mediaId: optionalMediaId,
+    imageAlt: optionalLimitedText(300),
+  }),
+  intro: z.object({
+    title: optionalLimitedText(140),
+    description: optionalLimitedText(2000),
+  }),
+});
+
+export const listingPageDefaults = {
+  PROJECTS: {
+    hero: { pageTitle: "مشاريع نفذناها على أرض الواقع", eyebrow: "مشاريعنا", shortDescription: "نماذج من أعمالنا في المظلات والتظليل الخارجي في جدة.", mediaId: "", imageAlt: "" },
+    intro: { title: "أعمال حقيقية تعكس جودة التنفيذ", description: "استعرض مجموعة من مشاريعنا المنفذة في جدة، من مظلات المواقف والمدارس إلى الجلسات الخارجية والمظلات السكنية والتجارية. نركز في كل مشروع على جودة الخامات، دقة التنفيذ، ملاءمة التصميم للموقع وتحقيق أفضل استفادة من المساحة." },
+  },
+  SERVICES: {
+    hero: { pageTitle: "خدمات تظليل وتنفيذ تناسب احتياجك", eyebrow: "خدماتنا", shortDescription: "تنفيذ احترافي للمظلات وحلول التظليل للمنازل والمنشآت والمساحات المختلفة.", mediaId: "", imageAlt: "" },
+    intro: { title: "خدمات متكاملة من التصميم حتى التنفيذ", description: "نقدم مجموعة متكاملة من خدمات المظلات والتظليل الخارجي في جدة، بدءاً من فهم احتياج الموقع واختيار الحل المناسب وحتى التوريد والتركيب والتشطيب، مع الاهتمام بجودة المواد ودقة التنفيذ." },
+  },
+  SOLUTIONS: {
+    hero: { pageTitle: "حلول تظليل مصممة حسب احتياج الموقع", eyebrow: "حلولنا", shortDescription: "نساعدك في اختيار الحل المناسب حسب استخدام المساحة وطبيعة المشروع.", mediaId: "", imageAlt: "" },
+    intro: { title: "الحل المناسب يبدأ من فهم الموقع", description: "نقسم حلولنا حسب طبيعة الاستخدام والموقع لمساعدة العميل على الوصول إلى الخيار الأنسب، سواء للمواقف أو المدارس أو المساحات الخارجية أو المنازل أو المنشآت التجارية." },
+  },
+} as const;
+
 export const pageKeySchema = z.nativeEnum(PageKey);
 export const pageIdSchema = z.object({ pageId: z.string().cuid(), key: pageKeySchema });
 export const pageSeoSchema = cmsSeoFieldsSchema;
@@ -167,12 +197,28 @@ export const pricesPagePublishSchema = pricesPageDraftSchema.extend({
   pricingFactors: pricesPageDraftSchema.shape.pricingFactors.extend({ title: required("أدخل عنوان عوامل التسعير.") }),
   finalCta: pricesPageDraftSchema.shape.finalCta.extend({ title: required("أدخل عنوان الدعوة الختامية."), buttonText: required("أدخل نص زر الدعوة الختامية."), target: safeTarget }),
 });
+export const listingPagePublishSchema = listingPageDraftSchema.extend({
+  hero: listingPageDraftSchema.shape.hero.extend({
+    pageTitle: required("أدخل عنوان الصفحة.").max(120),
+    shortDescription: required("أدخل الوصف المختصر.").max(240),
+  }),
+  intro: listingPageDraftSchema.shape.intro.extend({
+    description: required("أدخل وصف مقدمة الصفحة.").max(2000),
+  }),
+});
+export const projectsListingPagePublishSchema = listingPageDraftSchema.extend({
+  hero: listingPageDraftSchema.shape.hero.extend({
+    pageTitle: required("أدخل عنوان الصفحة.").max(120),
+    shortDescription: required("أدخل الوصف المختصر.").max(240),
+  }),
+});
 
-export const pageDraftSchemas = { HOME: homePageDraftSchema, ABOUT: aboutPageDraftSchema, CONTACT: contactPageDraftSchema, PRICES: pricesPageDraftSchema } as const;
-export const pagePublishSchemas = { HOME: homePagePublishSchema, ABOUT: aboutPagePublishSchema, CONTACT: contactPagePublishSchema, PRICES: pricesPagePublishSchema } as const;
+export const pageDraftSchemas = { HOME: homePageDraftSchema, ABOUT: aboutPageDraftSchema, CONTACT: contactPageDraftSchema, PRICES: pricesPageDraftSchema, PROJECTS: listingPageDraftSchema, SERVICES: listingPageDraftSchema, SOLUTIONS: listingPageDraftSchema } as const;
+export const pagePublishSchemas = { HOME: homePagePublishSchema, ABOUT: aboutPagePublishSchema, CONTACT: contactPagePublishSchema, PRICES: pricesPagePublishSchema, PROJECTS: projectsListingPagePublishSchema, SERVICES: listingPagePublishSchema, SOLUTIONS: listingPagePublishSchema } as const;
 
 export type HomePageData = z.infer<typeof homePageDraftSchema>;
 export type AboutPageData = z.infer<typeof aboutPageDraftSchema>;
 export type ContactPageData = z.infer<typeof contactPageDraftSchema>;
 export type PricesPageData = z.infer<typeof pricesPageDraftSchema>;
-export type StaticPageData = HomePageData | AboutPageData | ContactPageData | PricesPageData;
+export type ListingPageData = z.infer<typeof listingPageDraftSchema>;
+export type StaticPageData = HomePageData | AboutPageData | ContactPageData | PricesPageData | ListingPageData;

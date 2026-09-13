@@ -1,5 +1,6 @@
 import { ContentStatus } from "@prisma/client";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import { decodeCmsSlug } from "@/modules/cms/slugs";
 import { getCmsPagination, parseCmsSearchParams } from "@/modules/cms/validation";
@@ -36,11 +37,8 @@ export async function getSolutionList(searchParams: Record<string, string | stri
   const pagination = getCmsPagination({ page, pageSize, totalItems });
   const solutions = await prisma.solution.findMany({
     where,
-    include: {
-      draftVersion: { include: { heroMedia: true } },
-      publishedVersion: { include: { heroMedia: true } },
-    },
-    orderBy: { updatedAt: "desc" },
+    select: { id: true, status: true, updatedAt: true, draftVersion: { select: { title: true, slug: true, shortDescription: true, heroMedia: { select: { url: true } } } }, publishedVersion: { select: { title: true, slug: true, shortDescription: true, heroMedia: { select: { url: true } } } } },
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     skip: pagination.skip,
     take: pagination.take,
   });
@@ -74,35 +72,39 @@ export async function getNewSolutionEditorData() {
   return { media, relationOptions };
 }
 
-export async function getPublishedSolutions() {
-  return prisma.solution.findMany({
-    where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } },
-    include: { publishedVersion: { include: { heroMedia: true } } },
-    orderBy: { publishedAt: "desc" },
+export async function getPublishedSolutions(page = 1, pageSize = 12) {
+  const where = { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } };
+  const totalItems = await prisma.solution.count({ where });
+  const pagination = getCmsPagination({ page, pageSize, totalItems });
+  const items = await prisma.solution.findMany({
+    where,
+    select: { id: true, publishedVersion: { select: { title: true, slug: true, shortDescription: true, heroMedia: { select: { url: true, altText: true } } } } },
+    orderBy: [{ publishedAt: "desc" }, { id: "desc" }], skip: pagination.skip, take: pagination.take,
   });
+  return { items, pagination };
 }
 
-export async function getPublishedSolutionBySlug(slug: string) {
+export const getPublishedSolutionBySlug = cache(async (slug: string) => {
   const decodedSlug = decodeCmsSlug(slug);
   const solution = await prisma.solution.findFirst({
     where: { status: ContentStatus.PUBLISHED, publishedVersion: { slug: decodedSlug } },
     include: {
       publishedVersion: {
         include: {
-          heroMedia: true,
-          openGraphImage: true,
-          services: { where: { service: { status: ContentStatus.PUBLISHED } }, include: { service: { include: { publishedVersion: true } } } },
-          materials: { where: { material: { status: ContentStatus.PUBLISHED } }, include: { material: { include: { publishedVersion: true } } } },
-          projects: { where: { project: { status: ContentStatus.PUBLISHED } }, include: { project: { include: { publishedVersion: true } } } },
-          articles: { where: { article: { status: ContentStatus.PUBLISHED } }, include: { article: { include: { publishedVersion: true } } } },
-          faqs: { where: { faq: { status: ContentStatus.PUBLISHED } }, include: { faq: { include: { publishedVersion: true } } } },
+          heroMedia: { select: { url: true, altText: true, caption: true } },
+          openGraphImage: { select: { url: true } },
+          services: { where: { service: { status: ContentStatus.PUBLISHED } }, select: { service: { select: { publishedVersion: { select: { title: true, slug: true } } } } } },
+          materials: { where: { material: { status: ContentStatus.PUBLISHED } }, select: { material: { select: { publishedVersion: { select: { name: true, slug: true } } } } } },
+          projects: { where: { project: { status: ContentStatus.PUBLISHED } }, select: { project: { select: { publishedVersion: { select: { title: true, slug: true } } } } } },
+          articles: { where: { article: { status: ContentStatus.PUBLISHED } }, select: { article: { select: { publishedVersion: { select: { title: true, slug: true } } } } } },
+          faqs: { where: { faq: { status: ContentStatus.PUBLISHED } }, select: { faq: { select: { publishedVersion: { select: { question: true, answer: true } } } } } },
         },
       },
     },
   });
   if (!solution?.publishedVersion) notFound();
   return solution;
-}
+});
 
 export async function getSolutionPreview(solutionId: string) {
   const solution = await prisma.solution.findUnique({ where: { id: solutionId }, include: { draftVersion: { include: { heroMedia: true, openGraphImage: true } } } });
@@ -111,16 +113,16 @@ export async function getSolutionPreview(solutionId: string) {
 }
 
 function getImageMedia() {
-  return prisma.media.findMany({ where: { type: "IMAGE" }, orderBy: { createdAt: "desc" }, take: 80 });
+  return prisma.media.findMany({ where: { type: "IMAGE" }, select: { id: true, url: true, originalFilename: true, altText: true, width: true, height: true }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 80 });
 }
 
 async function getRelationOptions() {
   const [services, materials, projects, articles, faqs] = await Promise.all([
-    prisma.service.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }),
-    prisma.material.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }),
-    prisma.project.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }),
-    prisma.article.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }),
-    prisma.fAQ.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }),
+    prisma.service.findMany({ select: { id: true, status: true, draftVersion: { select: { title: true, slug: true } }, publishedVersion: { select: { title: true, slug: true } } }, orderBy: { updatedAt: "desc" } }),
+    prisma.material.findMany({ select: { id: true, status: true, draftVersion: { select: { name: true, slug: true } }, publishedVersion: { select: { name: true, slug: true } } }, orderBy: { updatedAt: "desc" } }),
+    prisma.project.findMany({ select: { id: true, status: true, draftVersion: { select: { title: true, slug: true } }, publishedVersion: { select: { title: true, slug: true } } }, orderBy: { updatedAt: "desc" } }),
+    prisma.article.findMany({ select: { id: true, status: true, draftVersion: { select: { title: true, slug: true } }, publishedVersion: { select: { title: true, slug: true } } }, orderBy: { updatedAt: "desc" } }),
+    prisma.fAQ.findMany({ select: { id: true, status: true, draftVersion: { select: { question: true, answer: true } }, publishedVersion: { select: { question: true, answer: true } } }, orderBy: { updatedAt: "desc" } }),
   ]);
   return {
     services: services.map((item) => ({ id: item.id, label: item.draftVersion?.title ?? item.publishedVersion?.title ?? "خدمة بدون عنوان", description: item.draftVersion?.slug ?? item.publishedVersion?.slug ?? undefined, status: item.status })),

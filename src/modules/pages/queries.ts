@@ -13,6 +13,9 @@ export const pageDefinitions = [
   { key: "ABOUT", label: "من نحن", path: "/about" },
   { key: "CONTACT", label: "التواصل", path: "/contact" },
   { key: "PRICES", label: "الأسعار", path: "/prices" },
+  { key: "PROJECTS", label: "المشاريع", path: "/projects" },
+  { key: "SERVICES", label: "الخدمات", path: "/services" },
+  { key: "SOLUTIONS", label: "الحلول", path: "/solutions" },
 ] as const satisfies { key: PageKey; label: string; path: string }[];
 
 export async function getPageList() {
@@ -27,7 +30,12 @@ export async function getPageEditorData(key: PageKey) {
   ]);
   if (!page) notFound();
   const data = page.draftVersion?.data ? pageDraftSchemas[key].safeParse(page.draftVersion.data) : null;
-  return { page, draftData: data?.success ? data.data : null, media, relationOptions };
+  const draftData = data?.success ? data.data : null;
+  const selectedHeroId = draftData && "mediaId" in draftData.hero ? draftData.hero.mediaId : null;
+  const selectedHero = selectedHeroId && !media.some((item) => item.id === selectedHeroId)
+    ? await prisma.media.findFirst({ where: { id: selectedHeroId, type: "IMAGE" } })
+    : null;
+  return { page, draftData, media: selectedHero ? [selectedHero, ...media] : media, relationOptions };
 }
 
 export async function getPublishedPage(key: PageKey) {
@@ -102,7 +110,7 @@ async function resolveSelections(key: PageKey, data: StaticPageData, preview: bo
   ].filter((id): id is string => Boolean(id)) : [];
   const pricesData = key === "PRICES" ? data as Extract<StaticPageData, { selectedPricingArticleIds: unknown }> : null;
   const [heroMedia, valuePropositionMedia, sectionMedia, services, solutions, materials, projects, articles, faqs, settings] = await Promise.all([
-    heroMediaId ? prisma.media.findUnique({ where: { id: heroMediaId } }) : null,
+    heroMediaId ? prisma.media.findFirst({ where: { id: heroMediaId, type: "IMAGE" } }) : null,
     valuePropositionMediaId ? prisma.media.findUnique({ where: { id: valuePropositionMediaId } }) : null,
     sectionMediaIds.length ? prisma.media.findMany({ where: { id: { in: sectionMediaIds }, type: "IMAGE" } }) : [],
     homeData ? prisma.service.findMany({ where: { id: { in: homeData.featuredServices.selectedServiceIds }, ...statusWhere }, include: serviceVersionInclude }) : key === "CONTACT" ? prisma.service.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],

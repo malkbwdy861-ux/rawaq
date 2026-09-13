@@ -12,8 +12,8 @@ export function ProjectFilterGrid({ categories, items }: { categories: { id: str
 
   return (
     <>
-      <div className="overflow-x-auto pb-2 [scrollbar-width:thin]" aria-label="تصنيفات المشاريع">
-        <div className="flex w-max min-w-full gap-2" role="group">
+      <div className="-mx-4 overflow-x-auto px-4 pb-2 [direction:rtl] [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden" aria-label="تصنيفات المشاريع">
+        <div className="flex w-max min-w-full gap-2" dir="rtl" role="group">
           {[{ id: "ALL", name: "الكل" }, ...categories].map((category) => {
             const active = category.id === activeCategory;
             return <button aria-pressed={active} className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-ring ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted text-text-secondary hover:border-primary hover:text-primary"}`} key={category.id} onClick={() => setActiveCategory(category.id)} type="button">{category.name}</button>;
@@ -21,7 +21,7 @@ export function ProjectFilterGrid({ categories, items }: { categories: { id: str
         </div>
       </div>
       {visibleItems.length ? (
-        <section className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5" aria-label="قائمة المشاريع">
+        <section className="mt-10 grid gap-4 sm:grid-cols-2 md:mt-12 lg:grid-cols-3 lg:gap-5" aria-label="قائمة المشاريع">
           {visibleItems.map((item) => <ProjectCard archive item={item} key={item.id} />)}
         </section>
       ) : (

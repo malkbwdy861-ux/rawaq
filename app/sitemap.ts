@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     prisma.redirect.findMany({ select: { sourcePath: true } }),
   ]);
   const redirected = new Set(redirects.map((item) => item.sourcePath));
-  const entries: MetadataRoute.Sitemap = ["/services", "/solutions", "/materials", "/projects", "/guides"]
+  const entries: MetadataRoute.Sitemap = ["/materials", "/guides"]
     .filter((path) => !redirected.has(path))
     .map((path) => ({ url: absoluteUrl(path) }));
 

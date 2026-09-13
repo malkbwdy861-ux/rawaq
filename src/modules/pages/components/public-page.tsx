@@ -31,6 +31,7 @@ import type {
   ContactPageData,
   HomePageData,
   PricesPageData,
+  ListingPageData,
   StaticPageData,
 } from "../validation";
 import {
@@ -102,7 +103,7 @@ export function PublicPage({
   resolved,
   preview = false,
 }: {
-  pageKey: "HOME" | "ABOUT" | "CONTACT" | "PRICES";
+  pageKey: "HOME" | "ABOUT" | "CONTACT" | "PRICES" | "PROJECTS" | "SERVICES" | "SOLUTIONS";
   data: StaticPageData;
   resolved: ResolvedPageData;
   preview?: boolean;
@@ -123,7 +124,7 @@ export function PublicPage({
       ) : null}
       {pageKey !== "HOME" ? (
         <StaticPublicPage
-          data={data as AboutPageData | ContactPageData | PricesPageData}
+          data={data as AboutPageData | ContactPageData | PricesPageData | ListingPageData}
           pageKey={pageKey}
           preview={preview}
           resolved={resolved}

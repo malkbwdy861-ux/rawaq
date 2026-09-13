@@ -189,7 +189,7 @@ export function SolutionCard({ item, index, total = 1, active = true, variant = 
     </article>;
   }
 
-  return <article className="group relative isolate flex aspect-[4/3] min-h-[290px] overflow-hidden rounded-[12px] bg-primary-active text-primary-foreground shadow-[var(--shadow-project)] transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-[3px] hover:shadow-[var(--shadow-project-hover)]">
+  return <article className="group relative isolate flex min-w-0 aspect-[4/3] min-h-[290px] overflow-hidden rounded-[12px] bg-primary-active text-primary-foreground shadow-[var(--shadow-project)] transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-[3px] hover:shadow-[var(--shadow-project-hover)]">
     <SolutionMedia active image={item.image} title={item.title} sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw" />
     <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,color-mix(in_oklch,var(--primary-active)_92%,transparent)_0%,color-mix(in_oklch,var(--primary-active)_64%,transparent)_42%,color-mix(in_oklch,var(--primary-active)_8%,transparent)_78%)]" />
     <div className="relative z-10 mt-auto w-full p-5 sm:p-6"><SolutionCardText item={item} index={index} total={total} variant="archive" /></div>

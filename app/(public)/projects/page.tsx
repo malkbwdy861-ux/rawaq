@@ -1,20 +1,24 @@
 import type { Metadata } from "next";
 
 import { cmsContentPath } from "@/modules/cms/slugs";
+import { ArchivePageHero } from "@/modules/pages/components/archive-page-hero";
+import { selectArchiveHeroImage } from "@/modules/pages/components/archive-page-media";
 import { ListingCta } from "@/modules/pages/components/listing-cta";
-import { ListingHero } from "@/modules/pages/components/listing-hero";
 import { ProjectFilterGrid } from "@/modules/pages/components/project-filter-grid";
+import { staticPageMetadata } from "@/modules/pages/metadata";
+import { getPublishedPage } from "@/modules/pages/queries";
+import type { ListingPageData } from "@/modules/pages/validation";
 import { getProjectCategoryOptions } from "@/modules/project-categories/queries";
 import { getPublishedProjects } from "@/modules/projects/queries";
-import { listingMetadata } from "@/modules/seo/metadata";
 import { buildWhatsAppUrl } from "@/modules/settings/contact";
 import { getSiteSettings } from "@/modules/settings/queries";
 
-export const metadata: Metadata = listingMetadata("المشاريع", "مشاريع ودراسات حالة منشورة من أعمال جده شيدنج.", "/projects");
 export const dynamic = "force-dynamic";
+export async function generateMetadata(): Promise<Metadata> { const result = await getPublishedPage("PROJECTS"); return staticPageMetadata(result.version, result.data, "/projects", result.resolved.heroMedia?.url); }
 
 export default async function ProjectsIndexPage() {
-  const [projects, categoryOptions, settings] = await Promise.all([getPublishedProjects(), getProjectCategoryOptions(), getSiteSettings()]);
+  const [pageContent, projects, categoryOptions, settings] = await Promise.all([getPublishedPage("PROJECTS"), getPublishedProjects(), getProjectCategoryOptions(), getSiteSettings()]);
+  const pageData = pageContent.data as ListingPageData;
   const items = projects.flatMap((project) => {
     const version = project.publishedVersion;
     if (!version?.title) return [];
@@ -30,14 +34,14 @@ export default async function ProjectsIndexPage() {
       category: version.category?.isActive ? { name: version.category.name, iconKey: version.category.iconKey } : undefined,
     }];
   });
-  const heroProject = items.find((item) => item.image);
-  const heroImage = heroProject?.image ?? (settings?.defaultOpenGraphImage ? { url: settings.defaultOpenGraphImage.url, altText: "" } : null);
+  const projectMedia = projects.map((project) => project.publishedVersion?.coverMedia).filter(Boolean);
+  const heroImage = selectArchiveHeroImage({ configured: pageContent.resolved.heroMedia, configuredAlt: pageData.hero.imageAlt, title: pageData.hero.pageTitle || "", fallbacks: [...projectMedia, settings?.defaultOpenGraphImage] });
   const whatsappHref = settings?.whatsappNumber ? buildWhatsAppUrl(settings.whatsappNumber, settings.defaultWhatsappText, { notes: "أرغب في مناقشة مشروع مشابه لأحد مشاريعكم." }) : "/contact";
 
   return (
     <main className="min-h-screen bg-background">
-      <ListingHero currentHref="/projects" currentLabel="مشاريعنا" description="نماذج من أعمالنا في المظلات والتظليل الخارجي في جدة." eyebrow="مشاريعنا" image={heroImage} title="مشاريع نفذناها على أرض الواقع" />
-      <div className="public-container py-12 md:py-16 lg:py-20">
+      <ArchivePageHero currentHref="/projects" currentLabel={pageData.hero.eyebrow || "مشاريعنا"} description={pageData.hero.shortDescription || ""} eyebrow={pageData.hero.eyebrow || ""} image={heroImage} imagePosition="center 55%" title={pageData.hero.pageTitle || ""} />
+      <div className="public-container py-12 md:py-16 lg:py-[72px]">
         {items.length ? <ProjectFilterGrid categories={categoryOptions.filter((category) => category.isActive).map(({ id, name }) => ({ id, name }))} items={items} /> : <section className="border-y border-border py-10"><h2 className="text-2xl font-semibold">نعمل على توثيق المشاريع</h2><p className="mt-2 text-text-secondary">ستضاف دراسات الحالة عند اكتمال صورها وتفاصيلها.</p></section>}
       </div>
       <ListingCta description="شاركنا تفاصيل الموقع والمساحة، وسنناقش معك نطاق التنفيذ والخيار المناسب." href={whatsappHref} title="لديك مشروع مشابه؟" />

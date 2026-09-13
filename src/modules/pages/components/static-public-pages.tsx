@@ -22,11 +22,13 @@ import { buildWhatsAppUrl, digitsOnly, phoneHref } from "@/modules/settings/cont
 import { ContactWhatsappForm } from "@/modules/settings/components/contact-whatsapp-form";
 import { WhatsappQuickDialog } from "@/modules/settings/components/whatsapp-quick-dialog";
 
-import type { AboutPageData, ContactPageData, PricesPageData } from "../validation";
+import type { AboutPageData, ContactPageData, ListingPageData, PricesPageData } from "../validation";
+import { ArchivePageHero } from "./archive-page-hero";
+import { ArchivePageIntro } from "./archive-page-intro";
 import type { ResolvedPageData } from "./public-page";
 
-type StaticPageKey = "ABOUT" | "CONTACT" | "PRICES";
-type StaticData = AboutPageData | ContactPageData | PricesPageData;
+type StaticPageKey = "ABOUT" | "CONTACT" | "PRICES" | "PROJECTS" | "SERVICES" | "SOLUTIONS";
+type StaticData = AboutPageData | ContactPageData | PricesPageData | ListingPageData;
 type Entity = ResolvedPageData["articles"][number];
 
 const valueIcons = {
@@ -43,7 +45,13 @@ export function StaticPublicPage({ pageKey, data, resolved, preview }: { pageKey
     {pageKey === "ABOUT" ? <AboutPageContent data={data as AboutPageData} resolved={resolved} /> : null}
     {pageKey === "CONTACT" ? <ContactPageContent data={data as ContactPageData} resolved={resolved} /> : null}
     {pageKey === "PRICES" ? <PricesPageContent data={data as PricesPageData} preview={preview} resolved={resolved} /> : null}
+    {pageKey === "PROJECTS" || pageKey === "SERVICES" || pageKey === "SOLUTIONS" ? <ListingPagePreview data={data as ListingPageData} pageKey={pageKey} resolved={resolved} /> : null}
   </>;
+}
+
+function ListingPagePreview({ data, pageKey, resolved }: { data: ListingPageData; pageKey: "PROJECTS" | "SERVICES" | "SOLUTIONS"; resolved: ResolvedPageData }) {
+  const paths = { PROJECTS: "/projects", SERVICES: "/services", SOLUTIONS: "/solutions" } as const;
+  return <><ArchivePageHero currentHref={paths[pageKey]} currentLabel={data.hero.eyebrow || "صفحة القائمة"} description={data.hero.shortDescription || ""} eyebrow={data.hero.eyebrow || ""} image={resolved.heroMedia ? { url: resolved.heroMedia.url, altText: data.hero.imageAlt || resolved.heroMedia.altText || data.hero.pageTitle || "" } : null} title={data.hero.pageTitle || ""} />{pageKey !== "PROJECTS" ? <ArchivePageIntro description={data.intro.description || ""} /> : null}</>;
 }
 
 function AboutPageContent({ data, resolved }: { data: AboutPageData; resolved: ResolvedPageData }) {

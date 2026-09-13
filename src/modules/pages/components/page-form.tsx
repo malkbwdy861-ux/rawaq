@@ -10,7 +10,7 @@ import type { CmsRelationOption } from "@/modules/cms/types";
 import { MediaPicker, type MediaPickerItem } from "@/modules/media/components/media-picker";
 
 import { publishPageAction } from "../actions";
-import type { AboutPageData, ContactPageData, HomePageData, PricesPageData, StaticPageData } from "../validation";
+import type { AboutPageData, ContactPageData, HomePageData, ListingPageData, PricesPageData, StaticPageData } from "../validation";
 import { RepeatableItems } from "./repeatable-items";
 
 type PageFormProps = {
@@ -33,6 +33,7 @@ export function PageForm({ page, draftData, media, path, relationOptions }: Page
         {page.key === "ABOUT" ? <AboutFields data={draftData as AboutPageData | null} media={media} /> : null}
         {page.key === "CONTACT" ? <ContactFields data={draftData as ContactPageData | null} /> : null}
         {page.key === "PRICES" ? <PricesFields data={draftData as PricesPageData | null} options={relationOptions} /> : null}
+        {page.key === "PROJECTS" || page.key === "SERVICES" || page.key === "SOLUTIONS" ? <ListingFields data={draftData as ListingPageData | null} media={media} pageKey={page.key} /> : null}
         <SeoFields version={page.draftVersion} media={media} />
       </div>
 
@@ -51,6 +52,25 @@ export function PageForm({ page, draftData, media, path, relationOptions }: Page
         </div>
       </div>
     </form>
+  );
+}
+
+function ListingFields({ data, media, pageKey }: { data: ListingPageData | null; media: MediaPickerItem[]; pageKey: "PROJECTS" | "SERVICES" | "SOLUTIONS" }) {
+  return (
+    <>
+      <PageSection title="واجهة صفحة القائمة" description="محتوى الشريط البصري أعلى الصفحة. استخدم عنواناً مباشراً ووصفاً مختصراً." defaultOpen>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+          <div className="grid gap-4">
+            <Text id="heroEyebrow" label="السطر التمهيدي" maxLength={60} value={data?.hero.eyebrow} />
+            <Text id="pageTitle" label="عنوان الصفحة" maxLength={120} required value={data?.hero.pageTitle} />
+            <Area id="shortDescription" label="الوصف المختصر داخل الواجهة" maxLength={240} required value={data?.hero.shortDescription} />
+            <Text id="heroImageAlt" label="النص البديل لصورة الواجهة" maxLength={300} value={data?.hero.imageAlt} />
+          </div>
+          <MediaPicker items={media} name="heroMediaId" defaultValue={data?.hero.mediaId} label="صورة واجهة الصفحة" />
+        </div>
+      </PageSection>
+      {pageKey !== "PROJECTS" ? <PageSection title="وصف الصفحة" description="يظهر كفقرة تحريرية مستقلة بين الواجهة ومحتوى القائمة." defaultOpen><Area id="description" label="الوصف التفصيلي" maxLength={2000} required tall value={data?.intro.description} /></PageSection> : null}
+    </>
   );
 }
 
@@ -319,12 +339,12 @@ function PageSection({ title, description, children, defaultOpen = false }: { ti
   );
 }
 
-function Text({ id, label, value, ltr }: { id: string; label: string; value?: string | null; ltr?: boolean }) {
-  return <CmsFieldShell id={id} label={label}><CmsInput dir={ltr ? "ltr" : undefined} id={id} name={id} defaultValue={value ?? ""} /></CmsFieldShell>;
+function Text({ id, label, value, ltr, maxLength, required }: { id: string; label: string; value?: string | null; ltr?: boolean; maxLength?: number; required?: boolean }) {
+  return <CmsFieldShell id={id} label={label}><CmsInput dir={ltr ? "ltr" : undefined} id={id} maxLength={maxLength} name={id} required={required} defaultValue={value ?? ""} /></CmsFieldShell>;
 }
 
-function Area({ id, label, value, tall }: { id: string; label: string; value?: string | null; tall?: boolean }) {
-  return <CmsFieldShell id={id} label={label}><CmsTextarea className={tall ? "min-h-48" : undefined} id={id} name={id} defaultValue={value ?? ""} /></CmsFieldShell>;
+function Area({ id, label, value, tall, maxLength, required }: { id: string; label: string; value?: string | null; tall?: boolean; maxLength?: number; required?: boolean }) {
+  return <CmsFieldShell id={id} label={label}><CmsTextarea className={tall ? "min-h-48" : undefined} id={id} maxLength={maxLength} name={id} required={required} defaultValue={value ?? ""} /></CmsFieldShell>;
 }
 
 function TwoColumns({ children }: { children: ReactNode }) {

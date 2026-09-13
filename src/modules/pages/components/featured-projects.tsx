@@ -77,7 +77,7 @@ export function ProjectCard({ item, featured = false, balanced = false, archive 
       </div>
     </>
   );
-  const sharedClassName = `group relative isolate flex overflow-hidden rounded-[16px] bg-primary-active shadow-[var(--shadow-project)] outline-none ring-offset-2 ring-offset-muted transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-[3px] hover:shadow-[var(--shadow-project-hover)] focus-visible:ring-2 focus-visible:ring-ring ${archive ? "aspect-[4/3] min-h-[270px]" : featured ? `aspect-[4/5] sm:aspect-[16/9] ${balanced ? "lg:aspect-[4/3]" : "lg:aspect-[4/5]"}` : "aspect-[4/3] min-h-[260px] sm:min-h-[300px] lg:aspect-auto lg:min-h-0"} ${className}`;
+  const sharedClassName = `group relative isolate flex overflow-hidden rounded-[16px] bg-primary-active shadow-[var(--shadow-project)] outline-none ring-offset-2 ring-offset-muted transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-[3px] hover:shadow-[var(--shadow-project-hover)] focus-visible:ring-2 focus-visible:ring-ring ${archive ? "min-w-0 aspect-[4/3] min-h-[270px]" : featured ? `aspect-[4/5] sm:aspect-[16/9] ${balanced ? "lg:aspect-[4/3]" : "lg:aspect-[4/5]"}` : "aspect-[4/3] min-h-[260px] sm:min-h-[300px] lg:aspect-auto lg:min-h-0"} ${className}`;
 
   return item.href ? <Link className={sharedClassName} href={item.href}>{content}</Link> : <article className={sharedClassName}>{content}</article>;
 }

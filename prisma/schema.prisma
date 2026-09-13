@@ -31,6 +31,9 @@ enum PageKey {
   ABOUT
   CONTACT
   PRICES
+  PROJECTS
+  SERVICES
+  SOLUTIONS
 }
 
 model AdminUser {

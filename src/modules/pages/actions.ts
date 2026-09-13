@@ -8,7 +8,7 @@ import { readStringArray } from "@/modules/cms/validation";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
 
-import { pageDraftSchemas, pageIdSchema, pageKeySchema, pagePublishSchemas, pageSeoSchema, type StaticPageData } from "./validation";
+import { listingPageDefaults, pageDraftSchemas, pageIdSchema, pageKeySchema, pagePublishSchemas, pageSeoSchema, type StaticPageData } from "./validation";
 
 export async function createPageDraftAction(formData: FormData) {
   await requireAdmin();
@@ -18,14 +18,16 @@ export async function createPageDraftAction(formData: FormData) {
   if (existing) {
     if (!existing.draftVersionId) {
       await prisma.$transaction(async (tx) => {
-        const draft = await tx.pageVersion.create({ data: { pageId: existing.id } });
+        const initialData = initialPageData(parsed.data);
+        const draft = await tx.pageVersion.create({ data: { pageId: existing.id, ...(initialData ? { data: initialData as Prisma.InputJsonValue } : {}) } });
         await tx.page.update({ where: { id: existing.id }, data: { draftVersionId: draft.id } });
       });
     }
     redirect(`/dashboard/pages/${parsed.data}`);
   }
   await prisma.$transaction(async (tx) => {
-    const page = await tx.page.create({ data: { key: parsed.data, versions: { create: {} } }, include: { versions: { select: { id: true }, take: 1 } } });
+    const initialData = initialPageData(parsed.data);
+    const page = await tx.page.create({ data: { key: parsed.data, versions: { create: initialData ? { data: initialData as Prisma.InputJsonValue } : {} } }, include: { versions: { select: { id: true }, take: 1 } } });
     await tx.page.update({ where: { id: page.id }, data: { draftVersionId: page.versions[0]?.id } });
   });
   revalidatePath("/dashboard/pages");
@@ -173,6 +175,10 @@ function readPageData(formData: FormData, key: PageKey): StaticPageData {
     showPhone: formData.get("showPhone") === "on", showWhatsapp: formData.get("showWhatsapp") === "on", showEmail: formData.get("showEmail") === "on", showAddress: formData.get("showAddress") === "on", showBusinessHours: formData.get("showBusinessHours") === "on",
     finalCta: { title: value("finalCtaTitle"), description: value("finalCtaDescription") },
   };
+  if (key === "PROJECTS" || key === "SERVICES" || key === "SOLUTIONS") return {
+    hero: { pageTitle: value("pageTitle"), eyebrow: value("heroEyebrow"), shortDescription: value("shortDescription"), mediaId: value("heroMediaId"), imageAlt: value("heroImageAlt") },
+    intro: { title: "", description: value("description") },
+  };
   return {
     hero: { title: value("heroTitle"), description: value("heroDescription") },
     intro: { title: value("introTitle"), content: value("introContent") },
@@ -181,6 +187,10 @@ function readPageData(formData: FormData, key: PageKey): StaticPageData {
     faqSection: { selectedFaqIds: readStringArray(formData, "selectedFaqIds") },
     finalCta: { title: value("finalCtaTitle"), description: value("finalCtaDescription"), buttonText: value("finalCtaButtonText"), target: value("finalCtaTarget") },
   };
+}
+
+function initialPageData(key: PageKey) {
+  return key === "PROJECTS" || key === "SERVICES" || key === "SOLUTIONS" ? listingPageDefaults[key] : null;
 }
 
 function readSeo(formData: FormData) { return { seoTitle: formData.get("seoTitle") ?? "", seoDescription: formData.get("seoDescription") ?? "", canonicalUrl: formData.get("canonicalUrl") ?? "", noIndex: formData.get("noIndex") === "on", openGraphTitle: formData.get("openGraphTitle") ?? "", openGraphDescription: formData.get("openGraphDescription") ?? "", openGraphImageId: formData.get("openGraphImageId") ?? "" }; }
