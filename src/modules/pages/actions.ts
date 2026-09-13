@@ -127,16 +127,24 @@ function readPageData(formData: FormData, key: PageKey): StaticPageData {
     const titles = formData.getAll(`${prefix}Titles`);
     const descriptions = formData.getAll(`${prefix}Descriptions`);
     const icons = formData.getAll(`${prefix}Icons`);
-    const supportedIcons = ["location", "shield", "team", "settings"] as const;
+    const supportedIcons = ["location", "shield", "team", "settings", "climate", "design"] as const;
     return titles.map((title, index) => {
       const icon = String(icons[index] ?? "");
-      return { title: String(title), description: String(descriptions[index] ?? ""), ...(supportedIcons.includes(icon as typeof supportedIcons[number]) ? { icon: icon as typeof supportedIcons[number] } : {}) };
+      const order = Number.parseInt(value(`${prefix}Order-${index}`), 10);
+      return {
+        title: String(title),
+        description: String(descriptions[index] ?? ""),
+        ...(supportedIcons.includes(icon as typeof supportedIcons[number]) ? { icon: icon as typeof supportedIcons[number] } : {}),
+        enabled: !formData.has(`${prefix}Enabled-${index}`) || formData.get(`${prefix}Enabled-${index}`) === "on",
+        order: Number.isFinite(order) ? order : index + 1,
+      };
     }).filter((item) => item.title || item.description);
   };
   if (key === "HOME") return {
     hero: { eyebrow: value("heroEyebrow"), title: value("heroTitle"), description: value("heroDescription"), primaryCtaText: value("primaryCtaText"), primaryCtaTarget: value("primaryCtaTarget"), secondaryCtaText: value("secondaryCtaText"), secondaryCtaTarget: value("secondaryCtaTarget"), mediaId: value("heroMediaId"), imageAlt: value("heroImageAlt") },
     featuredServices: { title: value("servicesTitle"), description: value("servicesDescription"), selectedServiceIds: readStringArray(formData, "selectedServiceIds") },
     featuredSolutions: { title: value("solutionsTitle"), description: value("solutionsDescription"), selectedSolutionIds: readStringArray(formData, "selectedSolutionIds") },
+    valueProposition: { enabled: formData.get("valuePropositionEnabled") === "on", eyebrow: value("valuePropositionEyebrow"), heading: value("valuePropositionHeading"), description: value("valuePropositionDescription"), mediaId: value("valuePropositionMediaId"), ctaLabel: value("valuePropositionCtaLabel"), ctaUrl: value("valuePropositionCtaUrl"), items: items("valuePropositionItem") },
     featuredProjects: { title: value("projectsTitle"), description: value("projectsDescription"), selectedProjectIds: readStringArray(formData, "selectedProjectIds") },
     trustSection: { title: value("trustTitle"), description: value("trustDescription"), items: items("trustItem") },
     faqSection: { title: value("faqTitle"), selectedFaqIds: readStringArray(formData, "selectedFaqIds") },

@@ -1,4 +1,4 @@
-import { ArrowLeft, ImageIcon, MapPin, MessageCircle, Settings2, ShieldCheck, UsersRound } from "lucide-react";
+import { ArrowLeft, ImageIcon, MapPin, MessageCircle, PencilRuler, Settings2, ShieldCheck, Sun, UsersRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -16,7 +16,7 @@ import { FeaturedSolutions, type FeaturedSolutionItem } from "./featured-solutio
 type Media = { url: string; altText: string | null; caption?: string | null };
 type Version = { title?: string | null; name?: string | null; slug?: string | null; shortDescription?: string | null; excerpt?: string | null; question?: string | null; answer?: string | null; coverMedia?: Media | null; heroMedia?: Media | null };
 type Entity = { id: string; draftVersion?: Version | null; publishedVersion?: Version | null };
-export type ResolvedPageData = { heroMedia: Media | null; services: Entity[]; solutions: Entity[]; materials: Entity[]; projects: Entity[]; articles: Entity[]; faqs: Entity[]; settings: { primaryPhone: string; secondaryPhone: string | null; whatsappNumber: string; email: string | null; address: string | null; businessHours: string | null; defaultSeoTitle: string | null; defaultSeoDescription: string | null; defaultOpenGraphImage?: { url: string } | null; defaultWhatsappText: string | null; defaultCtaText: string | null } | null };
+export type ResolvedPageData = { heroMedia: Media | null; valuePropositionMedia: Media | null; services: Entity[]; solutions: Entity[]; materials: Entity[]; projects: Entity[]; articles: Entity[]; faqs: Entity[]; settings: { primaryPhone: string; secondaryPhone: string | null; whatsappNumber: string; email: string | null; address: string | null; businessHours: string | null; defaultSeoTitle: string | null; defaultSeoDescription: string | null; defaultOpenGraphImage?: { url: string } | null; defaultWhatsappText: string | null; defaultCtaText: string | null } | null };
 
 export function PublicPage({ pageKey, data, resolved, preview = false }: { pageKey: "HOME" | "ABOUT" | "CONTACT" | "PRICES"; data: StaticPageData; resolved: ResolvedPageData; preview?: boolean }) {
   return <main className="min-h-screen bg-[oklch(97.5%_0.009_100)]">
@@ -44,6 +44,7 @@ function HomeContent({ data, resolved, preview }: { data: HomePageData; resolved
   });
   const projects = ordered(data.featuredProjects.selectedProjectIds, resolved.projects);
   const faqs = faqItems(data.faqSection.selectedFaqIds, resolved.faqs, preview);
+  const valuePropositionMedia = resolved.valuePropositionMedia ?? solutionItems.find((item) => item.image)?.image ?? null;
   return <>
     <section className="relative isolate min-h-[620px] overflow-hidden bg-primary-active text-primary-foreground sm:min-h-[680px] lg:min-h-[clamp(760px,90vh,850px)]">
       {resolved.heroMedia ? <Image alt={data.hero.imageAlt || resolved.heroMedia.altText || data.hero.title || ""} className="-z-30 object-cover object-[68%_center] sm:object-[64%_center] lg:object-[60%_center]" fill priority sizes="100vw" src={resolved.heroMedia.url} /> : <div aria-hidden="true" className="absolute inset-0 -z-30 bg-[linear-gradient(130deg,var(--primary-active),var(--primary))]" />}
@@ -65,11 +66,49 @@ function HomeContent({ data, resolved, preview }: { data: HomePageData; resolved
     </section>
     <FeaturedServices items={services} preview={preview} />
     {solutionItems.length ? <FeaturedSolutions title={data.featuredSolutions.title || "حلول تظليل لكل نوع من المشاريع"} description={data.featuredSolutions.description} items={solutionItems} /> : null}
+    {data.valueProposition.enabled ? <ValuePropositionSection data={data.valueProposition} image={valuePropositionMedia} /> : null}
     <ProjectSection title={data.featuredProjects.title || "مشاريع مختارة"} description={data.featuredProjects.description} items={projects} preview={preview} />
     {faqs.length ? <section className="px-4 py-16 md:px-8 md:py-20" id="faq"><div className="mx-auto max-w-4xl space-y-7"><h2 className="text-3xl font-bold leading-[1.35] md:text-4xl">{data.faqSection.title || "الأسئلة الشائعة"}</h2><FaqList items={faqs} /></div></section> : null}
     {!preview && faqs.length ? <FaqStructuredData items={faqs} /> : null}
     <FinalBand {...data.finalCta} />
   </>;
+}
+
+function ValuePropositionSection({ data, image }: { data: HomePageData["valueProposition"]; image: Media | null }) {
+  const icons = { location: MapPin, shield: ShieldCheck, team: UsersRound, settings: Settings2, climate: Sun, design: PencilRuler };
+  const items = data.items.filter((item) => item.enabled && (item.title || item.description)).sort((a, b) => a.order - b.order);
+
+  return <section aria-labelledby="value-proposition-title" className="relative overflow-hidden bg-muted px-4 py-16 md:px-8 md:py-20 lg:py-24">
+    <div aria-hidden="true" className="absolute inset-x-0 top-0 h-px bg-border" />
+    <div className="mx-auto grid max-w-7xl gap-x-8 gap-y-8 lg:grid-cols-12 lg:gap-x-12 lg:gap-y-0">
+      <header className="lg:col-span-6 lg:col-start-1 lg:row-start-1">
+        {data.eyebrow ? <p className="flex items-center gap-3 text-sm font-semibold text-clay-strong before:h-px before:w-9 before:bg-clay">{data.eyebrow}</p> : null}
+        <h2 className="mt-4 max-w-[680px] text-[clamp(2rem,3.4vw,3rem)] font-bold leading-[1.28] text-pretty" id="value-proposition-title">{data.heading}</h2>
+        {data.description ? <p className="mt-5 max-w-[58ch] text-[1.0625rem] leading-[1.85] text-text-secondary">{data.description}</p> : null}
+      </header>
+
+      {image ? <figure className="relative aspect-[4/5] min-h-[440px] overflow-hidden rounded-[12px] sm:aspect-[5/4] lg:col-span-5 lg:col-start-8 lg:row-span-3 lg:row-start-1 lg:min-h-[720px]">
+        <Image alt={image.altText || data.heading || "مشروع تظليل معماري في جدة"} className="object-cover" fill sizes="(min-width: 1024px) 42vw, 100vw" src={image.url} />
+      </figure> : null}
+
+      {items.length ? <ol className="border-y border-border lg:col-span-6 lg:col-start-1 lg:row-start-2 lg:mt-10">
+        {items.map((item, index) => {
+          const Icon = icons[item.icon ?? "shield"];
+          return <li className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3 border-b border-border py-5 last:border-b-0 sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-4" key={`${item.title}-${item.order}-${index}`}>
+            <span aria-hidden="true" className="grid size-10 place-items-center rounded-[9px] bg-primary-soft text-primary sm:size-11"><Icon className="size-[18px]" strokeWidth={1.7} /></span>
+            <div className="min-w-0">
+              {item.title ? <h3 className="text-lg font-semibold leading-[1.5] sm:text-xl">{item.title}</h3> : null}
+              {item.description ? <p className="mt-1.5 max-w-[48ch] text-[0.9375rem] leading-[1.75] text-text-secondary">{item.description}</p> : null}
+            </div>
+          </li>;
+        })}
+      </ol> : null}
+
+      {data.ctaLabel && data.ctaUrl ? <div className="lg:col-span-6 lg:col-start-1 lg:row-start-3 lg:mt-7">
+        <Link className="group inline-flex min-h-12 items-center gap-3 rounded-[9px] border border-border-strong px-5 text-sm font-semibold text-primary transition-colors duration-150 hover:border-primary hover:bg-primary-soft focus-visible:outline-ring" href={data.ctaUrl}>{data.ctaLabel}<ArrowLeft aria-hidden="true" className="size-[18px] transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:-translate-x-1" /></Link>
+      </div> : null}
+    </div>
+  </section>;
 }
 
 function AboutContent({ data, resolved }: { data: AboutPageData; resolved: ResolvedPageData }) {
@@ -160,7 +199,7 @@ function EntityRowsInner({ title, description, items, prefix, preview }: { title
 function ProjectSection({ title, description, items, preview }: { title: string; description?: string; items: Entity[]; preview: boolean }) { if (!items.length) return null; return <section className="px-4 py-16 md:px-8 md:py-24"><div className="mx-auto max-w-7xl space-y-10"><header className="max-w-2xl space-y-3"><h2 className="text-3xl font-bold md:text-4xl">{title}</h2>{description ? <p className="leading-[1.8] text-[oklch(42%_0.018_150)]">{description}</p> : null}</header><div className="grid gap-8 md:grid-cols-2">{items.map((item) => { const version = entityVersion(item, preview); if (!version?.title) return null; const body = <>{version.coverMedia ? <div className="relative aspect-[3/2] overflow-hidden rounded-[2px]"><Image alt={version.coverMedia.altText ?? version.title} className="object-cover" fill sizes="(min-width: 768px) 50vw, 100vw" src={version.coverMedia.url} /></div> : null}<div className="border-t border-[oklch(82%_0.012_145)] pt-4"><h3 className="text-2xl font-bold">{version.title}</h3>{version.shortDescription ? <p className="mt-2 leading-[1.8] text-[oklch(42%_0.018_150)]">{version.shortDescription}</p> : null}</div></>; return !preview && version.slug ? <Link className="grid gap-4" href={cmsContentPath("/projects", version.slug)} key={item.id}>{body}</Link> : <article className="grid gap-4" key={item.id}>{body}</article>; })}</div></div></section>; }
 function FinalBand({ title, description, buttonText, target }: { title?: string; description?: string; buttonText?: string; target?: string }) { if (!title) return null; return <section className="bg-[oklch(29%_0.055_155)] px-5 py-14 text-[oklch(99%_0.004_100)] md:px-10"><div className="mx-auto flex max-w-5xl flex-col gap-6 md:flex-row md:items-end md:justify-between"><div><h2 className="text-3xl font-bold">{title}</h2>{description ? <p className="mt-3 max-w-[52ch] leading-[1.8] text-[oklch(95.5%_0.018_145)]">{description}</p> : null}</div>{buttonText && target ? <Cta href={target} label={buttonText} /> : null}</div></section>; }
 function Cta({ href, label, secondary, icon }: { href: string; label: string; secondary?: boolean; icon?: "whatsapp" | "projects" }) { const Icon = icon === "whatsapp" ? MessageCircle : icon === "projects" ? ImageIcon : null; return <a className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[9px] px-4.5 text-sm font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[oklch(51%_0.09_155)] ${secondary ? "border border-primary-soft/55 bg-primary-active/15 text-primary-foreground hover:border-primary-soft hover:bg-primary-active/35" : "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active"}`} href={href}>{Icon ? <Icon aria-hidden="true" className="size-4" /> : null}{label}</a>; }
-function HeroTrustStrip({ items }: { items: HomePageData["trustSection"]["items"] }) { const icons = { location: MapPin, shield: ShieldCheck, team: UsersRound, settings: Settings2 }; return <dl className="grid border-t border-primary-soft/25 pt-3 sm:grid-cols-2 lg:grid-cols-3 lg:pt-3">{items.map((item, index) => { const Icon = icons[item.icon ?? "shield"]; return <div className="flex min-w-0 gap-2.5 py-2 sm:px-4 sm:first:pe-0 lg:border-s lg:border-primary-soft/20 lg:px-5 lg:first:border-s-0 lg:first:pe-0" key={`${item.title}-${index}`}><Icon aria-hidden="true" className="mt-0.5 size-[18px] shrink-0 text-clay" /><div className="min-w-0"><dt className="truncate text-[0.8125rem] font-semibold leading-5 text-primary-foreground">{item.title}</dt>{item.description ? <dd className="mt-0.5 truncate text-[0.6875rem] leading-4 text-primary-soft">{item.description}</dd> : null}</div></div>; })}</dl>; }
+function HeroTrustStrip({ items }: { items: HomePageData["trustSection"]["items"] }) { const icons = { location: MapPin, shield: ShieldCheck, team: UsersRound, settings: Settings2, climate: Sun, design: PencilRuler }; return <dl className="grid border-t border-primary-soft/25 pt-3 sm:grid-cols-2 lg:grid-cols-3 lg:pt-3">{items.map((item, index) => { const Icon = icons[item.icon ?? "shield"]; return <div className="flex min-w-0 gap-2.5 py-2 sm:px-4 sm:first:pe-0 lg:border-s lg:border-primary-soft/20 lg:px-5 lg:first:border-s-0 lg:first:pe-0" key={`${item.title}-${index}`}><Icon aria-hidden="true" className="mt-0.5 size-[18px] shrink-0 text-clay" /><div className="min-w-0"><dt className="truncate text-[0.8125rem] font-semibold leading-5 text-primary-foreground">{item.title}</dt>{item.description ? <dd className="mt-0.5 truncate text-[0.6875rem] leading-4 text-primary-soft">{item.description}</dd> : null}</div></div>; })}</dl>; }
 function Breadcrumb({ current }: { current: string }) {
   const paths: Record<string, string> = { "من نحن": "/about", "التواصل": "/contact", "الأسعار": "/prices" };
   return <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: current, href: paths[current] ?? "/" }]} />;

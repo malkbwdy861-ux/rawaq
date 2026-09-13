@@ -90,9 +90,11 @@ async function resolveSelections(key: PageKey, data: StaticPageData, preview: bo
   const statusWhere = preview ? {} : { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } };
   const heroMediaId = "mediaId" in data.hero ? data.hero.mediaId || null : null;
   const homeData = key === "HOME" ? data as Extract<StaticPageData, { featuredServices: unknown }> : null;
+  const valuePropositionMediaId = homeData?.valueProposition.mediaId || null;
   const pricesData = key === "PRICES" ? data as Extract<StaticPageData, { selectedPricingArticleIds: unknown }> : null;
-  const [heroMedia, services, solutions, materials, projects, articles, faqs, settings] = await Promise.all([
+  const [heroMedia, valuePropositionMedia, services, solutions, materials, projects, articles, faqs, settings] = await Promise.all([
     heroMediaId ? prisma.media.findUnique({ where: { id: heroMediaId } }) : null,
+    valuePropositionMediaId ? prisma.media.findUnique({ where: { id: valuePropositionMediaId } }) : null,
     homeData ? prisma.service.findMany({ where: { id: { in: homeData.featuredServices.selectedServiceIds }, ...statusWhere }, include: serviceVersionInclude }) : key === "CONTACT" ? prisma.service.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],
     homeData ? prisma.solution.findMany({ where: { id: { in: homeData.featuredSolutions.selectedSolutionIds }, ...statusWhere }, include: solutionVersionInclude }) : key === "CONTACT" ? prisma.solution.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],
     key === "CONTACT" ? prisma.material.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],
@@ -104,6 +106,7 @@ async function resolveSelections(key: PageKey, data: StaticPageData, preview: bo
   const faqIds = (homeData ?? pricesData)?.faqSection.selectedFaqIds ?? [];
   return {
     heroMedia,
+    valuePropositionMedia,
     services: homeData ? orderSelections(services, homeData.featuredServices.selectedServiceIds) : services,
     solutions: homeData ? orderSelections(solutions, homeData.featuredSolutions.selectedSolutionIds) : solutions,
     materials,

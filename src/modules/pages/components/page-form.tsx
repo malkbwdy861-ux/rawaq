@@ -87,6 +87,27 @@ function HomeFields({ data, media, options }: { data: HomePageData | null; media
         <Area id="solutionsDescription" label="وصف القسم" value={data?.featuredSolutions.description} />
         <CmsRelationSelector name="selectedSolutionIds" label="الحلول" options={options.solutions} selectedIds={data?.featuredSolutions.selectedSolutionIds} />
       </PageSection>
+      <PageSection title="لماذا مظلات جدة؟" description="قدّم أسباب الاختيار في قسم بصري موجز بين الحلول والمشاريع.">
+        <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border bg-dashboard-canvas/45 px-3 text-sm font-semibold transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-soft/45">
+          <input className="size-4 accent-primary" defaultChecked={data?.valueProposition.enabled ?? true} name="valuePropositionEnabled" type="checkbox" />
+          إظهار القسم في الصفحة الرئيسية
+        </label>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+          <div className="grid gap-4">
+            <Text id="valuePropositionEyebrow" label="السطر التمهيدي" value={data?.valueProposition.eyebrow} />
+            <Text id="valuePropositionHeading" label="العنوان" value={data?.valueProposition.heading} />
+            <Area id="valuePropositionDescription" label="الوصف" value={data?.valueProposition.description} />
+          </div>
+          <MediaPicker items={media} name="valuePropositionMediaId" defaultValue={data?.valueProposition.mediaId} label="صورة القسم" />
+        </div>
+        <TwoColumns>
+          <Text id="valuePropositionCtaLabel" label="نص الرابط" value={data?.valueProposition.ctaLabel} />
+          <Text id="valuePropositionCtaUrl" label="وجهة الرابط" value={data?.valueProposition.ctaUrl} ltr />
+        </TwoColumns>
+        <SubPanel title="نقاط القيمة" description="يمكن إخفاء كل بند وترتيبه برقم مستقل.">
+          <RepeatableItems name="valuePropositionItem" initialItems={data?.valueProposition.items} addLabel="إضافة نقطة" maxItems={8} minimumRows={4} showIcon />
+        </SubPanel>
+      </PageSection>
       <PageSection title="المشاريع المختارة" description="اعرض أدلة تنفيذ حقيقية تدعم ثقة الزائر.">
         <Text id="projectsTitle" label="عنوان القسم" value={data?.featuredProjects.title} />
         <Area id="projectsDescription" label="وصف القسم" value={data?.featuredProjects.description} />
