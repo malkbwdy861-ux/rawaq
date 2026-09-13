@@ -52,7 +52,7 @@ export function SettingsForm({ settings, media }: { settings: Settings | null; m
           </div>
         </CmsFieldGroup>
 
-        <CmsFieldGroup title="روابط التواصل الاجتماعي" description="أدخل الروابط المعتمدة فقط. الحقول الفارغة لا تظهر في الواجهة العامة.">
+        <CmsFieldGroup title="روابط التواصل الاجتماعي" description="أدخل الروابط المعتمدة فقط. الحقول الفارغة لا تظهر في الموقع العام.">
           <div className="grid gap-4 sm:grid-cols-2">
             <Text id="facebook" label="Facebook" value={settings?.socialLinks.facebook} ltr />
             <Text id="instagram" label="Instagram" value={settings?.socialLinks.instagram} ltr />
@@ -63,10 +63,10 @@ export function SettingsForm({ settings, media }: { settings: Settings | null; m
           </div>
         </CmsFieldGroup>
 
-        <CmsFieldGroup title="افتراضيات SEO" description="تستخدم عند عدم وجود قيمة أدق في المحتوى المنشور.">
-          <Text id="defaultSeoTitle" label="عنوان SEO الافتراضي" value={settings?.defaultSeoTitle} />
-          <Area id="defaultSeoDescription" label="وصف SEO الافتراضي" value={settings?.defaultSeoDescription} />
-          <MediaPicker items={media} name="defaultOpenGraphImageId" defaultValue={settings?.defaultOpenGraphImageId} label="صورة Open Graph الافتراضية" />
+        <CmsFieldGroup title="افتراضيات محركات البحث" description="تستخدم عند عدم وجود قيمة أدق في المحتوى المنشور.">
+          <Text id="defaultSeoTitle" label="عنوان محركات البحث الافتراضي" value={settings?.defaultSeoTitle} />
+          <Area id="defaultSeoDescription" label="وصف محركات البحث الافتراضي" value={settings?.defaultSeoDescription} />
+          <MediaPicker items={media} name="defaultOpenGraphImageId" defaultValue={settings?.defaultOpenGraphImageId} label="صورة المشاركة الافتراضية" />
         </CmsFieldGroup>
       </div>
 

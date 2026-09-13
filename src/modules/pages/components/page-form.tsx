@@ -161,7 +161,7 @@ function HomeFields({ data, media, options }: { data: HomePageData | null; media
           <MediaPicker items={media} name="featuredProofMediaId" defaultValue={data?.trustSection.featuredProof.mediaId} label="صورة الإثبات الرئيسية" />
         </div>
         <SubPanel title="أدلة الثقة" description="أضف قيمة حقيقية عند توفرها، أو استخدم عنوانا غير رقمي.">
-          <RepeatableItems name="proofMetric" initialItems={data?.trustSection.metrics} addLabel="إضافة دليل" maxItems={4} showEnabled showOrder showIcon showValue />
+          <RepeatableItems name="proofMetric" initialItems={data?.trustSection.metrics} addLabel="إضافة إثبات" maxItems={4} showEnabled showOrder showIcon showValue />
         </SubPanel>
         <SubPanel title="شريط الثقة" description="ثلاث نقاط مختصرة تظهر أسفل القسم.">
           <RepeatableItems name="trustStripItem" initialItems={data?.trustSection.stripItems} addLabel="إضافة نقطة" maxItems={3} showEnabled showOrder showIcon />

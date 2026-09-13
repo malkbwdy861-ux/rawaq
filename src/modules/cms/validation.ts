@@ -36,8 +36,8 @@ export const cmsSearchParamsSchema = z.object({
 export const cmsRelationIdsSchema = z.array(z.string().cuid()).default([]);
 
 export const cmsSeoFieldsSchema = z.object({
-  seoTitle: z.string().trim().max(70, "يجب ألا يتجاوز عنوان SEO عدد 70 حرفاً.").optional().or(z.literal("")),
-  seoDescription: z.string().trim().max(170, "يجب ألا يتجاوز وصف SEO عدد 170 حرفاً.").optional().or(z.literal("")),
+  seoTitle: z.string().trim().max(70, "يجب ألا يتجاوز عنوان محركات البحث 70 حرفاً.").optional().or(z.literal("")),
+  seoDescription: z.string().trim().max(170, "يجب ألا يتجاوز وصف محركات البحث 170 حرفاً.").optional().or(z.literal("")),
   canonicalUrl: z.string().trim().url("أدخل رابطاً قانونياً صالحاً يبدأ بـ http أو https.").optional().or(z.literal("")),
   noIndex: z.coerce.boolean().default(false),
   openGraphTitle: z.string().trim().max(70, "يجب ألا يتجاوز عنوان المشاركة 70 حرفاً.").optional().or(z.literal("")),

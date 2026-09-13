@@ -10,7 +10,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
   return (
     <div className="mx-auto max-w-[880px] space-y-6">
-      <CmsPageHeader title="إعدادات الموقع" description="إدارة بيانات الشركة والتواصل والروابط الاجتماعية وافتراضيات SEO وواتساب ضمن الحقول المعتمدة فقط." />
+      <CmsPageHeader title="إعدادات الموقع" description="إدارة بيانات الشركة والتواصل والروابط الاجتماعية وافتراضيات محركات البحث وواتساب ضمن الحقول المعتمدة فقط." />
       <CmsRouteToast cleanHref="/dashboard/settings" error={messages.error} success={messages.success} />
       <SettingsForm settings={data.settings} media={data.media} />
     </div>
