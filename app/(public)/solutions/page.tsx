@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
 import { cmsContentPath } from "@/modules/cms/slugs";
+import { CmsPaginationControls } from "@/modules/cms/components/pagination";
+import { parsePublicPage } from "@/modules/cms/validation";
 import { ArchivePageHero } from "@/modules/pages/components/archive-page-hero";
 import { ArchivePageIntro } from "@/modules/pages/components/archive-page-intro";
 import { selectArchiveHeroImage } from "@/modules/pages/components/archive-page-media";
@@ -13,11 +15,13 @@ import { getPublishedSolutions } from "@/modules/solutions/queries";
 import { buildWhatsAppUrl } from "@/modules/settings/contact";
 import { getSiteSettings } from "@/modules/settings/queries";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 export async function generateMetadata(): Promise<Metadata> { const result = await getPublishedPage("SOLUTIONS"); return staticPageMetadata(result.version, result.data, "/solutions", result.resolved.heroMedia?.url); }
 
-export default async function SolutionsIndexPage() {
-  const [pageContent, solutions, settings] = await Promise.all([getPublishedPage("SOLUTIONS"), getPublishedSolutions(), getSiteSettings()]);
+export default async function SolutionsIndexPage({ searchParams }: { searchParams: Promise<{ page?: string | string[] }> }) {
+  const page = parsePublicPage((await searchParams).page);
+  const [pageContent, result, settings] = await Promise.all([getPublishedPage("SOLUTIONS"), getPublishedSolutions(page), getSiteSettings()]);
+  const solutions = result.items;
   const pageData = pageContent.data as ListingPageData;
   const items = solutions.flatMap((solution): FeaturedSolutionItem[] => {
     const version = solution.publishedVersion;
@@ -33,7 +37,7 @@ export default async function SolutionsIndexPage() {
       <ArchivePageHero currentHref="/solutions" currentLabel={pageData.hero.eyebrow || "حلولنا"} description={pageData.hero.shortDescription || ""} eyebrow={pageData.hero.eyebrow || ""} image={heroImage} imagePosition="center 48%" title={pageData.hero.pageTitle || ""} />
       <ArchivePageIntro description={pageData.intro.description || ""} />
       <div className="public-container pb-16 md:pb-20 lg:pb-24">
-        {items.length ? <section aria-label="قائمة الحلول" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">{items.map((item, index) => <SolutionCard index={index} item={item} key={item.id} total={items.length} />)}</section> : <section className="border-y border-border py-10"><h2 className="text-xl font-semibold">نعمل على إضافة حلول تفصيلية</h2><p className="mt-2 text-text-secondary">تواصل معنا لمناقشة ظروف موقعك والنتيجة المطلوبة.</p></section>}
+        {items.length ? <><section aria-label="قائمة الحلول" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">{items.map((item, index) => <SolutionCard index={index} item={item} key={item.id} total={items.length} />)}</section><div className="mt-10"><CmsPaginationControls basePath="/solutions" pagination={result.pagination} /></div></> : <section className="border-y border-border py-10"><h2 className="text-xl font-semibold">نعمل على إضافة حلول تفصيلية</h2><p className="mt-2 text-text-secondary">تواصل معنا لمناقشة ظروف موقعك والنتيجة المطلوبة.</p></section>}
       </div>
       <ListingCta description="شاركنا استخدام المساحة وظروف الموقع، وسنرشدك إلى الحل الأقرب لاحتياجك." href={whatsappHref} label="ناقش احتياجك" title="غير متأكد من الحل المناسب؟" />
     </main>

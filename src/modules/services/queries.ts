@@ -4,6 +4,7 @@ import { cache } from "react";
 
 import { getCmsPagination, parseCmsSearchParams } from "@/modules/cms/validation";
 import { decodeCmsSlug } from "@/modules/cms/slugs";
+import { getRecentImageMedia, includeSelectedImageMedia } from "@/modules/media/queries";
 import { prisma } from "@/server/db/prisma";
 
 export async function getServiceList(searchParams: Record<string, string | string[] | undefined>) {
@@ -67,17 +68,17 @@ export async function getServiceEditorData(serviceId: string) {
         publishedVersion: true,
       },
     }),
-    prisma.media.findMany({ where: { type: "IMAGE" }, orderBy: { createdAt: "desc" }, take: 80 }),
+    getRecentImageMedia(),
     getRelationOptions(),
   ]);
 
   if (!service) notFound();
-  return { service, media, relationOptions };
+  return { service, media: await includeSelectedImageMedia(media, [service.draftVersion?.heroMediaId, service.draftVersion?.openGraphImageId]), relationOptions };
 }
 
 export async function getNewServiceEditorData() {
   const [media, relationOptions] = await Promise.all([
-    prisma.media.findMany({ where: { type: "IMAGE" }, orderBy: { createdAt: "desc" }, take: 80 }),
+    getRecentImageMedia(),
     getRelationOptions(),
   ]);
 

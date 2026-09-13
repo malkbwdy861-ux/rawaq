@@ -32,7 +32,8 @@ export default async function MediaPage({ searchParams }: { searchParams: MediaP
   const pagination = getCmsPagination({ page: requestedPage, pageSize: 10, totalItems });
   const mediaItems = await prisma.media.findMany({
     where,
-    orderBy: sort === "name" ? { originalFilename: "asc" } : { createdAt: sort === "oldest" ? "asc" : "desc" },
+    select: { id: true, url: true, originalFilename: true, altText: true, caption: true, width: true, height: true, sizeBytes: true, createdAt: true },
+    orderBy: sort === "name" ? [{ originalFilename: "asc" }, { id: "asc" }] : [{ createdAt: sort === "oldest" ? "asc" : "desc" }, { id: sort === "oldest" ? "asc" : "desc" }],
     skip: pagination.skip,
     take: pagination.take,
   });

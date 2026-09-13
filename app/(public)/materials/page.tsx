@@ -3,16 +3,19 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { cmsContentPath } from "@/modules/cms/slugs";
+import { CmsPaginationControls } from "@/modules/cms/components/pagination";
+import { parsePublicPage } from "@/modules/cms/validation";
 import { getPublishedMaterials } from "@/modules/materials/queries";
 import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
 import { listingMetadata } from "@/modules/seo/metadata";
 
 export const metadata: Metadata = listingMetadata("المواد", "تصفح المواد والخيارات المنشورة والمدعومة في أعمال جده شيدنج.", "/materials");
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
-export default async function MaterialsIndexPage() {
-  const materials = await getPublishedMaterials();
+export default async function MaterialsIndexPage({ searchParams }: { searchParams: Promise<{ page?: string | string[] }> }) {
+  const result = await getPublishedMaterials(parsePublicPage((await searchParams).page));
+  const materials = result.items;
 
   return (
     <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-12 md:px-8">
@@ -26,7 +29,7 @@ export default async function MaterialsIndexPage() {
         {materials.length === 0 ? (
           <section className="border-y border-border py-10"><h2 className="text-xl font-semibold">نعمل على توثيق المواد المتاحة</h2><p className="mt-2 text-text-secondary">يمكنك التواصل معنا للسؤال عن مادة أو استخدام محدد.</p></section>
         ) : (
-          <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" aria-label="قائمة المواد">
+          <><section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3" aria-label="قائمة المواد">
             {materials.map((material) => {
               const version = material.publishedVersion;
               if (!version) return null;
@@ -37,7 +40,7 @@ export default async function MaterialsIndexPage() {
                 </Link>
               );
             })}
-          </section>
+          </section><CmsPaginationControls basePath="/materials" pagination={result.pagination} /></>
         )}
       </div>
     </main>

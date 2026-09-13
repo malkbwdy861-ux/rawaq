@@ -13,7 +13,7 @@ import { contentMetadata } from "@/modules/seo/metadata";
 import { absoluteUrl } from "@/modules/seo/site-url";
 
 type GuidePageProps = { params: Promise<{ slug: string }> };
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 const typeLabels = { GUIDE: "دليل", PRICING: "دليل أسعار", COMPARISON: "مقارنة", MAINTENANCE: "صيانة", GENERAL: "مقال" } as const;
 
 export async function generateMetadata({ params }: GuidePageProps): Promise<Metadata> {

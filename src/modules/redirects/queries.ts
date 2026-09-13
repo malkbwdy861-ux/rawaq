@@ -17,6 +17,6 @@ export async function getRedirectList(searchParams: Record<string, string | stri
   ] } : {};
   const totalItems = await prisma.redirect.count({ where });
   const pagination = getCmsPagination({ page: params.page, pageSize: 20, totalItems });
-  const redirects = await prisma.redirect.findMany({ where, orderBy: { updatedAt: "desc" }, skip: pagination.skip, take: pagination.take });
+  const redirects = await prisma.redirect.findMany({ where, orderBy: [{ updatedAt: "desc" }, { id: "desc" }], skip: pagination.skip, take: pagination.take });
   return { params, pagination, redirects };
 }

@@ -10,7 +10,7 @@ import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
 import { contentMetadata } from "@/modules/seo/metadata";
 
 type ProjectPageProps = { params: Promise<{ slug: string }> };
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
   const { slug: rawSlug } = await params;

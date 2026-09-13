@@ -1,7 +1,9 @@
 import { ContentStatus, type PageKey } from "@prisma/client";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import type { CmsRelationOption } from "@/modules/cms/types";
+import { getRecentImageMedia, includeSelectedImageMedia } from "@/modules/media/queries";
 import { prisma } from "@/server/db/prisma";
 
 import { parseSocialLinks } from "@/modules/settings/queries";
@@ -19,32 +21,29 @@ export const pageDefinitions = [
 ] as const satisfies { key: PageKey; label: string; path: string }[];
 
 export async function getPageList() {
-  return prisma.page.findMany({ where: { key: { in: pageDefinitions.map((page) => page.key) } }, include: { draftVersion: true, publishedVersion: true } });
+  return prisma.page.findMany({ where: { key: { in: pageDefinitions.map((page) => page.key) } }, select: { key: true } });
 }
 
 export async function getPageEditorData(key: PageKey) {
   const [page, media, relationOptions] = await Promise.all([
     prisma.page.findUnique({ where: { key }, include: { draftVersion: true, publishedVersion: true } }),
-    prisma.media.findMany({ where: { type: "IMAGE" }, orderBy: { createdAt: "desc" }, take: 80 }),
+    getRecentImageMedia(),
     getPageRelationOptions(key),
   ]);
   if (!page) notFound();
   const data = page.draftVersion?.data ? pageDraftSchemas[key].safeParse(page.draftVersion.data) : null;
   const draftData = data?.success ? data.data : null;
-  const selectedHeroId = draftData && "mediaId" in draftData.hero ? draftData.hero.mediaId : null;
-  const selectedHero = selectedHeroId && !media.some((item) => item.id === selectedHeroId)
-    ? await prisma.media.findFirst({ where: { id: selectedHeroId, type: "IMAGE" } })
-    : null;
-  return { page, draftData, media: selectedHero ? [selectedHero, ...media] : media, relationOptions };
+  const selectedMediaIds = draftData ? getSelectedPageMediaIds(key, draftData, page.draftVersion?.openGraphImageId) : [];
+  return { page, draftData, media: await includeSelectedImageMedia(media, selectedMediaIds), relationOptions };
 }
 
-export async function getPublishedPage(key: PageKey) {
+export const getPublishedPage = cache(async (key: PageKey) => {
   const page = await prisma.page.findFirst({ where: { key, status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: { include: { openGraphImage: true } } } });
   if (!page?.publishedVersion?.data) notFound();
   const parsed = pagePublishSchemas[key].safeParse(page.publishedVersion.data);
   if (!parsed.success) notFound();
   return { page, version: page.publishedVersion, data: parsed.data, resolved: await resolveSelections(key, parsed.data, false) };
-}
+});
 
 export async function getPagePreview(key: PageKey) {
   const page = await prisma.page.findUnique({ where: { key }, include: { draftVersion: { include: { openGraphImage: true } } } });
@@ -55,18 +54,18 @@ export async function getPagePreview(key: PageKey) {
 }
 
 async function getPageRelationOptions(key: PageKey) {
-  const faqsPromise = prisma.fAQ.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } });
+  const faqsPromise = prisma.fAQ.findMany({ select: { id: true, status: true, draftVersion: { select: { question: true } }, publishedVersion: { select: { question: true } } }, orderBy: { updatedAt: "desc" } });
   if (key === "HOME") {
     const [services, solutions, projects, faqs] = await Promise.all([
-      prisma.service.findMany({ include: { draftVersion: { include: { heroMedia: true } }, publishedVersion: { include: { heroMedia: true } } }, orderBy: { updatedAt: "desc" } }),
-      prisma.solution.findMany({ include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }),
-      prisma.project.findMany({ include: { draftVersion: { include: { coverMedia: true } }, publishedVersion: { include: { coverMedia: true } } }, orderBy: { updatedAt: "desc" } }),
+      prisma.service.findMany({ select: { id: true, status: true, draftVersion: { select: { title: true, heroMedia: { select: { url: true } } } }, publishedVersion: { select: { title: true, heroMedia: { select: { url: true } } } } }, orderBy: { updatedAt: "desc" } }),
+      prisma.solution.findMany({ select: { id: true, status: true, draftVersion: { select: { title: true } }, publishedVersion: { select: { title: true } } }, orderBy: { updatedAt: "desc" } }),
+      prisma.project.findMany({ select: { id: true, status: true, draftVersion: { select: { title: true, coverMedia: { select: { url: true } } } }, publishedVersion: { select: { title: true, coverMedia: { select: { url: true } } } } }, orderBy: { updatedAt: "desc" } }),
       faqsPromise,
     ]);
     return { services: options(services, "title", "خدمة بدون عنوان"), solutions: options(solutions, "title", "حل بدون عنوان"), projects: options(projects, "title", "مشروع بدون عنوان"), faqs: faqOptions(faqs), articles: [] };
   }
   if (key === "PRICES") {
-    const [articles, faqs] = await Promise.all([prisma.article.findMany({ where: { OR: [{ draftVersion: { articleType: "PRICING" } }, { publishedVersion: { articleType: "PRICING" } }] }, include: { draftVersion: true, publishedVersion: true }, orderBy: { updatedAt: "desc" } }), faqsPromise]);
+    const [articles, faqs] = await Promise.all([prisma.article.findMany({ where: { OR: [{ draftVersion: { articleType: "PRICING" } }, { publishedVersion: { articleType: "PRICING" } }] }, select: { id: true, status: true, draftVersion: { select: { title: true } }, publishedVersion: { select: { title: true } } }, orderBy: { updatedAt: "desc" } }), faqsPromise]);
     return { services: [], solutions: [], projects: [], faqs: faqOptions(faqs), articles: options(articles, "title", "مقال بدون عنوان") };
   }
   return { services: [], solutions: [], projects: [], faqs: [], articles: [] } as { services: CmsRelationOption[]; solutions: CmsRelationOption[]; projects: CmsRelationOption[]; faqs: CmsRelationOption[]; articles: CmsRelationOption[] };
@@ -110,12 +109,12 @@ async function resolveSelections(key: PageKey, data: StaticPageData, preview: bo
   ].filter((id): id is string => Boolean(id)) : [];
   const pricesData = key === "PRICES" ? data as Extract<StaticPageData, { selectedPricingArticleIds: unknown }> : null;
   const [heroMedia, valuePropositionMedia, sectionMedia, services, solutions, materials, projects, articles, faqs, settings] = await Promise.all([
-    heroMediaId ? prisma.media.findFirst({ where: { id: heroMediaId, type: "IMAGE" } }) : null,
-    valuePropositionMediaId ? prisma.media.findUnique({ where: { id: valuePropositionMediaId } }) : null,
-    sectionMediaIds.length ? prisma.media.findMany({ where: { id: { in: sectionMediaIds }, type: "IMAGE" } }) : [],
-    homeData ? prisma.service.findMany({ where: { id: { in: homeData.featuredServices.selectedServiceIds }, ...statusWhere }, include: serviceVersionInclude }) : key === "CONTACT" ? prisma.service.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],
-    homeData ? prisma.solution.findMany({ where: { id: { in: homeData.featuredSolutions.selectedSolutionIds }, ...statusWhere }, include: solutionVersionInclude }) : key === "CONTACT" ? prisma.solution.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],
-    key === "CONTACT" ? prisma.material.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, include: { publishedVersion: true }, orderBy: { updatedAt: "desc" }, take: 80 }) : [],
+    heroMediaId ? prisma.media.findFirst({ where: { id: heroMediaId, type: "IMAGE" }, select: { id: true, url: true, altText: true } }) : null,
+    valuePropositionMediaId ? prisma.media.findUnique({ where: { id: valuePropositionMediaId }, select: { id: true, url: true, altText: true } }) : null,
+    sectionMediaIds.length ? prisma.media.findMany({ where: { id: { in: sectionMediaIds }, type: "IMAGE" }, select: { id: true, url: true, altText: true } }) : [],
+    homeData ? prisma.service.findMany({ where: { id: { in: homeData.featuredServices.selectedServiceIds }, ...statusWhere }, include: serviceVersionInclude }) : key === "CONTACT" ? prisma.service.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, select: { id: true, publishedVersion: { select: { title: true } } }, orderBy: [{ updatedAt: "desc" }, { id: "desc" }], take: 80 }) : [],
+    homeData ? prisma.solution.findMany({ where: { id: { in: homeData.featuredSolutions.selectedSolutionIds }, ...statusWhere }, include: solutionVersionInclude }) : key === "CONTACT" ? prisma.solution.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, select: { id: true, publishedVersion: { select: { title: true } } }, orderBy: [{ updatedAt: "desc" }, { id: "desc" }], take: 80 }) : [],
+    key === "CONTACT" ? prisma.material.findMany({ where: { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, select: { id: true, publishedVersion: { select: { name: true } } }, orderBy: [{ updatedAt: "desc" }, { id: "desc" }], take: 80 }) : [],
     homeData ? prisma.project.findMany({ where: { id: { in: homeData.featuredProjects.selectedProjectIds }, ...statusWhere }, include: { ...versionInclude, publishedVersion: { include: projectRelationsInclude }, ...(preview ? { draftVersion: { include: projectRelationsInclude } } : {}) } }) : [],
     pricesData ? prisma.article.findMany({ where: { id: { in: pricesData.selectedPricingArticleIds }, ...statusWhere, ...(preview ? {} : { publishedVersion: { articleType: "PRICING" } }) }, include: versionInclude }) : [],
     (homeData || pricesData) ? prisma.fAQ.findMany({ where: { id: { in: (homeData ?? pricesData)!.faqSection.selectedFaqIds }, ...statusWhere }, include: versionInclude }) : [],
@@ -143,4 +142,17 @@ function orderSelections<T extends { id: string }>(items: T[], ids: string[]) {
     const item = byId.get(id);
     return item ? [item] : [];
   });
+}
+
+function getSelectedPageMediaIds(key: PageKey, data: StaticPageData, openGraphImageId?: string | null) {
+  const ids: (string | null | undefined)[] = [openGraphImageId, "mediaId" in data.hero ? data.hero.mediaId : null];
+  if (key === "HOME" && "featuredServices" in data) {
+    ids.push(
+      data.valueProposition.mediaId,
+      ...data.howWeWork.steps.map((step) => step.mediaId),
+      data.trustSection.featuredProof.mediaId,
+      data.finalCta.backgroundMediaId,
+    );
+  }
+  return ids;
 }

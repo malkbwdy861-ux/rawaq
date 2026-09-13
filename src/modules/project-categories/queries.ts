@@ -1,10 +1,12 @@
+import { cache } from "react";
+
 import { prisma } from "@/server/db/prisma";
 
 export type ProjectCategoryOption = { id: string; name: string; iconKey: string; isActive: boolean };
 
-export async function getProjectCategoryOptions(): Promise<ProjectCategoryOption[]> {
+export const getProjectCategoryOptions = cache(async (): Promise<ProjectCategoryOption[]> => {
   return prisma.projectCategory.findMany({ select: { id: true, name: true, iconKey: true, isActive: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
-}
+});
 
 export async function getProjectCategoryList() {
   const [categories, projects] = await Promise.all([

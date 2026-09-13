@@ -3,17 +3,20 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { cmsContentPath } from "@/modules/cms/slugs";
+import { CmsPaginationControls } from "@/modules/cms/components/pagination";
+import { parsePublicPage } from "@/modules/cms/validation";
 import { getPublishedArticles } from "@/modules/articles/queries";
 import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
 import { listingMetadata } from "@/modules/seo/metadata";
 
 export const metadata: Metadata = listingMetadata("الأدلة", "أدلة عملية منشورة حول التظليل والمواد والأسعار والصيانة.", "/guides");
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const typeLabels = { GUIDE: "دليل", PRICING: "دليل أسعار", COMPARISON: "مقارنة", MAINTENANCE: "صيانة", GENERAL: "مقال" } as const;
 
-export default async function GuidesIndexPage() {
-  const articles = await getPublishedArticles();
+export default async function GuidesIndexPage({ searchParams }: { searchParams: Promise<{ page?: string | string[] }> }) {
+  const result = await getPublishedArticles(parsePublicPage((await searchParams).page));
+  const articles = result.items;
   return <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] px-4 py-16 md:px-8 md:py-20 lg:py-24">
     <div className="mx-auto max-w-7xl space-y-12">
       <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الأدلة", href: "/guides" }]} />
@@ -24,6 +27,7 @@ export default async function GuidesIndexPage() {
           {version.heroMedia ? <Link className="relative order-first aspect-video overflow-hidden rounded-[2px] bg-[oklch(95%_0.012_110)] md:order-none" href={cmsContentPath("/guides", version.slug ?? "")}><Image alt={version.heroMedia.altText ?? version.title ?? ""} className="object-cover" fill priority={index === 0} sizes="(min-width: 768px) 360px, 100vw" src={version.heroMedia.url} /></Link> : null}
         </article>; })}
       </section>}
+      {articles.length ? <CmsPaginationControls basePath="/guides" pagination={result.pagination} /> : null}
     </div>
   </main>;
 }

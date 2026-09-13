@@ -12,7 +12,7 @@ type MaterialPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: MaterialPageProps): Promise<Metadata> {
   const { slug: rawSlug } = await params;

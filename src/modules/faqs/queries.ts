@@ -29,8 +29,8 @@ export async function getFaqList(searchParams: Record<string, string | string[] 
   const pagination = getCmsPagination({ page, pageSize, totalItems });
   const faqs = await prisma.fAQ.findMany({
     where,
-    include: { draftVersion: true, publishedVersion: true },
-    orderBy: { updatedAt: "desc" },
+    select: { id: true, status: true, updatedAt: true, draftVersion: { select: { question: true, answer: true } }, publishedVersion: { select: { question: true, answer: true } } },
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     skip: pagination.skip,
     take: pagination.take,
   });

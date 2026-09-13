@@ -5,6 +5,7 @@ import { cache } from "react";
 import { decodeCmsSlug } from "@/modules/cms/slugs";
 import { getCmsPagination, parseCmsSearchParams } from "@/modules/cms/validation";
 import { prisma } from "@/server/db/prisma";
+import { getRecentImageMedia, includeSelectedImageMedia } from "@/modules/media/queries";
 
 export async function getSolutionList(searchParams: Record<string, string | string[] | undefined>) {
   const parsedParams = parseCmsSearchParams(searchParams);
@@ -64,7 +65,7 @@ export async function getSolutionEditorData(solutionId: string) {
     getRelationOptions(),
   ]);
   if (!solution) notFound();
-  return { solution, media, relationOptions };
+  return { solution, media: await includeSelectedImageMedia(media, [solution.draftVersion?.heroMediaId, solution.draftVersion?.openGraphImageId]), relationOptions };
 }
 
 export async function getNewSolutionEditorData() {
@@ -113,7 +114,7 @@ export async function getSolutionPreview(solutionId: string) {
 }
 
 function getImageMedia() {
-  return prisma.media.findMany({ where: { type: "IMAGE" }, select: { id: true, url: true, originalFilename: true, altText: true, width: true, height: true }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 80 });
+  return getRecentImageMedia();
 }
 
 async function getRelationOptions() {

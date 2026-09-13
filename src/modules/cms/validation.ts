@@ -73,6 +73,11 @@ export function getCmsPagination({ page, pageSize, totalItems }: CmsPagination) 
   };
 }
 
+export function parsePublicPage(value: string | string[] | undefined) {
+  const parsed = Number(Array.isArray(value) ? value[0] : value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
 export function readStringArray(formData: FormData, fieldName: string) {
   return formData
     .getAll(fieldName)

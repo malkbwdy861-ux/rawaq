@@ -14,7 +14,7 @@ type ServicePageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: ServicePageProps): Promise<Metadata> {
   const { slug: rawSlug } = await params;
