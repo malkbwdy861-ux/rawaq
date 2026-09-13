@@ -50,7 +50,7 @@ export async function submitArticleAction(previousState: ArticleFormState, formD
   if (!parsed.success) {
     return {
       status: "error",
-      message: intent === "publish" ? "تعذر نشر الدليل. راجع الحقول المحددة أدناه." : "تعذر حفظ المسودة. راجع الحقول المحددة أدناه.",
+      message: intent === "publish" ? "تعذر نشر المقال. راجع الحقول المحددة أدناه." : "تعذر حفظ المسودة. راجع الحقول المحددة أدناه.",
       fieldErrors: parsed.error.flatten().fieldErrors,
       values: input,
       revision: previousState.revision + 1,
@@ -66,7 +66,7 @@ export async function submitArticleAction(previousState: ArticleFormState, formD
       return mutationErrorState(previousState, input, error, "saveDraft");
     }
     revalidateArticleDraftPaths(articleId);
-    redirect(`/dashboard/articles/${articleId}?success=${encodeURIComponent("تم حفظ مسودة الدليل.")}`);
+    redirect(`/dashboard/articles/${articleId}?success=${encodeURIComponent("تم حفظ مسودة المقال.")}`);
   }
 
   let published: Awaited<ReturnType<typeof publishArticle>>;
@@ -83,7 +83,7 @@ export async function deleteArticleAction(formData: FormData) {
   await requireAdmin();
 
   const parsed = articleIdSchema.safeParse({ articleId: formData.get("articleId") });
-  if (!parsed.success) redirect("/dashboard/articles?error=تعذر تحديد الدليل المطلوب حذفه.");
+  if (!parsed.success) redirect("/dashboard/articles?error=تعذر تحديد المقال المطلوب حذفه.");
 
   let result: { blocked: boolean; deleted: boolean; slug?: string | null };
   try {
@@ -107,19 +107,19 @@ export async function deleteArticleAction(formData: FormData) {
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   } catch (error) {
     console.error("Article delete failed", error);
-    redirect("/dashboard/articles?error=تعذر حذف الدليل. حاول مرة أخرى.");
+    redirect("/dashboard/articles?error=تعذر حذف المقال. حاول مرة أخرى.");
   }
 
   if (result.blocked) {
-    redirect(`/dashboard/articles?error=${encodeURIComponent("لا يمكن حذف الدليل لأنه مستخدم في بيانات صفحة الأسعار. أزله من صفحة الأسعار أولاً ثم أعد المحاولة.")}`);
+    redirect(`/dashboard/articles?error=${encodeURIComponent("لا يمكن حذف المقال لأنه مستخدم في بيانات صفحة الأسعار. أزله من صفحة الأسعار أولاً ثم أعد المحاولة.")}`);
   }
-  if (!result.deleted) redirect("/dashboard/articles?error=الدليل غير موجود أو حُذف مسبقاً.");
+  if (!result.deleted) redirect("/dashboard/articles?error=المقال غير موجود أو حُذف مسبقاً.");
 
   revalidatePath("/dashboard/articles");
   revalidatePath("/guides");
   if (result.slug) revalidatePath(cmsContentPath("/guides", result.slug));
   revalidatePath("/sitemap.xml");
-  redirect(`/dashboard/articles?success=${encodeURIComponent("تم حذف الدليل نهائياً.")}`);
+  redirect(`/dashboard/articles?success=${encodeURIComponent("تم حذف المقال نهائياً.")}`);
 }
 
 function readArticleFormData(formData: FormData): ArticleFormValues {
@@ -155,11 +155,11 @@ function mutationErrorState(previousState: ArticleFormState, values: ArticleForm
   console.error(`Article ${intent} failed`, error);
   const code = typeof error === "object" && error && "code" in error ? error.code : undefined;
   let message = intent === "publish"
-    ? "تعذر نشر الدليل بسبب خطأ في قاعدة البيانات. بقيت بيانات النموذج والنسخة المنشورة الحالية كما هي."
+    ? "تعذر نشر المقال بسبب خطأ في قاعدة البيانات. بقيت بيانات النموذج والنسخة المنشورة الحالية كما هي."
     : "تعذر حفظ المسودة بسبب خطأ في قاعدة البيانات. بقيت بيانات النموذج كما هي.";
   if (error instanceof Error && /^[\u0600-\u06ff]/u.test(error.message)) message = error.message;
   if (code === "P2003") message = "تعذر الحفظ لأن أحد العناصر المرتبطة أو الصور لم يعد موجوداً. حدّث اختياراتك ثم حاول مرة أخرى.";
-  if (code === "P2025") message = "الدليل لم يعد موجوداً. ارجع إلى قائمة الأدلة وحدّث الصفحة.";
+  if (code === "P2025") message = "المقال لم يعد موجوداً. ارجع إلى قائمة المقالات وحدّث الصفحة.";
   return { status: "error", message, values, revision: previousState.revision + 1 };
 }
 
@@ -181,7 +181,7 @@ async function saveDraft(articleId: string, input: ArticleDraftInput) {
     await lockPublishingNamespace(tx, "articles");
     await assertImageMedia(tx, input);
     const article = await tx.article.findUnique({ where: { id: articleId }, include: { publishedVersion: { select: { slug: true } } } });
-    if (!article) throw new Error("الدليل غير موجود.");
+    if (!article) throw new Error("المقال غير موجود.");
     const slug = input.title ? await resolveArticleSlug(tx, articleId, input, article.publishedVersion?.slug) : article.publishedVersion?.slug ?? null;
     const versionData = toVersionData({ ...input, slug: slug ?? undefined });
     let versionId = article.draftVersionId;
@@ -203,7 +203,7 @@ async function publishArticle(existingArticleId: string | undefined, input: Arti
     const article = existingArticleId
       ? await tx.article.findUnique({ where: { id: existingArticleId }, include: { publishedVersion: { select: { slug: true } } } })
       : await tx.article.create({ data: { status: ContentStatus.DRAFT }, include: { publishedVersion: { select: { slug: true } } } });
-    if (!article) throw new Error("الدليل غير موجود.");
+    if (!article) throw new Error("المقال غير موجود.");
 
     const slug = await resolveArticleSlug(tx, article.id, input, article.publishedVersion?.slug);
     const versionData = toVersionData({ ...input, slug });
@@ -226,7 +226,7 @@ async function assertImageMedia(tx: Prisma.TransactionClient, input: Pick<Articl
   const ids = [...new Set([input.heroMediaId, input.openGraphImageId].filter((id): id is string => Boolean(id)))];
   if (!ids.length) return;
   const count = await tx.media.count({ where: { id: { in: ids }, type: "IMAGE" } });
-  if (count !== ids.length) throw new Error("اختر صوراً صالحة من مكتبة الصور للوسائط الرئيسية ووسائط المشاركة.");
+  if (count !== ids.length) throw new Error("اختر صوراً صالحة من مكتبة الصور للصورة الرئيسية وصورة المشاركة.");
 }
 
 async function resolveArticleSlug(tx: Prisma.TransactionClient, articleId: string, input: ArticleDraftInput, publishedSlug?: string | null) {

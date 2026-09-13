@@ -67,7 +67,7 @@ export async function getPublishedArticles(page = 1, pageSize = 12) {
   const where = { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } };
   const totalItems = await prisma.article.count({ where });
   const pagination = getCmsPagination({ page, pageSize, totalItems });
-  const items = await prisma.article.findMany({ where, select: { id: true, publishedVersion: { select: { title: true, slug: true, excerpt: true, articleType: true, heroMedia: { select: { url: true, altText: true } } } } }, orderBy: [{ publishedAt: "desc" }, { id: "desc" }], skip: pagination.skip, take: pagination.take });
+  const items = await prisma.article.findMany({ where, select: { id: true, publishedAt: true, publishedVersion: { select: { title: true, slug: true, excerpt: true, articleType: true, heroMedia: { select: { url: true, altText: true } } } } }, orderBy: [{ publishedAt: "desc" }, { id: "desc" }], skip: pagination.skip, take: pagination.take });
   return { items, pagination };
 }
 

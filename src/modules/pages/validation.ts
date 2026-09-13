@@ -179,7 +179,7 @@ export const pageSeoSchema = cmsSeoFieldsSchema;
 
 const required = (message: string) => text.min(1, message);
 export const homePagePublishSchema = homePageDraftSchema.extend({
-  hero: homePageDraftSchema.shape.hero.extend({ title: required("أدخل عنوان البطل."), description: required("أدخل وصف البطل."), primaryCtaText: required("أدخل نص الإجراء الرئيسي."), primaryCtaTarget: safeTarget, secondaryCtaTarget: optionalSafeTarget }),
+  hero: homePageDraftSchema.shape.hero.extend({ title: required("أدخل عنوان القسم الرئيسي."), description: required("أدخل وصف القسم الرئيسي."), primaryCtaText: required("أدخل نص الإجراء الرئيسي."), primaryCtaTarget: safeTarget, secondaryCtaTarget: optionalSafeTarget }),
   valueProposition: homePageDraftSchema.shape.valueProposition.unwrap().extend({ ctaUrl: optionalSafeTarget }).default(defaultValueProposition),
   finalCta: homePageDraftSchema.shape.finalCta.extend({ target: optionalSafeTarget }),
 }).superRefine((data, context) => {

@@ -45,7 +45,7 @@ const groups: NavGroup[] = [
       { label: "الصفحات", href: "/dashboard/pages", icon: FileText },
     ],
   },
-  { label: "الأصول", items: [{ label: "الوسائط", href: "/dashboard/media", icon: ImageIcon }] },
+  { label: "الصور", items: [{ label: "مكتبة الصور", href: "/dashboard/media", icon: ImageIcon }] },
   { label: "الظهور", items: [{ label: "إعادة التوجيه", href: "/dashboard/seo/redirects", icon: Route }] },
   { label: "النظام", items: [{ label: "الإعدادات", href: "/dashboard/settings", icon: Settings }] },
 ];
@@ -59,7 +59,7 @@ const routeLabels = [
   ["/dashboard/articles", "المقالات"],
   ["/dashboard/faqs", "الأسئلة الشائعة"],
   ["/dashboard/pages", "الصفحات"],
-  ["/dashboard/media", "الوسائط"],
+  ["/dashboard/media", "مكتبة الصور"],
   ["/dashboard/seo", "تحسين الظهور"],
   ["/dashboard/settings", "الإعدادات"],
 ] as const;

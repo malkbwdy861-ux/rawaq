@@ -18,13 +18,13 @@ export default async function PagesPage({ searchParams }: PagesPageProps) {
         <div>
           <h1 className="text-[1.75rem] font-bold leading-10">الصفحات الثابتة</h1>
           <p className="mt-1 max-w-[62ch] text-sm leading-6 text-text-secondary">
-            إدارة وجهات الموقع الأساسية ذات المخططات المعتمدة، بما فيها صفحات الخدمات والحلول والمشاريع.
+            إدارة صفحات الموقع الأساسية ومحتواها المعتمد، بما فيها صفحات الخدمات والحلول والمشاريع.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs font-semibold text-text-secondary">
           <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-border bg-card px-3">
             <Route className="size-4 text-primary" aria-hidden="true" />
-            {pageDefinitions.length} وجهات ثابتة
+            {pageDefinitions.length} صفحات ثابتة
           </span>
           {missingCount > 0 ? (
             <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-warning/40 bg-warning-soft px-3 text-warning">
@@ -36,11 +36,11 @@ export default async function PagesPage({ searchParams }: PagesPageProps) {
 
       <CmsRouteToast cleanHref="/dashboard/pages" error={messages.error} success={messages.success} />
 
-      <section aria-label="الوجهات الثابتة" className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-rest)]">
+      <section aria-label="الصفحات الثابتة" className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-rest)]">
         <div className="flex flex-col gap-3 border-b border-border bg-dashboard-canvas/65 px-4 py-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-base font-semibold text-foreground">خريطة الصفحات العامة</h2>
-            <p className="mt-1 text-xs leading-5 text-text-secondary">اختيار سريع للصفحات الثابتة المنشورة دائما في الواجهة العامة.</p>
+            <h2 className="text-base font-semibold text-foreground">صفحات الموقع العامة</h2>
+            <p className="mt-1 text-xs leading-5 text-text-secondary">اختيار سريع للصفحات الثابتة التي تظهر في الموقع العام.</p>
           </div>
           <Link className="inline-flex min-h-10 w-fit items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-3 text-sm font-semibold text-foreground outline-none transition-colors hover:border-primary hover:bg-primary-soft focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" href="/" target="_blank">
             فتح الموقع
@@ -51,9 +51,9 @@ export default async function PagesPage({ searchParams }: PagesPageProps) {
           <table className="w-full table-fixed text-start text-sm">
             <thead className="bg-secondary/45 text-xs font-medium text-muted-foreground">
               <tr className="h-11">
-                <th className="w-auto px-4 text-start font-medium">الوجهة</th>
+                <th className="w-auto px-4 text-start font-medium">الصفحة</th>
                 <th className="w-44 px-4 text-start font-medium">المسار العام</th>
-                <th className="w-44 px-4 text-start font-medium">الإجراء</th>
+                <th className="w-44 px-4 text-start font-medium">إدارة</th>
               </tr>
             </thead>
             <tbody>
@@ -68,7 +68,7 @@ export default async function PagesPage({ searchParams }: PagesPageProps) {
                         </span>
                         <span className="min-w-0">
                           <span className="block truncate font-semibold text-foreground">{definition.label}</span>
-                          <span className="mt-0.5 block truncate text-xs text-muted-foreground">صفحة ثابتة ضمن واجهة الموقع</span>
+                          <span className="mt-0.5 block truncate text-xs text-muted-foreground">صفحة ثابتة في الموقع العام</span>
                         </span>
                       </div>
                     </td>

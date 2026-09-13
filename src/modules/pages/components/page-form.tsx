@@ -38,7 +38,7 @@ export function PageForm({ page, draftData, media, path, relationOptions }: Page
       </div>
 
       <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-float)] sm:flex-row sm:items-center sm:justify-between">
-        <p className="hidden text-sm text-text-secondary sm:block">يحفظ هذا الإجراء الصفحة ويحدّث النسخة العامة.</p>
+        <p className="hidden text-sm text-text-secondary sm:block">يحفظ هذا الزر الصفحة ويحدّث نسختها المنشورة.</p>
         <div className="grid gap-2 sm:flex sm:items-center">
           <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-4 text-sm font-semibold text-foreground outline-none transition-colors hover:border-primary hover:bg-primary-soft focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" href={path} target="_blank">
             <Eye className="size-[18px]" aria-hidden="true" />
@@ -58,18 +58,18 @@ export function PageForm({ page, draftData, media, path, relationOptions }: Page
 function ListingFields({ data, media, pageKey }: { data: ListingPageData | null; media: MediaPickerItem[]; pageKey: "PROJECTS" | "SERVICES" | "SOLUTIONS" }) {
   return (
     <>
-      <PageSection title="واجهة صفحة القائمة" description="محتوى الشريط البصري أعلى الصفحة. استخدم عنواناً مباشراً ووصفاً مختصراً." defaultOpen>
+      <PageSection title="القسم الرئيسي" description="محتوى الشريط العلوي في الصفحة. استخدم عنواناً مباشراً ووصفاً مختصراً." defaultOpen>
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
           <div className="grid gap-4">
             <Text id="heroEyebrow" label="السطر التمهيدي" maxLength={60} value={data?.hero.eyebrow} />
             <Text id="pageTitle" label="عنوان الصفحة" maxLength={120} required value={data?.hero.pageTitle} />
-            <Area id="shortDescription" label="الوصف المختصر داخل الواجهة" maxLength={240} required value={data?.hero.shortDescription} />
-            <Text id="heroImageAlt" label="النص البديل لصورة الواجهة" maxLength={300} value={data?.hero.imageAlt} />
+            <Area id="shortDescription" label="الوصف المختصر في القسم الرئيسي" maxLength={240} required value={data?.hero.shortDescription} />
+            <Text id="heroImageAlt" label="النص البديل لصورة القسم الرئيسي" maxLength={300} value={data?.hero.imageAlt} />
           </div>
-          <MediaPicker items={media} name="heroMediaId" defaultValue={data?.hero.mediaId} label="صورة واجهة الصفحة" />
+          <MediaPicker items={media} name="heroMediaId" defaultValue={data?.hero.mediaId} label="صورة القسم الرئيسي" />
         </div>
       </PageSection>
-      {pageKey !== "PROJECTS" ? <PageSection title="وصف الصفحة" description="يظهر كفقرة تحريرية مستقلة بين الواجهة ومحتوى القائمة." defaultOpen><Area id="description" label="الوصف التفصيلي" maxLength={2000} required tall value={data?.intro.description} /></PageSection> : null}
+      {pageKey !== "PROJECTS" ? <PageSection title="وصف الصفحة" description="يظهر كفقرة تحريرية مستقلة بين القسم الرئيسي ومحتوى القائمة." defaultOpen><Area id="description" label="الوصف التفصيلي" maxLength={2000} required tall value={data?.intro.description} /></PageSection> : null}
     </>
   );
 }
@@ -77,14 +77,14 @@ function ListingFields({ data, media, pageKey }: { data: ListingPageData | null;
 function HomeFields({ data, media, options }: { data: HomePageData | null; media: MediaPickerItem[]; options: PageFormProps["relationOptions"] }) {
   return (
     <>
-      <PageSection title="الواجهة الرئيسية" description="أول ما يراه الزائر. اجعل العنوان مباشرا والوصف مفيدا دون مبالغة." defaultOpen>
+      <PageSection title="القسم الرئيسي" description="أول ما يراه الزائر. اجعل العنوان مباشرا والوصف مفيدا دون مبالغة." defaultOpen>
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
           <div className="grid gap-4">
             <Text id="heroEyebrow" label="السطر التمهيدي" value={data?.hero.eyebrow} />
             <Text id="heroTitle" label="العنوان" value={data?.hero.title} />
             <Area id="heroDescription" label="الوصف" value={data?.hero.description} />
           </div>
-          <MediaPicker items={media} name="heroMediaId" defaultValue={data?.hero.mediaId} label="صورة الواجهة الرئيسية" />
+          <MediaPicker items={media} name="heroMediaId" defaultValue={data?.hero.mediaId} label="صورة القسم الرئيسي" />
         </div>
         <TwoColumns>
           <Text id="primaryCtaText" label="نص الإجراء الرئيسي" value={data?.hero.primaryCtaText} />
@@ -93,7 +93,7 @@ function HomeFields({ data, media, options }: { data: HomePageData | null; media
           <Text id="secondaryCtaTarget" label="رابط الإجراء الثانوي" value={data?.hero.secondaryCtaTarget} ltr />
         </TwoColumns>
         <Text id="heroImageAlt" label="النص البديل للصورة" value={data?.hero.imageAlt} />
-        <SubPanel title="قيم الواجهة الرئيسية" description="تظهر داخل الشريط السفلي للواجهة الرئيسية.">
+        <SubPanel title="قيم القسم الرئيسي" description="تظهر داخل الشريط السفلي للقسم الرئيسي.">
           <RepeatableItems name="trustItem" initialItems={data?.trustSection.items} addLabel="إضافة بند" maxItems={3} minimumRows={3} showIcon />
         </SubPanel>
       </PageSection>
@@ -203,13 +203,13 @@ function HomeFields({ data, media, options }: { data: HomePageData | null; media
 function AboutFields({ data, media }: { data: AboutPageData | null; media: MediaPickerItem[] }) {
   return (
     <>
-      <PageSection title="الواجهة الرئيسية" description="قدّم الشركة بوضوح قبل الدخول في التفاصيل." defaultOpen>
+      <PageSection title="القسم الرئيسي" description="قدّم الشركة بوضوح قبل الدخول في التفاصيل." defaultOpen>
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
           <div className="grid gap-4">
             <Text id="heroTitle" label="العنوان" value={data?.hero.title} />
             <Area id="heroDescription" label="الوصف" value={data?.hero.description} />
           </div>
-          <MediaPicker items={media} name="heroMediaId" defaultValue={data?.hero.mediaId} label="صورة الواجهة الرئيسية" />
+          <MediaPicker items={media} name="heroMediaId" defaultValue={data?.hero.mediaId} label="صورة القسم الرئيسي" />
         </div>
       </PageSection>
       <PageSection title="قصة الشركة" description="النص الأساسي الذي يشرح الخبرة وطبيعة العمل.">
@@ -234,7 +234,7 @@ function ContactFields({ data }: { data: ContactPageData | null }) {
 
   return (
     <>
-      <PageSection title="الواجهة الرئيسية" description="مهّد للزائر قبل عرض طرق التواصل." defaultOpen>
+      <PageSection title="القسم الرئيسي" description="مهّد للزائر قبل عرض طرق التواصل." defaultOpen>
         <Text id="heroTitle" label="العنوان" value={data?.hero.title} />
         <Area id="heroDescription" label="الوصف" value={data?.hero.description} />
       </PageSection>
@@ -263,7 +263,7 @@ function ContactFields({ data }: { data: ContactPageData | null }) {
 function PricesFields({ data, options }: { data: PricesPageData | null; options: PageFormProps["relationOptions"] }) {
   return (
     <>
-      <PageSection title="الواجهة الرئيسية" description="اشرح منهج التسعير دون اختلاق أسعار." defaultOpen>
+      <PageSection title="القسم الرئيسي" description="اشرح منهج التسعير دون اختلاق أسعار." defaultOpen>
         <Text id="heroTitle" label="العنوان" value={data?.hero.title} />
         <Area id="heroDescription" label="الوصف" value={data?.hero.description} />
       </PageSection>
@@ -275,8 +275,8 @@ function PricesFields({ data, options }: { data: PricesPageData | null; options:
         <Text id="pricingFactorsTitle" label="عنوان القسم" value={data?.pricingFactors.title} />
         <RepeatableItems name="pricingFactor" initialItems={data?.pricingFactors.items} addLabel="إضافة عامل" />
       </PageSection>
-      <PageSection title="أدلة الأسعار" description="الاختيارات مقالات من نوع دليل أسعار وتظهر تحت /guides فقط.">
-        <CmsRelationSelector name="selectedPricingArticleIds" label="أدلة الأسعار المختارة" options={options.articles} selectedIds={data?.selectedPricingArticleIds} />
+      <PageSection title="مقالات الأسعار" description="اختر المقالات المصنفة كمقالات أسعار. تظهر هذه المقالات تحت /guides فقط.">
+        <CmsRelationSelector name="selectedPricingArticleIds" label="مقالات الأسعار المختارة" options={options.articles} selectedIds={data?.selectedPricingArticleIds} />
       </PageSection>
       <PageSection title="الأسئلة المختارة" description="اختر الأسئلة المرتبطة بالسعر وطلب المعاينة.">
         <CmsRelationSelector name="selectedFaqIds" label="الأسئلة الشائعة" options={options.faqs} selectedIds={data?.faqSection.selectedFaqIds} />
@@ -301,21 +301,21 @@ function FinalCta({ data }: { data?: { title?: string; description?: string; but
 
 function SeoFields({ version, media }: { version: SeoVersion | null; media: MediaPickerItem[] }) {
   return (
-    <PageSection title="SEO" description="حقول اختيارية تستخدم عند حفظ الصفحة وتحديث بيانات المشاركة والفهرسة.">
+    <PageSection title="محركات البحث" description="حقول اختيارية تستخدم عند حفظ الصفحة وتحديث بيانات المشاركة والفهرسة.">
       <TwoColumns>
-        <Text id="seoTitle" label="عنوان SEO" value={version?.seoTitle} />
-        <Text id="canonicalUrl" label="الرابط القانوني" value={version?.canonicalUrl} ltr />
+        <Text id="seoTitle" label="عنوان محركات البحث" value={version?.seoTitle} />
+        <Text id="canonicalUrl" label="الرابط الأساسي" value={version?.canonicalUrl} ltr />
       </TwoColumns>
-      <Area id="seoDescription" label="وصف SEO" value={version?.seoDescription} />
+      <Area id="seoDescription" label="وصف محركات البحث" value={version?.seoDescription} />
       <label className="flex min-h-12 items-center gap-3 rounded-lg border border-border bg-dashboard-canvas/45 px-3 text-sm font-semibold transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-soft/45">
         <input className="size-4 accent-primary" name="noIndex" type="checkbox" defaultChecked={version?.noIndex ?? false} />
         منع الفهرسة
       </label>
       <TwoColumns>
-        <Text id="openGraphTitle" label="عنوان Open Graph" value={version?.openGraphTitle} />
-        <Area id="openGraphDescription" label="وصف Open Graph" value={version?.openGraphDescription} />
+        <Text id="openGraphTitle" label="عنوان المشاركة" value={version?.openGraphTitle} />
+        <Area id="openGraphDescription" label="وصف المشاركة" value={version?.openGraphDescription} />
       </TwoColumns>
-      <MediaPicker items={media} name="openGraphImageId" defaultValue={version?.openGraphImageId} label="صورة Open Graph" />
+      <MediaPicker items={media} name="openGraphImageId" defaultValue={version?.openGraphImageId} label="صورة المشاركة" />
     </PageSection>
   );
 }

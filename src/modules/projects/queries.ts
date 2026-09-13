@@ -114,10 +114,10 @@ export const getPublishedProjectBySlug = cache(async (slug: string) => {
       category: { select: projectCategoryPublicSelect },
       openGraphImage: { select: { url: true } },
       gallery: { select: { id: true, caption: true, media: { select: { url: true, altText: true, caption: true } } }, orderBy: { sortOrder: "asc" } },
-      services: { where: { service: { status: ContentStatus.PUBLISHED } }, select: { service: { select: { publishedVersion: { select: { title: true, slug: true } } } } } },
-      solutions: { where: { solution: { status: ContentStatus.PUBLISHED } }, select: { solution: { select: { publishedVersion: { select: { title: true, slug: true } } } } } },
-      materials: { where: { material: { status: ContentStatus.PUBLISHED } }, select: { material: { select: { publishedVersion: { select: { name: true, slug: true } } } } } },
-      articles: { where: { article: { status: ContentStatus.PUBLISHED } }, select: { article: { select: { publishedVersion: { select: { title: true, slug: true } } } } } },
+      services: { where: { service: { status: ContentStatus.PUBLISHED } }, select: { service: { select: { id: true, publishedVersion: { select: { title: true, slug: true, shortDescription: true, heroMedia: { select: { url: true, altText: true } } } } } } } },
+      solutions: { where: { solution: { status: ContentStatus.PUBLISHED } }, select: { solution: { select: { id: true, publishedVersion: { select: { title: true, slug: true, shortDescription: true, heroMedia: { select: { url: true, altText: true } } } } } } } },
+      materials: { where: { material: { status: ContentStatus.PUBLISHED } }, select: { material: { select: { id: true, publishedVersion: { select: { name: true, slug: true, shortDescription: true, heroMedia: { select: { url: true, altText: true } } } } } } } },
+      articles: { where: { article: { status: ContentStatus.PUBLISHED } }, select: { article: { select: { id: true, publishedVersion: { select: { title: true, slug: true, excerpt: true, articleType: true, heroMedia: { select: { url: true, altText: true } } } } } } } },
     } } },
   });
   if (!project?.publishedVersion) notFound();

@@ -16,7 +16,7 @@ export default async function PageEditor({ params, searchParams }: PageEditorPro
   const definition = pageDefinitions.find((item) => item.key === key.data)!;
   return (
     <div className="mx-auto max-w-[1120px] space-y-6">
-      <CmsPageHeader title={`تحرير صفحة ${definition.label}`} description="حدّث محتوى الصفحة الثابتة، ثم احفظ التغييرات للواجهة العامة مباشرة." />
+      <CmsPageHeader title={`تحرير صفحة ${definition.label}`} description="حدّث محتوى الصفحة الثابتة، ثم احفظ التغييرات لتظهر في الموقع العام." />
       <CmsRouteToast cleanHref={`/dashboard/pages/${key.data}`} error={messages.error} success={messages.success} />
       <PageForm {...data} path={definition.path} />
     </div>

@@ -64,7 +64,7 @@ export default async function DashboardPage() {
     { label: "الخدمات المنشورة", value: publishedServices, detail: `${serviceDrafts.toLocaleString("ar-SA")} مسودة`, icon: Layers3, tone: "green" },
     { label: "المشاريع المنشورة", value: publishedProjects, detail: `${projectDrafts.toLocaleString("ar-SA")} مسودة`, icon: FolderKanban, tone: "blue" },
     { label: "المقالات المنشورة", value: publishedArticles, detail: `${articleDrafts.toLocaleString("ar-SA")} مسودة`, icon: BookOpenText, tone: "violet" },
-    { label: "مكتبة الوسائط", value: mediaCount, detail: `${draftCount.toLocaleString("ar-SA")} عنصر محتوى`, icon: ImageIcon, tone: "amber" },
+    { label: "مكتبة الصور", value: mediaCount, detail: `${draftCount.toLocaleString("ar-SA")} عنصر محتوى`, icon: ImageIcon, tone: "amber" },
   ] as const;
 
   const recent = [
@@ -77,7 +77,7 @@ export default async function DashboardPage() {
   const attention = [
     servicesWithoutImage ? { label: `${servicesWithoutImage.toLocaleString("ar-SA")} خدمات منشورة بدون صورة رئيسية`, href: "/dashboard/services?status=PUBLISHED" } : null,
     staleDrafts ? { label: `${staleDrafts.toLocaleString("ar-SA")} مسودات لم تُحدّث منذ أكثر من ٧ أيام`, href: "/dashboard/services?status=DRAFT" } : null,
-    servicesWithoutSeo ? { label: `${servicesWithoutSeo.toLocaleString("ar-SA")} خدمات منشورة بدون وصف SEO`, href: "/dashboard/services?status=PUBLISHED" } : null,
+    servicesWithoutSeo ? { label: `${servicesWithoutSeo.toLocaleString("ar-SA")} خدمات منشورة بدون وصف لمحركات البحث`, href: "/dashboard/services?status=PUBLISHED" } : null,
   ].filter((item): item is { label: string; href: string } => Boolean(item));
 
   return (
@@ -114,7 +114,7 @@ export default async function DashboardPage() {
 
         <div className="grid gap-5">
           <section className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-rest)]">
-            <div className="flex items-center gap-2"><AlertTriangle className="size-5 text-warning" /><h2 className="text-lg font-semibold">تحتاج انتباهك</h2></div>
+            <div className="flex items-center gap-2"><AlertTriangle className="size-5 text-warning" /><h2 className="text-lg font-semibold">تحتاج مراجعة</h2></div>
             {attention.length ? <div className="mt-4 divide-y divide-border">{attention.map((item) => <Link className="flex items-start justify-between gap-3 py-3 text-sm leading-6 first:pt-0 last:pb-0 hover:text-primary" href={item.href} key={item.label}><span>{item.label}</span><ArrowLeft className="mt-1 size-4 shrink-0 text-muted-foreground" /></Link>)}</div> : <div className="mt-4 flex items-center gap-3 rounded-lg bg-success-soft p-3 text-success"><CheckCircle2 className="size-5 shrink-0" /><p className="text-sm font-medium">كل شيء يبدو جيداً</p></div>}
           </section>
 
@@ -123,8 +123,8 @@ export default async function DashboardPage() {
             <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary-soft" href="/dashboard/services/new"><Plus className="size-4" />خدمة جديدة</Link>
               <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary-soft" href="/dashboard/projects/new"><Plus className="size-4" />مشروع جديد</Link>
-              <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary-soft" href="/dashboard/articles/new"><Plus className="size-4" />دليل جديد</Link>
-              <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary-soft" href="/dashboard/media#media-upload"><ImageIcon className="size-4" />رفع وسائط</Link>
+              <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary-soft" href="/dashboard/articles/new"><Plus className="size-4" />مقال جديد</Link>
+              <Link className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border-strong bg-card px-3 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary-soft" href="/dashboard/media#media-upload"><ImageIcon className="size-4" />رفع صور</Link>
             </div>
           </section>
         </div>
