@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# مشروع مظلات جدة
 
-## Getting Started
+موقع عربي مبني بـ Next.js مع لوحة إدارة مخصصة لإدارة الصفحات، الخدمات، الحلول، المواد، المشاريع، المقالات، الأسئلة الشائعة، الوسائط، والتحويلات الدائمة.
 
-First, run the development server:
+## التقنية المستخدمة
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Next.js 16 مع App Router.
+- React 19 و TypeScript.
+- Prisma ORM مع قاعدة بيانات PostgreSQL.
+- NextAuth لإدارة جلسات لوحة التحكم.
+- Tailwind CSS 4 لتنسيق الواجهة.
+- TipTap لتحرير المحتوى الغني داخل لوحة الإدارة.
+- نظام رفع وسائط يعتمد على تخزين ملفات دائم عبر `UPLOAD_DIR` وخدمة الملفات من `UPLOAD_PUBLIC_BASE`.
+
+## متطلبات التشغيل والنشر
+
+- Node.js 20 أو أحدث.
+- npm، لأن المشروع يحتوي على `package-lock.json`.
+- قاعدة بيانات PostgreSQL متاحة من بيئة الإنتاج.
+- مساحة تخزين دائمة للملفات المرفوعة، وليست مساحة مؤقتة داخل حاوية أو بيئة serverless.
+- نطاق production يعمل عبر HTTPS.
+- إعداد متغيرات البيئة المذكورة أدناه قبل البناء والتشغيل.
+
+## متغيرات البيئة
+
+انسخ `.env.example` إلى ملف البيئة المناسب في الاستضافة، ثم عدل القيم:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
+AUTH_SECRET="secure-random-secret"
+APP_URL="https://example.com"
+UPLOAD_DIR="/persistent/storage/uploads"
+UPLOAD_PUBLIC_BASE="/uploads"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- `DATABASE_URL`: رابط اتصال PostgreSQL المستخدم من Prisma.
+- `AUTH_SECRET`: مفتاح عشوائي قوي لجلسات المصادقة.
+- `APP_URL`: رابط الموقع النهائي ويستخدم في SEO والروابط العامة.
+- `UPLOAD_DIR`: المسار الفعلي لتخزين الملفات المرفوعة على الخادم.
+- `UPLOAD_PUBLIC_BASE`: المسار العام الذي تُخدم منه الملفات، والقيمة الحالية المتوقعة عادة هي `/uploads`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## التشغيل المحلي
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run prisma:generate
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
 
-## Learn More
+افتح `http://localhost:3000` بعد تشغيل الخادم المحلي.
 
-To learn more about Next.js, take a look at the following resources:
+## خطوات النشر
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. جهز قاعدة PostgreSQL production.
+2. جهز تخزينًا دائمًا للوسائط واضبط `UPLOAD_DIR` عليه.
+3. أضف متغيرات البيئة في منصة الاستضافة.
+4. ثبت الاعتمادات:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm ci
+```
 
-## Deploy on Vercel
+5. ولّد Prisma Client وطبق migrations:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run prisma:generate
+npx prisma migrate deploy
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+6. نفذ seed للبيانات الأساسية عند أول نشر فقط أو عند الحاجة:
+
+```bash
+npm run db:seed
+```
+
+7. ابن المشروع:
+
+```bash
+npm run build
+```
+
+8. شغل production server:
+
+```bash
+npm run start
+```
+
+## ملاحظات مهمة للاستضافة
+
+- إذا تم النشر على بيئة serverless مثل Vercel، لا تعتمد على نظام الملفات المحلي للوسائط لأنه قد يكون مؤقتًا. استخدم استضافة تدعم قرصًا دائمًا، أو اربط تخزينًا دائمًا قبل فتح رفع الصور في لوحة التحكم.
+- يجب أن تكون قاعدة البيانات والتخزين ضمن نفس بيئة الإنتاج أو متاحين لها عبر الشبكة.
+- تأكد أن `APP_URL` يطابق النطاق النهائي بدون شرطة مائلة في النهاية.
+- لا تستخدم `prisma migrate dev` في الإنتاج؛ استخدم `npx prisma migrate deploy` فقط.
+
+## التحقق قبل الإطلاق
+
+```bash
+npm run lint
+npm run type-check
+npm run build
+```
+
+بعد الإطلاق، تحقق من الصفحة الرئيسية، لوحة التحكم، تسجيل الدخول، رفع صورة، ظهور الوسائط عبر `/uploads`، وخريطة الموقع `sitemap.xml`.
