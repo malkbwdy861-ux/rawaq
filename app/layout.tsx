@@ -1,14 +1,22 @@
 import type { Metadata } from "next";
-import { Readex_Pro } from "next/font/google";
+import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import { JsonLd } from "@/modules/seo/components/json-ld";
 import { getSiteUrl } from "@/modules/seo/site-url";
 import { getSiteSettings } from "@/modules/settings/queries";
 import "./globals.css";
 
-const readexPro = Readex_Pro({
-  variable: "--font-readex-pro",
-  subsets: ["arabic", "latin"],
+const tajawal = localFont({
+  variable: "--font-tajawal",
+  src: [
+    { path: "../public/fonts/Tajawal-ExtraLight.ttf", weight: "200", style: "normal" },
+    { path: "../public/fonts/Tajawal-Light.ttf", weight: "300", style: "normal" },
+    { path: "../public/fonts/Tajawal-Regular.ttf", weight: "400", style: "normal" },
+    { path: "../public/fonts/Tajawal-Medium.ttf", weight: "500", style: "normal" },
+    { path: "../public/fonts/Tajawal-Bold.ttf", weight: "700", style: "normal" },
+    { path: "../public/fonts/Tajawal-ExtraBold.ttf", weight: "800", style: "normal" },
+    { path: "../public/fonts/Tajawal-Black.ttf", weight: "900", style: "normal" },
+  ],
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -32,7 +40,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html
       lang="ar-SA"
       dir="rtl"
-      className={`${readexPro.variable} h-full antialiased`}
+      className={`${tajawal.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col"><OrganizationData />{children}</body>
     </html>

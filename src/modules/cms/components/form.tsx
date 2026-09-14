@@ -94,12 +94,12 @@ export function CmsFieldShell({
       </label>
       {children}
       {hint ? (
-        <p className="text-sm leading-[1.6] text-[oklch(50%_0.014_150)]" id={`${id}-hint`}>
+        <p className="text-sm leading-[1.6] text-muted-foreground" id={`${id}-hint`}>
           {hint}
         </p>
       ) : null}
       {error ? (
-        <p className="text-sm font-medium leading-[1.6] text-[oklch(46%_0.16_28)]" id={`${id}-error`}>
+        <p className="text-sm font-medium leading-[1.6] text-destructive" id={`${id}-error`}>
           {error}
         </p>
       ) : null}

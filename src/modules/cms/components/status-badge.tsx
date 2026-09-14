@@ -9,9 +9,9 @@ const statusLabels: Record<CmsStatusFilter, string> = {
 };
 
 const statusClasses: Record<CmsStatus, string> = {
-  DRAFT: "border-[oklch(46%_0.09_240)] bg-[oklch(94%_0.025_240)] text-[oklch(46%_0.09_240)]",
-  PUBLISHED: "border-[oklch(44%_0.085_155)] bg-[oklch(95.5%_0.018_145)] text-[oklch(44%_0.085_155)]",
-  ARCHIVED: "border-[oklch(46%_0.16_28)] bg-[oklch(94%_0.025_28)] text-[oklch(46%_0.16_28)]",
+  DRAFT: "border-info bg-info-soft text-info",
+  PUBLISHED: "border-success bg-success-soft text-success",
+  ARCHIVED: "border-destructive bg-danger-soft text-destructive",
 };
 
 export function getCmsStatusLabel(status: CmsListItemStatus | CmsStatusFilter) {

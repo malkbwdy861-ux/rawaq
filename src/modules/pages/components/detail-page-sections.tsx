@@ -65,16 +65,16 @@ export function SectionHeader({ eyebrow, title, description, action, align = "st
 }
 
 export function Eyebrow({ children, muted = false }: { children: ReactNode; muted?: boolean }) {
-  return <p className={`flex items-center gap-3 text-sm font-semibold ${muted ? "text-primary-soft" : "text-clay-strong"}`}><span aria-hidden="true" className={`h-px w-9 ${muted ? "bg-clay" : "bg-clay"}`} />{children}</p>;
+  return <p className={`flex items-center gap-3 text-sm font-semibold ${muted ? "text-brand-secondary-muted" : "text-clay-strong"}`}><span aria-hidden="true" className="h-px w-9 bg-clay" />{children}</p>;
 }
 
 export function EditorialText({ children, dark = false, className = "" }: { children: ReactNode; dark?: boolean; className?: string }) {
-  return <div className={`max-w-[72ch] whitespace-pre-line text-[1.0625rem] leading-[1.95] md:text-lg ${dark ? "text-primary-soft" : "text-text-secondary"} ${className}`}>{children}</div>;
+  return <div className={`max-w-[72ch] whitespace-pre-line text-[1.0625rem] leading-[1.95] md:text-lg ${dark ? "text-brand-secondary-muted" : "text-text-secondary"} ${className}`}>{children}</div>;
 }
 
 export function MetaPill({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return <div className="flex min-w-0 items-center gap-3 rounded-[12px] border border-border bg-card px-4 py-3 shadow-[var(--shadow-rest)]">
-    <span className="grid size-10 shrink-0 place-items-center rounded-[9px] bg-accent text-primary">{icon}</span>
+    <span className="grid size-10 shrink-0 place-items-center rounded-[9px] bg-accent text-brand-accent-strong">{icon}</span>
     <span className="min-w-0"><span className="block text-xs font-semibold text-clay-strong">{label}</span><span className="mt-0.5 block truncate text-sm font-semibold text-foreground md:text-base">{value}</span></span>
   </div>;
 }
@@ -112,7 +112,7 @@ export function ArticleCard({ item }: { item: ArticleCardItem }) {
   const label = item.articleType ? articleTypeLabels[item.articleType] ?? "دليل" : "دليل";
   return <Link className="group min-w-0 overflow-hidden rounded-[14px] border border-border bg-card shadow-[var(--shadow-rest)] transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[var(--shadow-project)] focus-visible:ring-2 focus-visible:ring-ring" href={item.href}>
     <div className="relative aspect-[16/10] bg-accent">
-      {item.image ? <Image alt={item.image.altText || item.title} className="object-cover transition-transform duration-300 group-hover:scale-[1.025]" fill sizes="(min-width: 768px) 33vw, 100vw" src={item.image.url} /> : <div className="absolute inset-0 bg-primary [background-image:linear-gradient(125deg,transparent_0%,color-mix(in_oklch,var(--primary-active)_55%,transparent)_100%),linear-gradient(90deg,color-mix(in_oklch,var(--primary-soft)_12%,transparent)_1px,transparent_1px)] [background-size:auto,48px_100%]" />}
+      {item.image ? <Image alt={item.image.altText || item.title} className="object-cover transition-transform duration-300 group-hover:scale-[1.025]" fill sizes="(min-width: 768px) 33vw, 100vw" src={item.image.url} /> : <div className="absolute inset-0 bg-brand-secondary [background-image:linear-gradient(125deg,transparent,var(--brand-accent-strong))]" />}
     </div>
     <div className="p-5">
       <p className="text-xs font-semibold text-clay-strong">{label}</p>
@@ -125,21 +125,21 @@ export function ArticleCard({ item }: { item: ArticleCardItem }) {
 
 export function DetailCta({ title, description, settings, secondaryHref = "/contact", whatsappInput }: { title: string; description: string; settings: DetailSettings; secondaryHref?: string; whatsappInput?: WhatsAppMessageInput }) {
   const whatsappHref = settings ? buildWhatsAppUrl(settings.whatsappNumber, settings.defaultWhatsappText, whatsappInput) : "/contact";
-  return <section className="relative isolate overflow-hidden rounded-[22px] bg-primary-active px-5 py-8 text-primary-foreground shadow-[var(--shadow-project)] sm:px-8 md:px-10 md:py-11">
-    <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(ellipse_70%_70%_at_10%_10%,color-mix(in_oklch,var(--primary)_58%,transparent),transparent_65%),linear-gradient(135deg,color-mix(in_oklch,var(--primary)_30%,var(--primary-active)),var(--primary-active))]" />
-    <div aria-hidden="true" className="absolute inset-0 opacity-30 [background-image:linear-gradient(120deg,color-mix(in_oklch,var(--primary-soft)_12%,transparent)_1px,transparent_1px),linear-gradient(30deg,color-mix(in_oklch,var(--clay)_9%,transparent)_1px,transparent_1px)] [background-size:84px_84px,126px_126px]" />
+  return <section className="relative isolate overflow-hidden rounded-[22px] bg-brand-secondary px-5 py-8 text-brand-secondary-foreground shadow-[var(--shadow-project)] sm:px-8 md:px-10 md:py-11">
+    <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(ellipse_70%_70%_at_10%_10%,var(--brand-accent),transparent_65%),linear-gradient(135deg,var(--brand-accent-strong),var(--brand-secondary))] opacity-60" />
+    <div aria-hidden="true" className="absolute inset-0 opacity-10 [background-image:linear-gradient(120deg,var(--brand-secondary-foreground)_1px,transparent_1px),linear-gradient(30deg,var(--clay)_1px,transparent_1px)] [background-size:84px_84px,126px_126px]" />
     <div className="relative z-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-      <div><p className="text-sm font-semibold text-primary-soft">جاهزون للتنفيذ</p><h2 className="mt-2 max-w-2xl text-[clamp(1.75rem,3vw,3rem)] font-bold leading-[1.25] text-pretty">{title}</h2><p className="mt-3 max-w-[58ch] leading-[1.85] text-primary-soft/82">{description}</p></div>
+      <div><p className="text-sm font-semibold text-brand-secondary-muted">جاهزون للتنفيذ</p><h2 className="mt-2 max-w-2xl text-[clamp(1.75rem,3vw,3rem)] font-bold leading-[1.25] text-pretty">{title}</h2><p className="mt-3 max-w-[58ch] leading-[1.85] text-brand-secondary-muted/85">{description}</p></div>
       <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
-        <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-primary-foreground px-5 text-sm font-semibold text-primary-active transition-colors hover:bg-primary-soft focus-visible:outline-primary-soft" href={whatsappHref}><MessageCircle aria-hidden="true" className="size-[18px]" />اطلب عرض سعر</a>
-        {settings?.primaryPhone ? <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] border border-primary-soft/45 px-5 text-sm font-semibold text-primary-foreground transition-colors hover:border-primary-soft hover:bg-primary/35 focus-visible:outline-primary-soft" dir="ltr" href={phoneHref(settings.primaryPhone)}><Phone aria-hidden="true" className="size-[18px]" /><bdi>{settings.primaryPhone}</bdi></a> : <Link className="inline-flex min-h-12 items-center justify-center rounded-[9px] border border-primary-soft/45 px-5 text-sm font-semibold text-primary-foreground transition-colors hover:border-primary-soft hover:bg-primary/35" href={secondaryHref}>تواصل معنا</Link>}
+        <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-brand-secondary-foreground px-5 text-sm font-semibold text-brand-secondary transition-colors hover:bg-brand-secondary-muted focus-visible:outline-ring" href={whatsappHref}><MessageCircle aria-hidden="true" className="size-[18px]" />اطلب عرض سعر</a>
+        {settings?.primaryPhone ? <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] border border-brand-secondary-muted/45 px-5 text-sm font-semibold text-brand-secondary-foreground transition-colors hover:border-brand-secondary-muted hover:bg-brand-secondary-hover focus-visible:outline-ring" dir="ltr" href={phoneHref(settings.primaryPhone)}><Phone aria-hidden="true" className="size-[18px]" /><bdi>{settings.primaryPhone}</bdi></a> : <Link className="inline-flex min-h-12 items-center justify-center rounded-[9px] border border-brand-secondary-muted/45 px-5 text-sm font-semibold text-brand-secondary-foreground transition-colors hover:border-brand-secondary-muted hover:bg-brand-secondary-hover" href={secondaryHref}>تواصل معنا</Link>}
       </div>
     </div>
   </section>;
 }
 
 export function EmptyMediaPattern({ label }: { label: string }) {
-  return <div aria-label={label} className="absolute inset-0 bg-primary [background-image:linear-gradient(132deg,transparent_0%,color-mix(in_oklch,var(--primary-active)_68%,transparent)_100%),linear-gradient(90deg,color-mix(in_oklch,var(--primary-soft)_13%,transparent)_1px,transparent_1px),linear-gradient(color-mix(in_oklch,var(--primary-soft)_10%,transparent)_1px,transparent_1px)] [background-size:auto,72px_100%,100%_72px]" role="img" />;
+  return <div aria-label={label} className="absolute inset-0 bg-brand-secondary [background-image:linear-gradient(132deg,transparent,var(--brand-accent-strong))]" role="img" />;
 }
 
 export function metadataIcon(type: "location" | "date" | "technical" | "durability") {

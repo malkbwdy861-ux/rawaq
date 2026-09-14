@@ -123,7 +123,7 @@ export function LoginForm() {
       </div>
 
       <Button
-        className="h-14 w-full rounded-[13px] text-[0.9375rem] shadow-[0_8px_20px_color-mix(in_oklch,var(--primary)_18%,transparent)] transition-[background-color,box-shadow,transform] duration-150 hover:-translate-y-px hover:shadow-[0_10px_24px_color-mix(in_oklch,var(--primary)_22%,transparent)] focus-visible:ring-offset-card disabled:translate-y-0 disabled:bg-primary disabled:text-primary-foreground disabled:shadow-none"
+        className="h-14 w-full rounded-[13px] text-[0.9375rem] shadow-[var(--shadow-float)] transition-[background-color,box-shadow,transform] duration-150 hover:-translate-y-px hover:shadow-[var(--shadow-project-hover)] focus-visible:ring-offset-card disabled:translate-y-0 disabled:bg-primary disabled:text-primary-foreground disabled:shadow-none"
         disabled={pending}
         type="submit"
       >

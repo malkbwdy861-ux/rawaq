@@ -40,7 +40,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
   const materials = version.materials.map((item) => materialItem(item.material.id, item.material.publishedVersion)).filter(isMaterialCard).slice(0, 4);
   const articles = version.articles.map((item) => articleItem(item.article.id, item.article.publishedVersion)).filter(isArticleCard).slice(0, 3);
 
-  return <main className="min-h-screen bg-[oklch(97.5%_0.009_100)] pb-14 md:pb-20">
+  return <main className="min-h-screen bg-background pb-14 md:pb-20">
     <article>
       <section className="relative isolate overflow-hidden px-4 pb-10 pt-8 md:px-8 md:pb-14 md:pt-12 lg:pb-16">
         <DetailContainer className="space-y-8">
@@ -57,7 +57,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             </dl> : null}
           </header>
           <figure>
-            <div className="relative aspect-[16/10] overflow-hidden rounded-[18px] bg-primary-active shadow-[var(--shadow-project)] md:aspect-[16/8]">
+            <div className="relative aspect-[16/10] overflow-hidden rounded-[18px] bg-brand-secondary shadow-[var(--shadow-project)] md:aspect-[16/8]">
               {version.coverMedia ? <Image alt={version.coverMedia.altText ?? version.title ?? ""} className="object-cover" fill priority sizes="(min-width: 1440px) 1280px, 100vw" src={version.coverMedia.url} /> : <EmptyMediaPattern label={version.title ?? "صورة المشروع"} />}
             </div>
             {version.coverMedia?.caption ? <figcaption className="mt-3 max-w-[72ch] text-sm leading-[1.75] text-text-secondary">{version.coverMedia.caption}</figcaption> : null}
@@ -76,8 +76,8 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           {version.solutionSummary ? <CasePanel number="02" title="الحل المنفذ" content={version.solutionSummary} highlighted /> : null}
         </section> : null}
 
-        {version.technicalDetails ? <section className="relative isolate overflow-hidden rounded-[18px] bg-primary-active p-5 text-primary-foreground md:p-8 lg:p-10">
-          <div aria-hidden="true" className="absolute inset-0 opacity-25 [background-image:linear-gradient(90deg,color-mix(in_oklch,var(--primary-soft)_13%,transparent)_1px,transparent_1px),linear-gradient(color-mix(in_oklch,var(--primary-soft)_10%,transparent)_1px,transparent_1px)] [background-size:56px_56px]" />
+        {version.technicalDetails ? <section className="relative isolate overflow-hidden rounded-[18px] bg-brand-secondary p-5 text-brand-secondary-foreground md:p-8 lg:p-10">
+          <div aria-hidden="true" className="absolute inset-0 opacity-25 [background-image:linear-gradient(90deg,color-mix(in_oklab,var(--brand-secondary-muted)_13%,transparent)_1px,transparent_1px),linear-gradient(color-mix(in_oklab,var(--brand-secondary-muted)_10%,transparent)_1px,transparent_1px)] [background-size:56px_56px]" />
           <div className="relative z-10 grid gap-7 lg:grid-cols-12">
             <div className="lg:col-span-4"><SectionHeader eyebrow="تفاصيل فنية" title="ما الذي صنع الفارق؟" /></div>
             <EditorialText dark className="lg:col-span-7 lg:col-start-6">{version.technicalDetails}</EditorialText>

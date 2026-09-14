@@ -17,7 +17,7 @@ export function CmsPaginationControls({
   return (
     <nav
       aria-label="صفحات النتائج"
-      className="flex flex-col gap-3 text-sm text-[oklch(42%_0.018_150)] sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-3 text-sm text-text-secondary sm:flex-row sm:items-center sm:justify-between"
     >
       <p className="tabular-nums">
         صفحة {page.page} من {page.totalPages}، {page.totalItems} سجل
@@ -51,7 +51,7 @@ function PaginationLink({
 }) {
   if (disabled) {
     return (
-      <span className="inline-flex min-h-10 items-center justify-center rounded-[4px] border border-[oklch(82%_0.012_145)] bg-[oklch(95%_0.012_110)] px-4 py-2 text-[0.8125rem] font-semibold text-[oklch(53%_0.012_150)]">
+      <span className="inline-flex min-h-10 items-center justify-center rounded-[4px] border border-border bg-muted px-4 py-2 text-[0.8125rem] font-semibold text-text-disabled">
         {children}
       </span>
     );
@@ -59,7 +59,7 @@ function PaginationLink({
 
   return (
     <Link
-      className="inline-flex min-h-10 items-center justify-center rounded-[4px] border border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] px-4 py-2 text-[0.8125rem] font-semibold text-[oklch(37%_0.075_155)] hover:bg-[oklch(95.5%_0.018_145)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[oklch(51%_0.09_155)]"
+      className="inline-flex min-h-10 items-center justify-center rounded-[4px] border border-control-border bg-card px-4 py-2 text-[0.8125rem] font-semibold text-brand-accent-strong hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       href={href}
     >
       {children}

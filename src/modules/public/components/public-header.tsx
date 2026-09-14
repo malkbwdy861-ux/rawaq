@@ -33,7 +33,7 @@ export function PublicHeader({ settings }: { settings: PublicSettings | null }) 
 
   return (
     <header className={`${isHome ? "fixed" : "sticky"} inset-x-0 top-0 z-100 px-3 pt-3 sm:px-5 sm:pt-5 lg:px-8`}>
-      <div className="mx-auto flex h-[64px] w-full max-w-[1100px] items-center justify-between gap-3 rounded-full border border-[color-mix(in_oklch,var(--border)_78%,transparent)] bg-[color-mix(in_oklch,var(--card)_96%,transparent)] px-3 shadow-[var(--shadow-float)] sm:px-4 lg:h-[72px] lg:max-w-[1280px] lg:px-5">
+      <div className="mx-auto flex h-[64px] w-full max-w-[1100px] items-center justify-between gap-3 rounded-full border border-border/80 bg-card/95 px-3 shadow-[var(--shadow-float)] sm:px-4 lg:h-[72px] lg:max-w-[1280px] lg:px-5">
         <Link aria-label={`${name}، الرئيسية`} className="flex min-w-0 shrink-0 items-center gap-2.5" href="/">
           {settings?.logoMedia ? <Image alt={settings.logoMedia.altText || name} className="h-9 w-auto max-w-28 object-contain lg:h-10 lg:max-w-36" height={40} src={settings.logoMedia.url} width={144} /> : null}
           <span className="min-w-0"><strong className="block truncate text-sm text-foreground lg:text-[0.9375rem]">{name}</strong><span className="hidden text-[0.6875rem] text-muted-foreground lg:block">تظليل وتنفيذ خارجي</span></span>
@@ -42,7 +42,7 @@ export function PublicHeader({ settings }: { settings: PublicSettings | null }) 
         <nav aria-label="التنقل الرئيسي" className="hidden min-w-0 items-center justify-center gap-0.5 lg:flex">
           {publicNavigationLinks.map(([label, href]) => {
             const active = href === "/" ? isHome : pathname === href;
-            return <Link aria-current={active ? "page" : undefined} className={`relative inline-flex min-h-11 items-center px-2.5 text-[0.8125rem] font-semibold transition-colors duration-150 hover:text-primary ${active ? "text-primary" : "text-text-secondary"}`} href={href} key={href}>{label}{active ? <span aria-hidden="true" className="absolute inset-x-3 bottom-1 h-px bg-primary" /> : null}</Link>;
+            return <Link aria-current={active ? "page" : undefined} className={`relative inline-flex min-h-11 items-center px-2.5 text-[0.8125rem] font-semibold transition-colors duration-150 hover:text-brand-accent-strong ${active ? "text-brand-accent-strong" : "text-text-secondary"}`} href={href} key={href}>{label}{active ? <span aria-hidden="true" className="absolute inset-x-3 bottom-1 h-px bg-brand-accent" /> : null}</Link>;
           })}
         </nav>
 
@@ -52,13 +52,13 @@ export function PublicHeader({ settings }: { settings: PublicSettings | null }) 
         </div>
       </div>
 
-      {menuOpen ? <div className="fixed inset-0 z-300 bg-[color-mix(in_oklch,var(--foreground)_46%,transparent)]" onClick={() => setMenuOpen(false)}>
-        <aside aria-label="قائمة التنقل" className="absolute inset-y-0 end-0 flex w-[min(88vw,360px)] flex-col bg-card px-5 pb-6 pt-5 shadow-[0_16px_48px_oklch(22%_0.018_155_/_0.16)]" id="public-menu" onClick={(event) => event.stopPropagation()}>
+      {menuOpen ? <div className="fixed inset-0 z-300 bg-foreground/45" onClick={() => setMenuOpen(false)}>
+        <aside aria-label="قائمة التنقل" className="absolute inset-y-0 end-0 flex w-[min(88vw,360px)] flex-col bg-card px-5 pb-6 pt-5 shadow-[var(--shadow-drawer)]" id="public-menu" onClick={(event) => event.stopPropagation()}>
           <div className="flex items-center justify-between border-b border-border pb-5"><strong className="text-base">{name}</strong><button aria-label="إغلاق القائمة" className="grid size-11 place-items-center rounded-full text-foreground hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setMenuOpen(false)} type="button"><X aria-hidden="true" className="size-5" /></button></div>
           <nav aria-label="التنقل الرئيسي" className="mt-5 grid">
             {publicNavigationLinks.map(([label, href]) => {
               const active = href === "/" ? isHome : pathname === href;
-              return <Link aria-current={active ? "page" : undefined} className={`flex min-h-12 items-center border-b border-border text-sm font-semibold transition-colors ${active ? "text-primary" : "text-foreground hover:text-primary"}`} href={href} key={href} onClick={() => setMenuOpen(false)}>{label}</Link>;
+              return <Link aria-current={active ? "page" : undefined} className={`flex min-h-12 items-center border-b border-border text-sm font-semibold transition-colors ${active ? "text-brand-accent-strong" : "text-foreground hover:text-brand-accent-strong"}`} href={href} key={href} onClick={() => setMenuOpen(false)}>{label}</Link>;
             })}
           </nav>
           <div className="mt-auto grid gap-2 border-t border-border pt-5">

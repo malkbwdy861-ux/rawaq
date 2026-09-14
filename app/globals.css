@@ -1,49 +1,76 @@
 @import "tailwindcss";
 
 :root {
-  --background: oklch(97.2% 0.004 145);
-  --foreground: oklch(22% 0.018 155);
+  /* Palette: these are the only raw UI colors in the application. */
+  --brand-primary: oklch(78.63% 0.0745 77.96);
+  --brand-secondary: oklch(40.9% 0.0614 224.73);
+  --brand-accent: oklch(66.18% 0.101 193.31);
+  --palette-paper: oklch(98.7% 0.01 82);
+  --state-success: oklch(44% 0.085 155);
+  --state-warning: oklch(47% 0.1 75);
+  --state-error: oklch(46% 0.16 28);
+  --state-info: oklch(46% 0.09 240);
+  --state-violet: oklch(48% 0.09 300);
+
+  /* Semantic colors are derived from the palette above. */
+  --background: color-mix(in oklch, var(--palette-paper) 96%, var(--brand-primary));
+  --foreground: var(--brand-secondary);
   --radius: 10px;
-  --card: oklch(99.3% 0.003 145);
-  --card-foreground: oklch(22% 0.018 155);
-  --popover: oklch(98.8% 0.004 145);
-  --popover-foreground: oklch(22% 0.018 155);
-  --primary: oklch(37% 0.075 155);
-  --primary-foreground: oklch(99.3% 0.003 145);
-  --secondary: oklch(96.2% 0.006 145);
-  --secondary-foreground: oklch(22% 0.018 155);
-  --muted: oklch(95.4% 0.006 145);
-  --muted-foreground: oklch(50% 0.014 150);
-  --accent: oklch(95.5% 0.018 145);
-  --accent-foreground: oklch(22% 0.018 155);
-  --destructive: oklch(46% 0.16 28);
-  --border: oklch(87.5% 0.008 145);
-  --input: oklch(74% 0.014 145);
-  --ring: oklch(51% 0.09 155);
-  --primary-hover: oklch(29% 0.055 155);
-  --primary-active: oklch(22% 0.035 155);
-  --primary-soft: oklch(90% 0.035 150);
-  --surface-raised: oklch(96.2% 0.006 145);
-  --text-secondary: oklch(42% 0.018 150);
-  --border-strong: oklch(74% 0.014 145);
-  --success: oklch(44% 0.085 155);
-  --success-soft: oklch(95.5% 0.018 145);
-  --warning: oklch(47% 0.1 75);
-  --warning-soft: oklch(94% 0.035 80);
-  --danger-soft: oklch(94% 0.025 28);
-  --clay: oklch(58% 0.11 45);
-  --clay-strong: oklch(34% 0.065 42);
-  --shadow-float: 0 8px 24px oklch(22% 0.018 155 / 0.12);
-  --dashboard-canvas: oklch(96.8% 0.005 145);
-  --dashboard-sidebar: oklch(98.7% 0.004 145);
-  --dashboard-hover: oklch(94.8% 0.012 150);
-  --info: oklch(46% 0.09 240);
-  --info-soft: oklch(94% 0.025 240);
-  --violet: oklch(48% 0.09 300);
-  --violet-soft: oklch(95% 0.02 300);
-  --shadow-rest: 0 1px 2px oklch(22% 0.018 155 / 0.055);
-  --shadow-project: 0 8px 30px oklch(22% 0.018 155 / 0.08);
-  --shadow-project-hover: 0 14px 38px oklch(22% 0.018 155 / 0.12);
+  --card: var(--palette-paper);
+  --card-foreground: var(--brand-secondary);
+  --popover: color-mix(in oklch, var(--palette-paper) 98%, var(--brand-primary));
+  --popover-foreground: var(--brand-secondary);
+  --primary: var(--brand-primary);
+  --primary-foreground: var(--brand-secondary);
+  --primary-hover: color-mix(in oklch, var(--brand-primary) 84%, var(--brand-secondary));
+  --primary-active: color-mix(in oklch, var(--brand-primary) 68%, var(--brand-secondary));
+  --primary-soft: color-mix(in oklch, var(--palette-paper) 80%, var(--brand-primary));
+  --secondary: color-mix(in oklch, var(--palette-paper) 92%, var(--brand-secondary));
+  --secondary-foreground: var(--brand-secondary);
+  --brand-secondary-hover: color-mix(in oklch, var(--brand-secondary) 88%, var(--foreground));
+  --brand-secondary-soft: color-mix(in oklch, var(--palette-paper) 88%, var(--brand-secondary));
+  --brand-secondary-muted: color-mix(in oklch, var(--palette-paper) 78%, var(--brand-secondary));
+  --brand-secondary-foreground: var(--palette-paper);
+  --brand-accent-strong: color-mix(in oklch, var(--brand-accent) 72%, var(--brand-secondary));
+  --brand-accent-soft: color-mix(in oklch, var(--palette-paper) 84%, var(--brand-accent));
+  --muted: color-mix(in oklch, var(--palette-paper) 88%, var(--brand-primary));
+  --muted-foreground: color-mix(in oklch, var(--brand-secondary) 68%, var(--palette-paper));
+  --accent: var(--brand-accent-soft);
+  --accent-foreground: var(--brand-secondary);
+  --surface-raised: color-mix(in oklch, var(--palette-paper) 94%, var(--brand-primary));
+  --text-secondary: color-mix(in oklch, var(--brand-secondary) 78%, var(--palette-paper));
+  --text-inverted: var(--palette-paper);
+  --text-disabled: color-mix(in oklch, var(--brand-secondary) 54%, var(--palette-paper));
+  --border: color-mix(in oklch, var(--brand-secondary) 16%, var(--palette-paper));
+  --border-strong: color-mix(in oklch, var(--brand-secondary) 34%, var(--palette-paper));
+  --control-border: color-mix(in oklch, var(--brand-secondary) 46%, var(--palette-paper));
+  --input: var(--control-border);
+  --ring: var(--brand-accent-strong);
+  --destructive: var(--state-error);
+  --danger-soft: color-mix(in oklch, var(--palette-paper) 88%, var(--state-error));
+  --success: var(--state-success);
+  --success-soft: color-mix(in oklch, var(--palette-paper) 88%, var(--state-success));
+  --warning: var(--state-warning);
+  --warning-soft: color-mix(in oklch, var(--palette-paper) 84%, var(--state-warning));
+  --info: var(--state-info);
+  --info-soft: color-mix(in oklch, var(--palette-paper) 88%, var(--state-info));
+  --violet: var(--state-violet);
+  --violet-soft: color-mix(in oklch, var(--palette-paper) 90%, var(--state-violet));
+  --clay: var(--brand-primary);
+  --clay-strong: color-mix(in oklch, var(--brand-primary) 62%, var(--brand-secondary));
+  --clay-soft: color-mix(in oklch, var(--palette-paper) 76%, var(--brand-primary));
+  --dashboard-canvas: color-mix(in oklch, var(--palette-paper) 93%, var(--brand-primary));
+  --dashboard-sidebar: color-mix(in oklch, var(--palette-paper) 98%, var(--brand-primary));
+  --dashboard-hover: color-mix(in oklch, var(--palette-paper) 86%, var(--brand-accent));
+
+  /* Color-bearing effects also derive from the palette. */
+  --shadow-float: 0 8px 24px color-mix(in oklch, var(--brand-secondary) 12%, transparent);
+  --shadow-rest: 0 1px 2px color-mix(in oklch, var(--brand-secondary) 5.5%, transparent);
+  --shadow-project: 0 8px 30px color-mix(in oklch, var(--brand-secondary) 8%, transparent);
+  --shadow-project-hover: 0 14px 38px color-mix(in oklch, var(--brand-secondary) 12%, transparent);
+  --shadow-metric: 0 10px 24px color-mix(in oklch, var(--brand-secondary) 4.5%, transparent);
+  --shadow-drawer: 0 16px 48px color-mix(in oklch, var(--brand-secondary) 16%, transparent);
+  --shadow-dialog: 0 24px 64px color-mix(in oklch, var(--brand-secondary) 20%, transparent);
 }
 
 @theme inline {
@@ -68,9 +95,20 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-active: var(--primary-active);
   --color-primary-soft: var(--primary-soft);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-secondary-hover: var(--brand-secondary-hover);
+  --color-brand-secondary-soft: var(--brand-secondary-soft);
+  --color-brand-secondary-muted: var(--brand-secondary-muted);
+  --color-brand-secondary-foreground: var(--brand-secondary-foreground);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-strong: var(--brand-accent-strong);
+  --color-brand-accent-soft: var(--brand-accent-soft);
   --color-surface-raised: var(--surface-raised);
   --color-text-secondary: var(--text-secondary);
+  --color-text-inverted: var(--text-inverted);
+  --color-text-disabled: var(--text-disabled);
   --color-border-strong: var(--border-strong);
+  --color-control-border: var(--control-border);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
@@ -78,6 +116,7 @@
   --color-danger-soft: var(--danger-soft);
   --color-clay: var(--clay);
   --color-clay-strong: var(--clay-strong);
+  --color-clay-soft: var(--clay-soft);
   --color-dashboard-canvas: var(--dashboard-canvas);
   --color-dashboard-sidebar: var(--dashboard-sidebar);
   --color-dashboard-hover: var(--dashboard-hover);
@@ -89,14 +128,14 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: var(--font-readex-pro);
+  --font-sans: var(--font-tajawal);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-readex-pro), "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+  font-family: var(--font-tajawal), "Noto Sans Arabic", Tahoma, Arial, sans-serif;
 }
 
 html {
@@ -121,7 +160,7 @@ html {
   transform: translateY(-150%);
   border-radius: 4px;
   background: var(--foreground);
-  color: var(--primary-foreground);
+  color: var(--text-inverted);
   padding: 10px 16px;
   font-weight: 600;
 }
@@ -140,14 +179,14 @@ html {
   background:
     radial-gradient(
       ellipse 70% 60% at 8% 18%,
-      color-mix(in oklch, var(--primary) 62%, var(--primary-active)) 0%,
+      color-mix(in oklch, var(--brand-accent) 24%, var(--brand-secondary)) 0%,
       transparent 68%
     ),
     linear-gradient(
       135deg,
-      color-mix(in oklch, var(--primary) 34%, var(--primary-active)) 0%,
-      var(--primary-active) 54%,
-      color-mix(in oklch, var(--foreground) 20%, var(--primary-active)) 100%
+      color-mix(in oklch, var(--brand-accent) 12%, var(--brand-secondary)) 0%,
+      var(--brand-secondary) 54%,
+      color-mix(in oklch, var(--foreground) 20%, var(--brand-secondary)) 100%
     );
 }
 
@@ -157,8 +196,8 @@ html {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(120deg, color-mix(in oklch, var(--primary-soft) 10%, transparent) 1px, transparent 1px),
-    linear-gradient(30deg, color-mix(in oklch, var(--clay) 8%, transparent) 1px, transparent 1px);
+    linear-gradient(120deg, color-mix(in oklch, var(--brand-secondary-foreground) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(30deg, color-mix(in oklch, var(--brand-primary) 8%, transparent) 1px, transparent 1px);
   background-position: left top;
   background-size: 96px 96px, 144px 144px;
   mask-image: linear-gradient(90deg, black, transparent 58%);
@@ -173,8 +212,8 @@ html {
   width: min(38rem, 62vw);
   pointer-events: none;
   background:
-    linear-gradient(90deg, color-mix(in oklch, var(--primary-active) 8%, transparent), var(--primary-active)),
-    radial-gradient(ellipse 80% 70% at 0% 50%, color-mix(in oklch, var(--clay) 10%, transparent), transparent 72%);
+    linear-gradient(90deg, color-mix(in oklch, var(--brand-secondary) 8%, transparent), var(--brand-secondary)),
+    radial-gradient(ellipse 80% 70% at 0% 50%, color-mix(in oklch, var(--brand-primary) 10%, transparent), transparent 72%);
   opacity: 0.55;
 }
 

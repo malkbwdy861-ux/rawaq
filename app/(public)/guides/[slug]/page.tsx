@@ -45,14 +45,14 @@ export default async function GuideDetailPage({ params }: GuidePageProps) {
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Article", headline: version.title, description: version.excerpt, url: absoluteUrl(cmsContentPath("/guides", slug)), image: version.heroMedia?.url || undefined, datePublished: article.publishedAt?.toISOString(), dateModified: version.updatedAt.toISOString() }} />
       {version.faqs.length ? <JsonLd data={{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: version.faqs.flatMap((item) => item.faq.publishedVersion ? [{ "@type": "Question", name: item.faq.publishedVersion.question, acceptedAnswer: { "@type": "Answer", text: item.faq.publishedVersion.answer } }] : []) }} /> : null}
 
-      <section className="relative isolate overflow-hidden bg-primary-active px-4 pb-20 pt-10 text-primary-foreground md:px-8 md:pb-28 md:pt-12">
-        <div aria-hidden="true" className="absolute inset-0 -z-10 opacity-30 [background-image:linear-gradient(90deg,color-mix(in_oklch,var(--primary-soft)_10%,transparent)_1px,transparent_1px)] [background-size:96px_100%] [mask-image:linear-gradient(90deg,transparent,black_25%,black_80%,transparent)]" />
+      <section className="relative isolate overflow-hidden bg-brand-secondary px-4 pb-20 pt-10 text-brand-secondary-foreground md:px-8 md:pb-28 md:pt-12">
+        <div aria-hidden="true" className="absolute inset-0 -z-10 opacity-30 [background-image:linear-gradient(90deg,color-mix(in_oklab,var(--brand-secondary-muted)_10%,transparent)_1px,transparent_1px)] [background-size:96px_100%] [mask-image:linear-gradient(90deg,transparent,black_25%,black_80%,transparent)]" />
         <div className="mx-auto max-w-7xl">
-          <Breadcrumbs className="text-primary-soft" items={[{ label: "الرئيسية", href: "/" }, { label: "الأدلة", href: "/guides" }, { label: version.title ?? "دليل", href: cmsContentPath("/guides", slug) }]} />
+          <Breadcrumbs className="text-brand-secondary-muted" items={[{ label: "الرئيسية", href: "/" }, { label: "الأدلة", href: "/guides" }, { label: version.title ?? "دليل", href: cmsContentPath("/guides", slug) }]} />
           <header className="mt-14 max-w-4xl">
-            <div className="flex flex-wrap items-center gap-3 text-sm"><span className="font-semibold text-primary-soft">{version.articleType ? typeLabels[version.articleType] : "دليل"}</span>{article.publishedAt ? <><span aria-hidden="true" className="size-1 rounded-full bg-primary-soft/60" /><time className="text-primary-soft/80" dateTime={article.publishedAt.toISOString()}>{article.publishedAt.toLocaleDateString("ar-SA", { day: "numeric", month: "long", year: "numeric" })}</time></> : null}</div>
+            <div className="flex flex-wrap items-center gap-3 text-sm"><span className="font-semibold text-brand-secondary-muted">{version.articleType ? typeLabels[version.articleType] : "دليل"}</span>{article.publishedAt ? <><span aria-hidden="true" className="size-1 rounded-full bg-brand-secondary-muted/60" /><time className="text-brand-secondary-muted/80" dateTime={article.publishedAt.toISOString()}>{article.publishedAt.toLocaleDateString("ar-SA", { day: "numeric", month: "long", year: "numeric" })}</time></> : null}</div>
             <h1 className="mt-5 text-[clamp(2.5rem,5.5vw,4.5rem)] font-bold leading-[1.18]">{version.title}</h1>
-            <p className="mt-6 max-w-[62ch] text-xl leading-[1.8] text-primary-soft md:text-2xl">{version.excerpt}</p>
+            <p className="mt-6 max-w-[62ch] text-xl leading-[1.8] text-brand-secondary-muted md:text-2xl">{version.excerpt}</p>
           </header>
         </div>
       </section>

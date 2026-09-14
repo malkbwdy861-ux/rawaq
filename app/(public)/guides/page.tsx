@@ -21,16 +21,16 @@ export default async function GuidesIndexPage({ searchParams }: { searchParams: 
 
   return (
     <main className="min-h-screen bg-background">
-      <section className="relative isolate overflow-hidden bg-primary-active px-4 pb-20 pt-10 text-primary-foreground md:px-8 md:pb-28 md:pt-12 lg:pb-32">
-        <div aria-hidden="true" className="absolute inset-0 -z-10 opacity-35 [background-image:linear-gradient(90deg,color-mix(in_oklch,var(--primary-soft)_10%,transparent)_1px,transparent_1px),linear-gradient(color-mix(in_oklch,var(--primary-soft)_10%,transparent)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(90deg,transparent,black_25%,black_75%,transparent)]" />
+      <section className="relative isolate overflow-hidden bg-brand-secondary px-4 pb-20 pt-10 text-brand-secondary-foreground md:px-8 md:pb-28 md:pt-12 lg:pb-32">
+        <div aria-hidden="true" className="absolute inset-0 -z-10 opacity-35 [background-image:linear-gradient(90deg,color-mix(in_oklab,var(--brand-secondary-muted)_10%,transparent)_1px,transparent_1px),linear-gradient(color-mix(in_oklab,var(--brand-secondary-muted)_10%,transparent)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(90deg,transparent,black_25%,black_75%,transparent)]" />
         <div className="mx-auto max-w-7xl">
-          <Breadcrumbs className="text-primary-soft" items={[{ label: "الرئيسية", href: "/" }, { label: "الأدلة", href: "/guides" }]} />
+          <Breadcrumbs className="text-brand-secondary-muted" items={[{ label: "الرئيسية", href: "/" }, { label: "الأدلة", href: "/guides" }]} />
           <header className="mt-14 grid gap-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(260px,0.28fr)] lg:items-end">
             <div>
-              <p className="text-sm font-semibold text-primary-soft">معرفة عملية، قبل قرار التنفيذ</p>
+              <p className="text-sm font-semibold text-brand-secondary-muted">معرفة عملية، قبل قرار التنفيذ</p>
               <h1 className="mt-4 max-w-[14ch] text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.16]">أدلة واضحة لاختيار ما يناسب موقعك</h1>
             </div>
-            <p className="max-w-[42ch] border-t border-primary-soft/25 pt-5 text-lg leading-[1.85] text-primary-soft">معلومات عملية عن المواد والأسعار والصيانة والمقارنات، مرتبة لتصل إلى القرار بثقة.</p>
+            <p className="max-w-[42ch] border-t border-brand-secondary-muted/25 pt-5 text-lg leading-[1.85] text-brand-secondary-muted">معلومات عملية عن المواد والأسعار والصيانة والمقارنات، مرتبة لتصل إلى القرار بثقة.</p>
           </header>
         </div>
       </section>

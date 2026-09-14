@@ -47,7 +47,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
   return <main className="min-h-screen bg-background pb-14 md:pb-20">
     <article>
       <section className="relative isolate overflow-hidden px-4 pb-12 pt-8 md:px-8 md:pb-16 md:pt-12 lg:pb-20">
-        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[64%] bg-[linear-gradient(180deg,color-mix(in_oklch,var(--primary-soft)_38%,var(--background)),transparent)]" />
+        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[64%] bg-[linear-gradient(180deg,color-mix(in_oklab,var(--primary-soft)_38%,var(--background)),transparent)]" />
         <DetailContainer className="relative z-10 space-y-8">
           <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الخدمات", href: "/services" }, { label: version.title ?? "خدمة", href: cmsContentPath("/services", slug) }]} />
           <JsonLd data={{ "@context": "https://schema.org", "@type": "Service", name: version.title, description: version.shortDescription, url: absoluteUrl(cmsContentPath("/services", slug)), image: version.heroMedia?.url || undefined }} />
@@ -61,9 +61,9 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                 <Link className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] border border-border-strong bg-card px-5 text-sm font-semibold text-primary transition-colors hover:border-primary hover:bg-primary-soft" href="/contact">تواصل مع الفريق<ArrowLeft aria-hidden="true" className="size-4 transition-transform group-hover:-translate-x-1" /></Link>
               </div>
             </div>
-            <div className="relative min-h-[320px] overflow-hidden rounded-[22px] bg-primary-active shadow-[var(--shadow-project)] sm:min-h-[430px] lg:col-span-6">
+            <div className="relative min-h-[320px] overflow-hidden rounded-[22px] bg-brand-secondary shadow-[var(--shadow-project)] sm:min-h-[430px] lg:col-span-6">
               {version.heroMedia ? <Image alt={version.heroMedia.altText ?? version.title ?? ""} className="object-cover" fill priority sizes="(min-width: 1024px) 50vw, 100vw" src={version.heroMedia.url} /> : <EmptyMediaPattern label={version.title ?? "صورة الخدمة"} />}
-              <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,color-mix(in_oklch,var(--foreground)_50%,transparent),transparent_58%)]" />
+              <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,color-mix(in_oklab,var(--foreground)_50%,transparent),transparent_58%)]" />
               <div className="absolute bottom-5 right-5 max-w-[22rem] rounded-[14px] bg-card/95 p-4 shadow-[var(--shadow-float)] backdrop-blur-sm">
                 <p className="text-sm font-semibold text-primary">تنفيذ خارجي مضبوط</p>
                 <p className="mt-1 text-sm leading-[1.75] text-text-secondary">نراجع الموقع، الاستخدام، والمواد قبل اقتراح طريقة التنفيذ.</p>

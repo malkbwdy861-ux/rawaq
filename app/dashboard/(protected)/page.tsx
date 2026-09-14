@@ -93,7 +93,7 @@ export default async function DashboardPage() {
 
       <section aria-label="ملخص المحتوى" className="grid grid-cols-[repeat(auto-fit,minmax(148px,1fr))] gap-3 sm:grid-cols-2 sm:gap-4 2xl:grid-cols-4">
         {metrics.map(({ label, value, detail, icon: Icon, tone }) => (
-          <article className="flex min-h-[142px] flex-col justify-between rounded-[20px] border border-border/70 bg-card/95 p-3.5 shadow-[0_10px_24px_oklch(22%_0.018_155_/_0.045)] sm:min-h-[154px] sm:p-4" key={label}>
+          <article className="flex min-h-[142px] flex-col justify-between rounded-[20px] border border-border/70 bg-card/95 p-3.5 shadow-[var(--shadow-metric)] sm:min-h-[154px] sm:p-4" key={label}>
             <div>
               <span className={cn("grid size-8 place-items-center rounded-xl sm:size-9", metricStyles[tone].icon)}><Icon aria-hidden="true" className="size-4 sm:size-[18px]" strokeWidth={1.9} /></span>
               <p className="mt-3 text-[12px] font-semibold leading-5 text-text-secondary sm:text-[13px]">{label}</p>

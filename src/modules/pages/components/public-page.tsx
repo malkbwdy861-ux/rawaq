@@ -110,9 +110,9 @@ export function PublicPage({
   preview?: boolean;
 }) {
   return (
-    <main className="min-h-screen bg-[oklch(97.5%_0.009_100)]">
+    <main className="min-h-screen bg-background">
       {preview ? (
-        <div className="border-b border-[oklch(47%_0.10_75)] bg-[oklch(94%_0.035_80)] px-4 py-3 text-center font-semibold text-[oklch(47%_0.10_75)]">
+        <div className="border-b border-warning bg-warning-soft px-4 py-3 text-center font-semibold text-warning">
           معاينة محمية لمسودة غير منشورة
         </div>
       ) : null}
@@ -225,7 +225,7 @@ function HomeContent({
     : data.featuredProjects.description;
   return (
     <>
-      <section className="relative isolate min-h-svh overflow-hidden bg-primary-active text-primary-foreground">
+      <section className="relative isolate min-h-svh overflow-hidden bg-brand-secondary text-brand-secondary-foreground">
         {resolved.heroMedia ? (
           <Image
             alt={
@@ -243,18 +243,18 @@ function HomeContent({
         ) : (
           <div
             aria-hidden="true"
-            className="absolute inset-0 -z-30 bg-[linear-gradient(130deg,var(--primary-active),var(--primary))]"
+            className="absolute inset-0 -z-30 bg-[linear-gradient(130deg,var(--brand-secondary),var(--brand-accent-strong))]"
           />
         )}
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[linear-gradient(to_left,color-mix(in_oklch,var(--primary-active)_72%,transparent)_0%,color-mix(in_oklch,var(--primary-active)_52%,transparent)_24%,color-mix(in_oklch,var(--primary)_24%,transparent)_48%,color-mix(in_oklch,var(--primary)_5%,transparent)_70%,transparent_100%)]"
+          className="absolute inset-0 -z-10 bg-gradient-to-l from-brand-secondary via-brand-secondary/55 to-transparent"
         />
         <div className="mx-auto grid min-h-svh max-w-[1280px] grid-rows-[1fr_auto] px-4 pb-8 pt-32 sm:px-6 sm:pb-10 sm:pt-36 lg:px-10 lg:pb-14 lg:pt-48">
           <div className="grid items-center lg:grid-cols-12">
             <div className="max-w-[780px] self-center lg:col-span-7 lg:col-start-1 lg:pb-10">
               {data.hero.eyebrow ? (
-                <p className="mb-6 flex items-center gap-3 text-sm font-semibold text-primary-soft before:h-px before:w-10 before:bg-clay">
+                <p className="mb-6 flex items-center gap-3 text-sm font-semibold text-brand-secondary-muted before:h-px before:w-10 before:bg-clay">
                   {data.hero.eyebrow}
                 </p>
               ) : null}
@@ -262,7 +262,7 @@ function HomeContent({
                 {data.hero.title}
               </h1>
               {data.hero.description ? (
-                <p className="mt-6 max-w-[560px] text-[1rem] leading-[1.9] text-primary-soft md:text-[1.0625rem]">
+                <p className="mt-6 max-w-[560px] text-[1rem] leading-[1.9] text-brand-secondary-muted md:text-[1.0625rem]">
                   {data.hero.description}
                 </p>
               ) : null}
@@ -493,7 +493,7 @@ function TrustProofSection({
           {data.featuredProof.title ||
           data.featuredProof.description ||
           featuredImage ? (
-            <article className="relative isolate flex min-h-[360px] overflow-hidden rounded-[12px] bg-primary-active p-6 text-primary-foreground sm:min-h-[420px] sm:p-8 lg:col-span-7 lg:p-10">
+            <article className="relative isolate flex min-h-[360px] overflow-hidden rounded-[12px] bg-brand-secondary p-6 text-brand-secondary-foreground sm:min-h-[420px] sm:p-8 lg:col-span-7 lg:p-10">
               {featuredImage ? (
                 <Image
                   alt={featuredImage.altText || data.featuredProof.title || ""}
@@ -505,12 +505,12 @@ function TrustProofSection({
               ) : (
                 <div
                   aria-hidden="true"
-                  className="absolute inset-0 -z-20 bg-[linear-gradient(135deg,var(--primary-active),var(--primary))] [background-image:linear-gradient(135deg,var(--primary-active),var(--primary)),linear-gradient(90deg,color-mix(in_oklch,var(--primary-soft)_13%,transparent)_1px,transparent_1px)] [background-size:auto,64px_100%]"
+                  className="absolute inset-0 -z-20 bg-[linear-gradient(135deg,var(--brand-secondary),var(--brand-accent-strong))]"
                 />
               )}
               <div
                 aria-hidden="true"
-                className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,color-mix(in_oklch,var(--primary-active)_94%,transparent),color-mix(in_oklch,var(--primary-active)_26%,transparent))]"
+                className="absolute inset-0 -z-10 bg-gradient-to-t from-brand-secondary to-brand-secondary/25"
               />
               <div className="mt-auto max-w-[560px]">
                 <ShieldCheck className="size-8 text-clay" strokeWidth={1.5} />
@@ -520,7 +520,7 @@ function TrustProofSection({
                   </h3>
                 ) : null}
                 {data.featuredProof.description ? (
-                  <p className="mt-3 max-w-[50ch] leading-[1.8] text-primary-soft">
+                  <p className="mt-3 max-w-[50ch] leading-[1.8] text-brand-secondary-muted">
                     {data.featuredProof.description}
                   </p>
                 ) : null}
@@ -543,7 +543,7 @@ function TrustProofSection({
                     />
                     {item.value ? (
                       <p
-                        className="mt-auto text-3xl font-bold tabular-nums text-primary"
+                        className="mt-auto text-3xl font-bold tabular-nums text-brand-accent-strong"
                         dir="auto"
                       >
                         {item.value}
@@ -576,7 +576,7 @@ function TrustProofSection({
                 >
                   <Icon
                     aria-hidden="true"
-                    className="size-[18px] shrink-0 text-primary"
+                    className="size-[18px] shrink-0 text-brand-accent-strong"
                     strokeWidth={1.7}
                   />
                   <span className="text-sm font-semibold">{item.title}</span>
@@ -634,7 +634,7 @@ function HomeFaqSection({
           <div className="max-w-[820px]">
             <HomeFaqAccordion items={items} />
             <Link
-              className="group mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary underline decoration-border-strong underline-offset-8 transition-colors hover:text-primary-hover hover:decoration-primary focus-visible:outline-ring"
+              className="group mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-accent-strong underline decoration-border-strong underline-offset-8 transition-colors hover:text-brand-accent hover:decoration-brand-accent focus-visible:outline-ring"
               href={allFaqsHref}
             >
               {allFaqsLabel}
@@ -679,7 +679,7 @@ function HomeFinalCta({
       className="bg-background px-4 pb-16 pt-4 md:px-8 md:pb-20 lg:pb-24"
       aria-labelledby="final-cta-title"
     >
-      <div className="relative isolate mx-auto max-w-7xl overflow-hidden rounded-[16px] bg-primary-active px-5 py-12 text-primary-foreground sm:px-8 md:py-16 lg:px-16 lg:py-20">
+      <div className="relative isolate mx-auto max-w-7xl overflow-hidden rounded-[16px] bg-brand-secondary px-5 py-12 text-brand-secondary-foreground sm:px-8 md:py-16 lg:px-16 lg:py-20">
         {background ? (
           <Image
             alt=""
@@ -691,12 +691,12 @@ function HomeFinalCta({
         ) : (
           <div
             aria-hidden="true"
-            className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_12%_25%,color-mix(in_oklch,var(--primary)_70%,transparent),transparent_38%),linear-gradient(125deg,var(--primary-active),var(--primary-hover))]"
+            className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_12%_25%,var(--brand-accent),transparent_38%),linear-gradient(125deg,var(--brand-secondary),var(--brand-secondary-hover))] opacity-70"
           />
         )}
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,color-mix(in_oklch,var(--primary-active)_25%,transparent),color-mix(in_oklch,var(--primary-active)_90%,transparent))]"
+          className="absolute inset-0 -z-10 bg-gradient-to-r from-brand-secondary/25 to-brand-secondary/90"
         />
         <div className="mx-auto max-w-3xl text-center">
           {data.eyebrow ? (
@@ -709,14 +709,14 @@ function HomeFinalCta({
             {data.title}
           </h2>
           {data.description ? (
-            <p className="mx-auto mt-4 max-w-[52ch] text-[1.0625rem] leading-[1.85] text-primary-soft">
+            <p className="mx-auto mt-4 max-w-[52ch] text-[1.0625rem] leading-[1.85] text-brand-secondary-muted">
               {data.description}
             </p>
           ) : null}
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             {primaryLabel && primaryHref ? (
               <a
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-primary-foreground px-5 text-sm font-semibold text-primary-active transition-colors hover:bg-primary-soft focus-visible:outline-ring"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-brand-secondary-foreground px-5 text-sm font-semibold text-brand-secondary transition-colors hover:bg-brand-secondary-muted focus-visible:outline-ring"
                 href={primaryHref}
               >
                 <MessageCircle aria-hidden="true" className="size-[18px]" />
@@ -725,7 +725,7 @@ function HomeFinalCta({
             ) : null}
             {data.secondaryCtaLabel && secondaryHref ? (
               <a
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] border border-primary-soft/55 px-5 text-sm font-semibold text-primary-foreground transition-colors hover:border-primary-soft hover:bg-primary/35 focus-visible:outline-ring"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] border border-brand-secondary-muted/55 px-5 text-sm font-semibold text-brand-secondary-foreground transition-colors hover:border-brand-secondary-muted hover:bg-brand-secondary-hover focus-visible:outline-ring"
                 href={secondaryHref}
               >
                 <Phone aria-hidden="true" className="size-[18px]" />
@@ -879,7 +879,7 @@ export function AboutContent({
           <h1 className="text-4xl font-bold leading-[1.24] md:text-6xl">
             {data.hero.title}
           </h1>
-          <p className="max-w-[62ch] text-xl leading-[1.7] text-[oklch(42%_0.018_150)]">
+          <p className="max-w-[62ch] text-xl leading-[1.7] text-text-secondary">
             {data.hero.description}
           </p>
         </header>
@@ -900,18 +900,18 @@ export function AboutContent({
         <h2 className="text-3xl font-bold leading-[1.35] md:col-span-4">
           {data.companyStory.title}
         </h2>
-        <p className="whitespace-pre-line text-lg leading-[1.9] text-[oklch(42%_0.018_150)] md:col-span-7 md:col-start-6">
+        <p className="whitespace-pre-line text-lg leading-[1.9] text-text-secondary md:col-span-7 md:col-start-6">
           {data.companyStory.content}
         </p>
       </section>
       {data.values.items.length ? (
-        <section className="border-y border-[oklch(82%_0.012_145)] py-16">
+        <section className="border-y border-border py-16">
           <h2 className="text-3xl font-bold">{data.values.title}</h2>
           <div className="mt-10 grid gap-x-10 gap-y-8 md:grid-cols-2">
             {data.values.items.map((item) => (
               <div key={item.title}>
                 <h3 className="text-xl font-semibold">{item.title}</h3>
-                <p className="mt-3 leading-[1.8] text-[oklch(42%_0.018_150)]">
+                <p className="mt-3 leading-[1.8] text-text-secondary">
                   {item.description}
                 </p>
               </div>
@@ -922,7 +922,7 @@ export function AboutContent({
       {data.capabilities.content ? (
         <section className="max-w-[72ch] py-20">
           <h2 className="text-3xl font-bold">{data.capabilities.title}</h2>
-          <p className="mt-5 whitespace-pre-line text-lg leading-[1.9] text-[oklch(42%_0.018_150)]">
+          <p className="mt-5 whitespace-pre-line text-lg leading-[1.9] text-text-secondary">
             {data.capabilities.content}
           </p>
         </section>
@@ -964,7 +964,7 @@ export function ContactContent({
         <h1 className="text-4xl font-bold leading-[1.24] md:text-6xl">
           {data.hero.title}
         </h1>
-        <p className="max-w-[62ch] text-xl leading-[1.7] text-[oklch(42%_0.018_150)]">
+        <p className="max-w-[62ch] text-xl leading-[1.7] text-text-secondary">
           {data.hero.description}
         </p>
       </header>
@@ -972,13 +972,13 @@ export function ContactContent({
         <div className="space-y-4 md:col-span-4">
           <h2 className="text-3xl font-bold">{data.contactIntro.title}</h2>
           {data.contactIntro.description ? (
-            <p className="leading-[1.8] text-[oklch(42%_0.018_150)]">
+            <p className="leading-[1.8] text-text-secondary">
               {data.contactIntro.description}
             </p>
           ) : null}
         </div>
         <div className="space-y-8 md:col-span-7 md:col-start-6">
-          <dl className="grid border-y border-[oklch(82%_0.012_145)]">
+          <dl className="grid border-y border-border">
             {settings && data.showWhatsapp ? (
               <ContactRow
                 term="واتساب"
@@ -1029,10 +1029,10 @@ export function ContactContent({
         </div>
       </section>
       {data.finalCta.title ? (
-        <section className="border-t border-[oklch(82%_0.012_145)] py-12">
+        <section className="border-t border-border py-12">
           <h2 className="text-2xl font-bold">{data.finalCta.title}</h2>
           {data.finalCta.description ? (
-            <p className="mt-3 max-w-[62ch] leading-[1.8] text-[oklch(42%_0.018_150)]">
+            <p className="mt-3 max-w-[62ch] leading-[1.8] text-text-secondary">
               {data.finalCta.description}
             </p>
           ) : null}
@@ -1057,36 +1057,36 @@ export function PricesContent({
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-20">
       <Breadcrumb current="الأسعار" />
       <header className="mt-12 max-w-4xl space-y-5">
-        <p className="text-sm font-semibold text-[oklch(34%_0.065_42)]">
+        <p className="text-sm font-semibold text-clay-strong">
           مركز الأسعار
         </p>
         <h1 className="text-4xl font-bold leading-[1.24] md:text-6xl">
           {data.hero.title}
         </h1>
-        <p className="max-w-[62ch] text-xl leading-[1.7] text-[oklch(42%_0.018_150)]">
+        <p className="max-w-[62ch] text-xl leading-[1.7] text-text-secondary">
           {data.hero.description}
         </p>
       </header>
       <section className="grid gap-8 py-20 md:grid-cols-12">
         <h2 className="text-3xl font-bold md:col-span-4">{data.intro.title}</h2>
-        <p className="whitespace-pre-line text-lg leading-[1.9] text-[oklch(42%_0.018_150)] md:col-span-7 md:col-start-6">
+        <p className="whitespace-pre-line text-lg leading-[1.9] text-text-secondary md:col-span-7 md:col-start-6">
           {data.intro.content}
         </p>
       </section>
       {data.pricingFactors.items.length ? (
-        <section className="bg-[oklch(37%_0.075_155)] px-5 py-12 text-[oklch(99%_0.004_100)] md:px-10">
+        <section className="bg-brand-secondary px-5 py-12 text-brand-secondary-foreground md:px-10">
           <h2 className="text-3xl font-bold">{data.pricingFactors.title}</h2>
-          <div className="mt-8 divide-y divide-[oklch(64%_0.018_145)]">
+          <div className="mt-8 divide-y divide-brand-secondary-muted/40">
             {data.pricingFactors.items.map((item, index) => (
               <div
                 className="grid gap-3 py-5 md:grid-cols-[4rem_260px_minmax(0,1fr)]"
                 key={`${item.title}-${index}`}
               >
-                <span className="tabular-nums text-[oklch(91%_0.035_55)]">
+                <span className="tabular-nums text-clay-soft">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <h3 className="text-xl font-semibold">{item.title}</h3>
-                <p className="leading-[1.8] text-[oklch(95.5%_0.018_145)]">
+                <p className="leading-[1.8] text-brand-secondary-muted">
                   {item.description}
                 </p>
               </div>
@@ -1236,12 +1236,12 @@ function EntityRowsInner({
           {title}
         </h2>
         {description ? (
-          <p className="leading-[1.8] text-[oklch(42%_0.018_150)]">
+          <p className="leading-[1.8] text-text-secondary">
             {description}
           </p>
         ) : null}
       </header>
-      <div className="border-y border-[oklch(82%_0.012_145)] md:col-span-7 md:col-start-6">
+      <div className="border-y border-border md:col-span-7 md:col-start-6">
         {items.map((item) => {
           const version = entityVersion(item, preview);
           const label = version?.title ?? version?.name;
@@ -1250,7 +1250,7 @@ function EntityRowsInner({
             <>
               <h3 className="text-xl font-semibold">{label}</h3>
               {version.shortDescription || version.excerpt ? (
-                <p className="mt-2 leading-[1.8] text-[oklch(42%_0.018_150)]">
+                <p className="mt-2 leading-[1.8] text-text-secondary">
                   {version.shortDescription ?? version.excerpt}
                 </p>
               ) : null}
@@ -1258,12 +1258,12 @@ function EntityRowsInner({
           );
           return (
             <div
-              className="border-b border-[oklch(82%_0.012_145)] py-5 last:border-b-0"
+              className="border-b border-border py-5 last:border-b-0"
               key={item.id}
             >
               {!preview && version.slug ? (
                 <Link
-                  className="block min-h-11 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[oklch(51%_0.09_155)]"
+                  className="block min-h-11 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   href={`${prefix}/${version.slug}`}
                 >
                   {content}
@@ -1291,12 +1291,12 @@ function FinalBand({
 }) {
   if (!title) return null;
   return (
-    <section className="bg-[oklch(29%_0.055_155)] px-5 py-14 text-[oklch(99%_0.004_100)] md:px-10">
+    <section className="bg-brand-secondary px-5 py-14 text-brand-secondary-foreground md:px-10">
       <div className="mx-auto flex max-w-5xl flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="text-3xl font-bold">{title}</h2>
           {description ? (
-            <p className="mt-3 max-w-[52ch] leading-[1.8] text-[oklch(95.5%_0.018_145)]">
+            <p className="mt-3 max-w-[52ch] leading-[1.8] text-brand-secondary-muted">
               {description}
             </p>
           ) : null}
@@ -1325,7 +1325,7 @@ function Cta({
         : null;
   return (
     <a
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[9px] px-4.5 text-sm font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[oklch(51%_0.09_155)] ${secondary ? "border border-primary-soft/55 bg-primary-active/15 text-primary-foreground hover:border-primary-soft hover:bg-primary-active/35" : "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active"}`}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[9px] px-4.5 text-sm font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${secondary ? "border border-brand-secondary-muted/55 bg-brand-secondary/15 text-brand-secondary-foreground hover:border-brand-secondary-muted hover:bg-brand-secondary-hover/35" : "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active"}`}
       href={href}
     >
       {Icon ? <Icon aria-hidden="true" className="size-4" /> : null}
@@ -1425,15 +1425,15 @@ function ContactRow({
   href?: string;
 }) {
   return (
-    <div className="grid gap-2 border-b border-[oklch(82%_0.012_145)] py-5 last:border-b-0 sm:grid-cols-[180px_minmax(0,1fr)]">
-      <dt className="font-semibold text-[oklch(34%_0.065_42)]">{term}</dt>
+    <div className="grid gap-2 border-b border-border py-5 last:border-b-0 sm:grid-cols-[180px_minmax(0,1fr)]">
+      <dt className="font-semibold text-clay-strong">{term}</dt>
       <dd
         className="whitespace-pre-line"
         dir={term === "العنوان" || term === "ساعات العمل" ? undefined : "ltr"}
       >
         {href ? (
           <a
-            className="font-semibold text-[oklch(37%_0.075_155)] underline"
+            className="font-semibold text-brand-accent-strong underline"
             href={href}
           >
             {value}

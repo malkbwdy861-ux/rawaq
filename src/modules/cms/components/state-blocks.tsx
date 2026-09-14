@@ -50,7 +50,7 @@ export function CmsEmptyState({
       action={
         actionHref && actionLabel ? (
           <a
-            className="inline-flex min-h-10 items-center justify-center rounded-[4px] bg-[oklch(37%_0.075_155)] px-4 py-2 text-[0.8125rem] font-semibold text-[oklch(99%_0.004_100)] hover:bg-[oklch(29%_0.055_155)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[oklch(51%_0.09_155)]"
+            className="inline-flex min-h-10 items-center justify-center rounded-[4px] bg-brand-accent-strong px-4 py-2 text-[0.8125rem] font-semibold text-inverted hover:bg-brand-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             href={actionHref}
           >
             {actionLabel}
@@ -63,15 +63,15 @@ export function CmsEmptyState({
 
 export function CmsListSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="overflow-hidden rounded-[8px] border border-[oklch(82%_0.012_145)] bg-[oklch(99%_0.004_110)]">
+    <div className="overflow-hidden rounded-[8px] border border-border bg-card">
       {Array.from({ length: rows }, (_, index) => (
         <div
-          className="grid gap-3 border-b border-[oklch(82%_0.012_145)] p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_160px_140px]"
+          className="grid gap-3 border-b border-border p-4 last:border-b-0 md:grid-cols-[minmax(0,1fr)_160px_140px]"
           key={index}
         >
-          <div className="h-5 animate-pulse rounded-[4px] bg-[oklch(95%_0.012_110)]" />
-          <div className="h-5 animate-pulse rounded-[4px] bg-[oklch(95%_0.012_110)]" />
-          <div className="h-5 animate-pulse rounded-[4px] bg-[oklch(95%_0.012_110)]" />
+          <div className="h-5 animate-pulse rounded-[4px] bg-muted" />
+          <div className="h-5 animate-pulse rounded-[4px] bg-muted" />
+          <div className="h-5 animate-pulse rounded-[4px] bg-muted" />
         </div>
       ))}
     </div>

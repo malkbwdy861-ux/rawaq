@@ -40,14 +40,14 @@ export function CmsSlugField({
           value={value}
         />
         <button
-          className="min-h-11 rounded-[4px] border border-[oklch(64%_0.018_145)] bg-[oklch(99%_0.004_110)] px-3 py-2 text-[0.8125rem] font-semibold text-[oklch(37%_0.075_155)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[oklch(51%_0.09_155)]"
+          className="min-h-11 rounded-[4px] border border-control-border bg-card px-3 py-2 text-[0.8125rem] font-semibold text-brand-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           onClick={() => setValue(normalizeCmsSlug(sourceValue ?? value))}
           type="button"
         >
           تنسيق الرابط
         </button>
       </div>
-      <p className="text-sm leading-[1.6] text-[oklch(50%_0.014_150)]">
+      <p className="text-sm leading-[1.6] text-muted-foreground">
         المسار المتوقع: <bdi dir="ltr">{routePrefix}/{value || "slug"}</bdi>
       </p>
     </CmsFieldShell>

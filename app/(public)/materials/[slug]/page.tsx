@@ -52,7 +52,7 @@ export default async function MaterialDetailPage({ params }: MaterialPageProps) 
     <main className="min-h-screen bg-background pb-14 md:pb-20">
       <article>
         <section className="relative isolate overflow-hidden px-4 pb-12 pt-8 md:px-8 md:pb-16 md:pt-12 lg:pb-20">
-          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[68%] bg-[linear-gradient(180deg,color-mix(in_oklch,var(--primary-soft)_38%,var(--background)),transparent)]" />
+          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[68%] bg-[linear-gradient(180deg,color-mix(in_oklab,var(--primary-soft)_38%,var(--background)),transparent)]" />
           <DetailContainer className="relative z-10 space-y-8">
             <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "المواد", href: "/materials" }, { label: name, href: cmsContentPath("/materials", slug) }]} />
             <header className="grid gap-8 lg:grid-cols-12 lg:items-center">
@@ -65,12 +65,12 @@ export default async function MaterialDetailPage({ params }: MaterialPageProps) 
                   <Link className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] border border-border-strong bg-card px-5 text-sm font-semibold text-primary transition-colors hover:border-primary hover:bg-primary-soft" href="/materials">قارن بمواد أخرى<ArrowLeft aria-hidden="true" className="size-4 transition-transform group-hover:-translate-x-1" /></Link>
                 </div>
               </div>
-              <div className="relative min-h-[320px] overflow-hidden rounded-[22px] bg-primary-active shadow-[var(--shadow-project)] sm:min-h-[430px] lg:col-span-6">
+              <div className="relative min-h-[320px] overflow-hidden rounded-[22px] bg-brand-secondary shadow-[var(--shadow-project)] sm:min-h-[430px] lg:col-span-6">
                 {version.heroMedia ? <Image alt={version.heroMedia.altText ?? name} className="object-cover" fill priority sizes="(min-width: 1024px) 50vw, 100vw" src={version.heroMedia.url} /> : <EmptyMediaPattern label={`صورة ${name}`} />}
-                <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,color-mix(in_oklch,var(--foreground)_55%,transparent),transparent_60%)]" />
-                <div className="absolute inset-x-5 bottom-5 border-t border-primary-foreground/35 pt-3 text-primary-foreground">
+                <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,color-mix(in_oklab,var(--foreground)_55%,transparent),transparent_60%)]" />
+                <div className="absolute inset-x-5 bottom-5 border-t border-brand-secondary-foreground/35 pt-3 text-brand-secondary-foreground">
                   <p className="text-sm font-semibold">الاختيار يبدأ من ظروف الموقع</p>
-                  <p className="mt-1 max-w-[42ch] text-sm leading-[1.75] text-primary-foreground/78">راجع المزايا والقيود والاستخدام المناسب قبل اعتماد المادة.</p>
+                  <p className="mt-1 max-w-[42ch] text-sm leading-[1.75] text-brand-secondary-foreground/78">راجع المزايا والقيود والاستخدام المناسب قبل اعتماد المادة.</p>
                 </div>
               </div>
             </header>
@@ -83,11 +83,11 @@ export default async function MaterialDetailPage({ params }: MaterialPageProps) 
           {advantages.length || limitations.length ? <FactsComparison advantages={advantages} limitations={limitations} /> : null}
 
           {recommendedUses.length || version.maintenanceNotes ? (
-            <section className="relative isolate overflow-hidden rounded-[22px] bg-primary-active px-5 py-8 text-primary-foreground sm:px-8 md:px-10 md:py-11">
-              <div aria-hidden="true" className="absolute inset-0 opacity-25 [background-image:linear-gradient(120deg,color-mix(in_oklch,var(--primary-soft)_12%,transparent)_1px,transparent_1px)] [background-size:84px_84px]" />
+            <section className="relative isolate overflow-hidden rounded-[22px] bg-brand-secondary px-5 py-8 text-brand-secondary-foreground sm:px-8 md:px-10 md:py-11">
+              <div aria-hidden="true" className="absolute inset-0 opacity-25 [background-image:linear-gradient(120deg,color-mix(in_oklab,var(--brand-secondary-muted)_12%,transparent)_1px,transparent_1px)] [background-size:84px_84px]" />
               <div className="relative grid gap-10 lg:grid-cols-12">
-                {recommendedUses.length ? <div className="lg:col-span-7"><p className="text-sm font-semibold text-primary-soft">الاستخدام العملي</p><h2 className="mt-2 text-[clamp(1.75rem,3vw,2.5rem)] font-bold leading-[1.3]">أين تكون هذه المادة خيارًا مناسبًا؟</h2><ul className="mt-6 grid gap-3 sm:grid-cols-2">{recommendedUses.map((item) => <li className="flex gap-3 border-t border-primary-soft/25 pt-3 leading-[1.8] text-primary-soft" key={item}><CircleDot aria-hidden="true" className="mt-1.5 size-4 shrink-0 text-clay" />{item}</li>)}</ul></div> : null}
-                {version.maintenanceNotes ? <div className="lg:col-span-4 lg:col-start-9"><Wrench aria-hidden="true" className="size-6 text-clay" /><h2 className="mt-4 text-xl font-bold">العناية والصيانة</h2><p className="mt-3 whitespace-pre-line leading-[1.9] text-primary-soft">{version.maintenanceNotes}</p></div> : null}
+                {recommendedUses.length ? <div className="lg:col-span-7"><p className="text-sm font-semibold text-brand-secondary-muted">الاستخدام العملي</p><h2 className="mt-2 text-[clamp(1.75rem,3vw,2.5rem)] font-bold leading-[1.3]">أين تكون هذه المادة خيارًا مناسبًا؟</h2><ul className="mt-6 grid gap-3 sm:grid-cols-2">{recommendedUses.map((item) => <li className="flex gap-3 border-t border-brand-secondary-muted/25 pt-3 leading-[1.8] text-brand-secondary-muted" key={item}><CircleDot aria-hidden="true" className="mt-1.5 size-4 shrink-0 text-clay" />{item}</li>)}</ul></div> : null}
+                {version.maintenanceNotes ? <div className="lg:col-span-4 lg:col-start-9"><Wrench aria-hidden="true" className="size-6 text-clay" /><h2 className="mt-4 text-xl font-bold">العناية والصيانة</h2><p className="mt-3 whitespace-pre-line leading-[1.9] text-brand-secondary-muted">{version.maintenanceNotes}</p></div> : null}
               </div>
             </section>
           ) : null}

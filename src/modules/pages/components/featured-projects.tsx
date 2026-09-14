@@ -44,7 +44,7 @@ export function FeaturedProjects({
           {eyebrow ? <p className="flex items-center gap-3 text-sm font-semibold text-clay-strong before:h-px before:w-9 before:bg-clay">{eyebrow}</p> : null}
           <h2 className="mt-2 text-[clamp(2rem,4vw,3.5rem)] font-bold leading-[1.2] text-pretty" id="featured-projects-title">{title}</h2>
           {description ? <p className="mt-3 max-w-[62ch] text-[1.0625rem] leading-[1.8] text-text-secondary">{description}</p> : null}
-          {ctaLabel && ctaHref ? <Link className="group mt-5 inline-flex min-h-12 items-center gap-3 rounded-[9px] border border-border-strong bg-background px-5 text-sm font-semibold text-primary transition-colors duration-150 hover:border-primary hover:bg-primary-soft focus-visible:outline-ring" href={ctaHref}>{ctaLabel}<ArrowLeft aria-hidden="true" className="size-[18px] transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:-translate-x-1" /></Link> : null}
+          {ctaLabel && ctaHref ? <Link className="group mt-5 inline-flex min-h-12 items-center gap-3 rounded-[9px] border border-border-strong bg-background px-5 text-sm font-semibold text-brand-accent-strong transition-colors duration-150 hover:border-brand-accent-strong hover:bg-brand-accent-soft focus-visible:outline-ring" href={ctaHref}>{ctaLabel}<ArrowLeft aria-hidden="true" className="size-[18px] transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:-translate-x-1" /></Link> : null}
         </header>
 
         <div className={`mt-8 md:mt-10 ${isSingle ? "mx-auto max-w-4xl" : isPair ? "grid gap-4 lg:grid-cols-2 lg:gap-5" : "grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-5"}`}>
@@ -64,24 +64,24 @@ export function ProjectCard({ item, featured = false, balanced = false, archive 
   const Heading = archive ? "h2" : "h3";
   const content = (
     <>
-      {item.image ? <Image alt={item.image.altText} className="object-cover object-center transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.025]" fill quality={featured ? 86 : 80} sizes={archive ? "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" : featured ? "(min-width: 1440px) 570px, (min-width: 1024px) 40vw, 100vw" : "(min-width: 1440px) 420px, (min-width: 640px) 50vw, 100vw"} src={item.image.url} /> : <div aria-hidden="true" className="absolute inset-0 bg-primary [background-image:linear-gradient(125deg,transparent_0%,color-mix(in_oklch,var(--primary-active)_55%,transparent)_100%),linear-gradient(90deg,color-mix(in_oklch,var(--primary-soft)_11%,transparent)_1px,transparent_1px)] [background-size:auto,52px_100%]" />}
-      <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_top,color-mix(in_oklch,var(--foreground)_82%,transparent)_0%,color-mix(in_oklch,var(--foreground)_55%,transparent)_30%,color-mix(in_oklch,var(--foreground)_12%,transparent)_52%,transparent_68%)] transition-opacity duration-300 group-hover:opacity-95" />
+      {item.image ? <Image alt={item.image.altText} className="object-cover object-center transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.025]" fill quality={featured ? 86 : 80} sizes={archive ? "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" : featured ? "(min-width: 1440px) 570px, (min-width: 1024px) 40vw, 100vw" : "(min-width: 1440px) 420px, (min-width: 640px) 50vw, 100vw"} src={item.image.url} /> : <div aria-hidden="true" className="absolute inset-0 bg-brand-secondary [background-image:linear-gradient(125deg,transparent,var(--brand-accent-strong))]" />}
+      <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-brand-secondary via-brand-secondary/55 to-transparent transition-opacity duration-300 group-hover:opacity-95" />
       {item.category ? <ProjectBadge category={item.category} featured={featured} /> : null}
-      <div className={`relative z-10 mt-auto flex items-end gap-4 text-primary-foreground ${featured ? "p-6 sm:p-8" : "p-5 sm:p-6"}`}>
+      <div className={`relative z-10 mt-auto flex items-end gap-4 text-brand-secondary-foreground ${featured ? "p-6 sm:p-8" : "p-5 sm:p-6"}`}>
         <div className="min-w-0 flex-1 text-start">
-          {item.location ? <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-primary-foreground/75"><MapPin aria-hidden="true" className="size-3.5" />{item.location}</p> : null}
+          {item.location ? <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-brand-secondary-foreground/75"><MapPin aria-hidden="true" className="size-3.5" />{item.location}</p> : null}
           <Heading className={`${featured ? "text-[clamp(1.625rem,2.4vw,2.25rem)]" : "text-xl sm:text-[1.375rem]"} line-clamp-2 font-bold leading-[1.4]`}>{item.title}</Heading>
-          <p className={`${featured ? "line-clamp-3 max-w-[48ch] text-sm sm:text-[0.9375rem]" : "line-clamp-2 text-[0.8125rem] sm:text-sm"} mt-1.5 font-normal leading-[1.7] text-primary-foreground/75`}>{item.shortDescription}</p>
+          <p className={`${featured ? "line-clamp-3 max-w-[48ch] text-sm sm:text-[0.9375rem]" : "line-clamp-2 text-[0.8125rem] sm:text-sm"} mt-1.5 font-normal leading-[1.7] text-brand-secondary-foreground/75`}>{item.shortDescription}</p>
         </div>
         <span aria-hidden="true" className={`${featured ? "size-11" : "size-10"} grid shrink-0 place-items-center rounded-full border border-primary-foreground/25 bg-foreground/35 backdrop-blur-sm transition-[background-color,transform] duration-300 group-hover:-translate-x-1 group-hover:bg-foreground/50`}><ArrowLeft className="size-4" /></span>
       </div>
     </>
   );
-  const sharedClassName = `group relative isolate flex overflow-hidden rounded-[16px] bg-primary-active shadow-[var(--shadow-project)] outline-none ring-offset-2 ring-offset-muted transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-[3px] hover:shadow-[var(--shadow-project-hover)] focus-visible:ring-2 focus-visible:ring-ring ${archive ? "min-w-0 aspect-[4/3] min-h-[270px]" : featured ? `aspect-[4/5] sm:aspect-[16/9] ${balanced ? "lg:aspect-[4/3]" : "lg:aspect-[4/5]"}` : "aspect-[4/3] min-h-[260px] sm:min-h-[300px] lg:aspect-auto lg:min-h-0"} ${className}`;
+  const sharedClassName = `group relative isolate flex overflow-hidden rounded-[16px] bg-brand-secondary shadow-[var(--shadow-project)] outline-none ring-offset-2 ring-offset-muted transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-[3px] hover:shadow-[var(--shadow-project-hover)] focus-visible:ring-2 focus-visible:ring-ring ${archive ? "min-w-0 aspect-[4/3] min-h-[270px]" : featured ? `aspect-[4/5] sm:aspect-[16/9] ${balanced ? "lg:aspect-[4/3]" : "lg:aspect-[4/5]"}` : "aspect-[4/3] min-h-[260px] sm:min-h-[300px] lg:aspect-auto lg:min-h-0"} ${className}`;
 
   return item.href ? <Link className={sharedClassName} href={item.href}>{content}</Link> : <article className={sharedClassName}>{content}</article>;
 }
 
 function ProjectBadge({ category, featured }: { category: NonNullable<FeaturedProjectItem["category"]>; featured: boolean }) {
-  return <span className={`absolute start-4 top-4 z-10 inline-flex min-h-8 max-w-[calc(100%_-_2rem)] items-center gap-2 rounded-full border border-primary-foreground/15 bg-foreground/45 px-3 text-xs font-semibold text-primary-foreground shadow-[var(--shadow-rest)] backdrop-blur-md ${featured ? "sm:start-6 sm:top-6" : "sm:start-5 sm:top-5"}`}><ProjectCategoryIcon className="size-3.5 shrink-0" iconKey={category.iconKey} /><span className="truncate">{category.name}</span></span>;
+  return <span className={`absolute start-4 top-4 z-10 inline-flex min-h-8 max-w-[calc(100%_-_2rem)] items-center gap-2 rounded-full border border-brand-secondary-foreground/15 bg-brand-secondary/45 px-3 text-xs font-semibold text-brand-secondary-foreground shadow-[var(--shadow-rest)] backdrop-blur-md ${featured ? "sm:start-6 sm:top-6" : "sm:start-5 sm:top-5"}`}><ProjectCategoryIcon className="size-3.5 shrink-0" iconKey={category.iconKey} /><span className="truncate">{category.name}</span></span>;
 }
