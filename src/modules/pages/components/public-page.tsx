@@ -3,7 +3,6 @@ import {
   Check,
   ImageIcon,
   MapPin,
-  MessageCircle,
   PencilRuler,
   Phone,
   Settings2,
@@ -14,6 +13,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
 import { cmsContentPath } from "@/modules/cms/slugs";
 import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
 import { JsonLd } from "@/modules/seo/components/json-ld";
@@ -719,7 +719,7 @@ function HomeFinalCta({
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-brand-secondary-foreground px-5 text-sm font-semibold text-brand-secondary transition-colors hover:bg-brand-secondary-muted focus-visible:outline-ring"
                 href={primaryHref}
               >
-                <MessageCircle aria-hidden="true" className="size-[18px]" />
+                <WhatsappIcon aria-hidden="true" className="size-[18px]" />
                 {primaryLabel}
               </a>
             ) : null}
@@ -1319,7 +1319,7 @@ function Cta({
 }) {
   const Icon =
     icon === "whatsapp"
-      ? MessageCircle
+      ? WhatsappIcon
       : icon === "projects"
         ? ImageIcon
         : null;

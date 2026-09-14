@@ -1,8 +1,9 @@
 "use client";
 
-import { MessageCircle, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { useState } from "react";
 
+import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
 import { Input } from "@/components/ui/input";
 import { Select as UiSelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,7 +43,7 @@ export function ContactWhatsappForm({ whatsappNumber, defaultMessage, services, 
         </label>
       </div>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover" href={href} rel="noopener noreferrer" target="_blank"><MessageCircle aria-hidden="true" className="size-[18px]" />فتح واتساب بالرسالة</a>
+        <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover" href={href} rel="noopener noreferrer" target="_blank"><WhatsappIcon aria-hidden="true" className="size-[18px]" />فتح واتساب بالرسالة</a>
         <button className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] border border-border-strong px-5 text-sm font-semibold text-brand-accent-strong transition-colors hover:border-brand-accent-strong hover:bg-brand-accent-soft" type="button" onClick={() => setValues(emptyValues)}><RotateCcw aria-hidden="true" className="size-4" />مسح التفاصيل</button>
       </div>
     </section>

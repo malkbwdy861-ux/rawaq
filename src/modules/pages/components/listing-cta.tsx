@@ -1,4 +1,4 @@
-import { MessageCircle } from "lucide-react";
+import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
 
 type ListingCtaProps = {
   title: string;
@@ -18,7 +18,7 @@ export function ListingCta({ title, description, href, label = "اطلب عرض 
             <p className="mt-3 max-w-[52ch] leading-[1.8] text-brand-secondary-muted">{description}</p>
           </div>
           <a className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-[9px] bg-brand-secondary-foreground px-5 text-sm font-semibold text-brand-secondary transition-colors hover:bg-brand-secondary-muted focus-visible:outline-ring" href={href}>
-            <MessageCircle aria-hidden="true" className="size-[18px]" />
+            <WhatsappIcon aria-hidden="true" className="size-[18px]" />
             {label}
           </a>
         </div>

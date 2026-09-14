@@ -3,7 +3,6 @@ import {
   Clock3,
   Mail,
   MapPin,
-  MessageCircle,
   PencilRuler,
   Phone,
   ReceiptText,
@@ -15,6 +14,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
 import { FaqList } from "@/modules/faqs/components/faq-list";
 import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
 import { JsonLd } from "@/modules/seo/components/json-ld";
@@ -167,7 +167,7 @@ function Eyebrow({ children }: { children: string }) { return <p className="flex
 function PageBreadcrumb({ current }: { current: string }) { const paths: Record<string, string> = { "من نحن": "/about", "التواصل": "/contact", "الأسعار": "/prices", "الأسئلة الشائعة": "/faqs" }; return <Breadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: current, href: paths[current] ?? "/" }]} />; }
 
 function ContactCard({ term, value, href }: { term: string; value: string; href?: string }) {
-  const Icon = term === "واتساب" ? MessageCircle : term.includes("هاتف") || term === "الهاتف" ? Phone : term === "البريد الإلكتروني" ? Mail : term === "العنوان" ? MapPin : Clock3;
+  const Icon = term === "واتساب" ? WhatsappIcon : term.includes("هاتف") || term === "الهاتف" ? Phone : term === "البريد الإلكتروني" ? Mail : term === "العنوان" ? MapPin : Clock3;
   const ltr = term !== "العنوان" && term !== "ساعات العمل";
   return <div className="flex min-h-[112px] gap-4 rounded-[12px] border border-border bg-card p-4.5"><span className="grid size-10 shrink-0 place-items-center rounded-[9px] bg-brand-accent-soft text-brand-accent-strong"><Icon aria-hidden="true" className="size-[18px]" strokeWidth={1.7} /></span><div className="min-w-0"><dt className="text-sm font-semibold text-foreground">{term}</dt><dd className="mt-2 whitespace-pre-line break-words text-sm leading-[1.7] text-text-secondary" dir={ltr ? "ltr" : undefined}>{href ? <a className="font-semibold text-brand-accent-strong underline decoration-border-strong underline-offset-4 hover:decoration-brand-accent" href={href}><bdi>{value}</bdi></a> : value}</dd></div></div>;
 }
@@ -186,7 +186,7 @@ function PricingGuides({ items, preview }: { items: Entity[]; preview: boolean }
 
 function FinalCta({ title, description, buttonText, target }: { title?: string; description?: string; buttonText?: string; target?: string }) {
   if (!title) return null;
-  const Icon = target?.startsWith("/") ? ArrowLeft : MessageCircle;
+  const Icon = target?.startsWith("/") ? ArrowLeft : WhatsappIcon;
   return <section className="bg-background px-4 py-14 md:px-8 md:py-20"><div className="relative isolate mx-auto max-w-7xl overflow-hidden rounded-[16px] bg-brand-secondary px-5 py-11 text-brand-secondary-foreground sm:px-8 md:px-12 md:py-14"><div aria-hidden="true" className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_12%_25%,var(--brand-accent),transparent_38%),linear-gradient(125deg,var(--brand-secondary),var(--brand-secondary-hover))] opacity-70" /><div className="flex flex-col gap-7 md:flex-row md:items-center md:justify-between"><div><h2 className="text-[clamp(1.75rem,3vw,2.5rem)] font-bold leading-[1.3]">{title}</h2>{description ? <p className="mt-3 max-w-[52ch] leading-[1.8] text-brand-secondary-muted">{description}</p> : null}</div>{buttonText && target ? <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-brand-secondary-foreground px-5 text-sm font-semibold text-brand-secondary transition-colors hover:bg-brand-secondary-muted" href={target}><Icon aria-hidden="true" className="size-[18px]" />{buttonText}</a> : null}</div></div></section>;
 }
 

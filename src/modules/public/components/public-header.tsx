@@ -1,11 +1,12 @@
 "use client";
 
-import { Menu, MessageCircle, Phone, X } from "lucide-react";
+import { Menu, Phone, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
 import { buildWhatsAppUrl, phoneHref } from "@/modules/settings/contact";
 import { publicNavigationLinks } from "@/modules/public/navigation";
 
@@ -47,7 +48,7 @@ export function PublicHeader({ settings }: { settings: PublicSettings | null }) 
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5">
-          <a className="hidden min-h-10 items-center gap-1.5 rounded-[9px] bg-primary px-3.5 text-[0.8125rem] font-semibold text-primary-foreground transition-colors duration-150 hover:bg-primary-hover active:bg-primary-active sm:inline-flex" href={whatsappHref}><MessageCircle aria-hidden="true" className="size-4" />اطلب عرض سعر</a>
+          <a className="hidden min-h-10 items-center gap-1.5 rounded-[9px] bg-primary px-3.5 text-[0.8125rem] font-semibold text-primary-foreground transition-colors duration-150 hover:bg-primary-hover active:bg-primary-active sm:inline-flex" href={whatsappHref}><WhatsappIcon aria-hidden="true" className="size-4" />اطلب عرض سعر</a>
           <button aria-controls="public-menu" aria-expanded={menuOpen} aria-label={menuOpen ? "إغلاق القائمة" : "فتح القائمة"} className="grid size-10 place-items-center rounded-[9px] text-foreground transition-colors duration-150 hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring lg:hidden" onClick={() => setMenuOpen((open) => !open)} type="button">{menuOpen ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}</button>
         </div>
       </div>
@@ -62,7 +63,7 @@ export function PublicHeader({ settings }: { settings: PublicSettings | null }) 
             })}
           </nav>
           <div className="mt-auto grid gap-2 border-t border-border pt-5">
-            <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-primary px-4 text-sm font-semibold text-primary-foreground" href={whatsappHref}><MessageCircle aria-hidden="true" className="size-[18px]" />اطلب عرض سعر</a>
+            <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-primary px-4 text-sm font-semibold text-primary-foreground" href={whatsappHref}><WhatsappIcon aria-hidden="true" className="size-[18px]" />اطلب عرض سعر</a>
             {settings?.primaryPhone ? <a className="inline-flex min-h-11 items-center justify-center gap-2 text-sm font-semibold text-text-secondary" dir="ltr" href={phoneHref(settings.primaryPhone)}><Phone aria-hidden="true" className="size-[18px]" /><bdi>{settings.primaryPhone}</bdi></a> : null}
           </div>
         </aside>

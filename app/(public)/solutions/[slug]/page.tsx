@@ -1,9 +1,10 @@
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
 import { cmsContentPath, decodeCmsSlug } from "@/modules/cms/slugs";
 import { HomeFaqAccordion } from "@/modules/pages/components/home-faq-accordion";
 import { articleItem, ArticlesGrid, DetailContainer, DetailCta, EditorialText, EmptyMediaPattern, materialItem, MaterialsGrid, SectionHeader, type ArticleCardItem, type MaterialCardItem } from "@/modules/pages/components/detail-page-sections";
@@ -54,7 +55,7 @@ export default async function SolutionDetailPage({ params }: SolutionPageProps) 
               <h1 className="max-w-[14ch] text-[clamp(2.25rem,5vw,4.45rem)] font-bold leading-[1.22] text-pretty">{version.title}</h1>
               <p className="max-w-[58ch] text-lg leading-[1.9] text-brand-secondary-muted md:text-xl">{version.shortDescription}</p>
               <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-                <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover active:bg-primary-active" href={whatsappHref}><MessageCircle aria-hidden="true" className="size-[18px]" />اسأل عن هذا الحل</a>
+                <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover active:bg-primary-active" href={whatsappHref}><WhatsappIcon aria-hidden="true" className="size-[18px]" />اسأل عن هذا الحل</a>
                 <Link className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] border border-brand-secondary-muted/45 px-5 text-sm font-semibold text-brand-secondary-foreground transition-colors hover:border-brand-secondary-muted hover:bg-brand-secondary-foreground/10" href="/projects">شاهد تطبيقات مشابهة<ArrowLeft aria-hidden="true" className="size-4 transition-transform group-hover:-translate-x-1" /></Link>
               </div>
             </div>

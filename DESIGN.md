@@ -2,35 +2,25 @@
 name: "Jeddah Shading"
 description: "Arabic-first architectural clarity for durable outdoor work in Jeddah and Makkah"
 colors:
-  background-canvas: "oklch(97.2% 0.004 145)"
-  background-muted: "oklch(95.4% 0.006 145)"
-  background-brand-subtle: "oklch(95.5% 0.018 145)"
-  surface-base: "oklch(99.3% 0.003 145)"
-  surface-raised: "oklch(96.2% 0.006 145)"
-  surface-overlay: "oklch(98.8% 0.004 145)"
-  text-primary: "oklch(22% 0.018 155)"
-  text-secondary: "oklch(42% 0.018 150)"
-  text-muted: "oklch(50% 0.014 150)"
-  text-inverted: "oklch(99% 0.004 100)"
-  border-default: "oklch(87.5% 0.008 145)"
-  border-strong: "oklch(74% 0.014 145)"
-  brand-primary: "oklch(37% 0.075 155)"
-  brand-primary-hover: "oklch(29% 0.055 155)"
-  brand-primary-active: "oklch(22% 0.035 155)"
-  brand-primary-focus: "oklch(51% 0.09 155)"
-  brand-primary-soft: "oklch(90% 0.035 150)"
-  brand-accent: "oklch(58% 0.11 45)"
-  brand-accent-strong: "oklch(34% 0.065 42)"
-  brand-accent-soft: "oklch(91% 0.035 55)"
-  state-success: "oklch(44% 0.085 155)"
-  state-success-soft: "oklch(95.5% 0.018 145)"
-  state-warning: "oklch(47% 0.10 75)"
-  state-warning-soft: "oklch(94% 0.035 80)"
-  state-error: "oklch(46% 0.16 28)"
-  state-error-soft: "oklch(94% 0.025 28)"
-  state-info: "oklch(46% 0.09 240)"
-  state-info-soft: "oklch(94% 0.025 240)"
-  state-disabled: "oklch(53% 0.012 150)"
+  source-of-truth: "app/globals.css :root"
+  brand-primary: "var(--brand-primary)"
+  brand-secondary: "var(--brand-secondary)"
+  brand-accent: "var(--brand-accent)"
+  background-canvas: "var(--background)"
+  background-muted: "var(--muted)"
+  surface-base: "var(--card)"
+  surface-raised: "var(--surface-raised)"
+  surface-overlay: "var(--popover)"
+  text-primary: "var(--foreground)"
+  text-secondary: "var(--text-secondary)"
+  text-muted: "var(--muted-foreground)"
+  text-inverted: "var(--text-inverted)"
+  border-default: "var(--border)"
+  border-strong: "var(--border-strong)"
+  state-success: "var(--success)"
+  state-warning: "var(--warning)"
+  state-error: "var(--destructive)"
+  state-info: "var(--info)"
 typography:
   display:
     fontFamily: "Readex Pro, Noto Sans Arabic, Tahoma, Arial, sans-serif"
@@ -180,7 +170,7 @@ Every route declares one visual mode through its nearest shell:
 - `PERSUADE`: public pages. Image-led or architectural, generous chapter rhythm, one dominant conversion action, and a `1280px` content cap.
 - `OPERATE`: dashboard pages. Neutral, compact, explicit state, predictable controls, and widths selected by task.
 
-Do not mix public display typography, orchestrated motion, broad green fields, or promotional copy into `OPERATE`. Do not expose dashboard lifecycle language or dense toolbars in `PERSUADE`.
+Do not mix public display typography, orchestrated motion, broad petrol fields, or promotional copy into `OPERATE`. Do not expose dashboard lifecycle language or dense toolbars in `PERSUADE`.
 
 ### Required layout widths
 
@@ -223,8 +213,8 @@ No page may default to the widest width. Inputs follow the information they coll
 Until the five reference screens receive visual approval, dashboard implementation is limited to the shared shell, Overview, Services collection, Service editor, and Media Library. Other routes must not inherit experimental collection or editor markup.
 
 - Physical scene: one Arabic-speaking administrator works at a bright office monitor for sustained content-entry sessions. The interface is light, cool, low-glare, compact, and immediately scannable rather than dark or decorative.
-- Color strategy: restrained. At least 90 percent of each viewport uses the cool canvas, white-green surfaces, and tinted ink. Deep mineral green is reserved for primary actions, current navigation, focus, selection, and success. Semantic blue, amber, and violet appear only in small icon or status surfaces.
-- Canvas and surfaces: the dashboard canvas is `background-canvas`. Sidebar is a slightly distinct near-white neutral. Primary working surfaces use `surface-base`; controls may use `surface-overlay`; hover uses a cool neutral-green tint. Major cards use a full 1px `border-default`, 12–14px radius, 18–24px padding, and at most `0 1px 2px` low-opacity resting elevation.
+- Color strategy: restrained. At least 90 percent of each viewport uses warm sand-white surfaces and petrol-tinted ink. Gold is reserved for primary actions and selection; turquoise marks links, focus, and small details. Semantic state colors appear only in icon or status surfaces.
+- Canvas and surfaces: the dashboard canvas is `background`. Sidebar is a slightly distinct warm neutral. Primary working surfaces use `card`; controls may use `popover`; hover uses a soft turquoise tint. Major cards use a full 1px `border`, 12–14px radius, 18–24px padding, and at most `--shadow-rest` elevation.
 - Shell: `240px` desktop sidebar from `1280px`, right-side drawer below it, `60px` utility topbar, compact `40–42px` navigation rows, `16–18px` icons, and no invented brand mark. The brand area stays within `60–68px`. Navigation groups have 12–16px separation, not large dead gaps.
 - Page frame: desktop padding is 24–32px, tablet 20–24px, mobile 16px. Overview and Media cap at `1600px`, Services at `1360px`, and Service editor at `1200px`. Heading-to-first-section spacing is 24px; major section gaps are 20–24px; card grids use 16–20px gaps.
 - Typography: dashboard page titles are 28–30px at weight 700; section titles 18–20px at weight 600–700; card titles 15–17px at weight 600; body and fields 14–16px; navigation 13–14px; metadata 12–13px. Values use tabular numerals. Secondary and muted colors, not bold weight everywhere, establish supporting hierarchy.
@@ -244,7 +234,7 @@ Until the five reference screens receive visual approval, dashboard implementati
 ### Component enforcement
 
 - Route files compose domain data and archetypes. They must not define new button, field, badge, status, page-header, empty-state, or container styling inline.
-- Raw `oklch()` values are allowed only in token definitions and exceptional data visualization. Components consume semantic tokens.
+- Raw color values are allowed only in the palette block at `app/globals.css :root`. Components and data visualization consume semantic tokens.
 - Cards require a distinct object, action, selection, or comparison boundary. Ordinary sections use spacing, tonal change, or one separator.
 - Every interactive component implements default, hover where supported, focus-visible, active, disabled, and pending states.
 - Active navigation uses text weight, icon treatment, and a full soft surface or hairline boundary. It never relies on color alone.
@@ -256,21 +246,21 @@ Until the five reference screens receive visual approval, dashboard implementati
 
 **Creative North Star: "The Measured Roshan"**
 
-The visual system translates Al-Balad roshan screens into proportion, repetition, screened depth, and disciplined alignment rather than literal heritage ornament. Red Sea limestone supplies a bright, sun-readable ground. Mineral green communicates durable shade and professional execution. Fired clay appears only as a material note. Precise architectural drawings inform fine rules, measured spacing, captions, and image annotation.
+The visual system translates Al-Balad roshan screens into proportion, repetition, screened depth, and disciplined alignment rather than literal heritage ornament. Warm sand-white supplies a bright, sun-readable ground. Dark petrol communicates durable shade and professional execution. Gold sand and turquoise provide measured highlights. Precise architectural drawings inform fine rules, measured spacing, captions, and image annotation.
 
-The public website uses the project-defined **PERSUADE** surface mode and Impeccable's brand register. It should feel image-led, locally specific, quietly premium, and visually committed. Mineral green may carry 30 to 45 percent of a major public page through decisive full-width bands, hero fields, or section transitions. It must never become a generic green accent scattered across a template.
+The public website uses the project-defined **PERSUADE** surface mode and Impeccable's brand register. It should feel image-led, locally specific, quietly premium, and visually committed. Dark petrol may carry 30 to 45 percent of a major public page through decisive full-width bands, hero fields, or section transitions. Gold sand marks primary actions and turquoise provides smaller details rather than competing broad fields.
 
-The dashboard uses the project-defined **OPERATE** surface mode and Impeccable's product register. It inherits the mineral and limestone foundation but remains restrained: approximately 90 percent neutral surfaces, with brand or semantic color used only for primary action, current selection, focus, and status. Familiar controls, explicit lifecycle state, predictable forms, and task completion outrank visual novelty.
+The dashboard uses the project-defined **OPERATE** surface mode and Impeccable's product register. It inherits the petrol and warm sand foundation but remains restrained: approximately 90 percent neutral surfaces, with brand or semantic color used only for primary action, current selection, focus, and status. Familiar controls, explicit lifecycle state, predictable forms, and task completion outrank visual novelty.
 
 The brand is architectural, grounded, exact, durable, locally rooted, and quietly premium. It should feel technically competent without becoming industrially cold, bold without becoming loud, and premium through workmanship rather than luxury affectation. The intended memory is simple: built correctly, lasts.
 
 **Key Characteristics:**
 
 - Arabic-first and structurally RTL.
-- Bright limestone ground with decisive mineral-green fields.
+- Warm sand-white ground with decisive dark-petrol fields.
 - Architectural alignment and measured repetition.
 - Authentic project evidence before promotional claims.
-- Restrained fired-clay detail.
+- Restrained gold-sand and turquoise detail.
 - Public persuasion and dashboard operation share foundations but not density.
 
 ### UX Principles
@@ -343,23 +333,21 @@ The logo is pending. Reserve horizontal and compact mark slots that tolerate an 
 
 ## 2. Colors
 
-The palette is mineral, sun-readable, and rooted in the approved physical references. All canonical values are in the YAML frontmatter. The project intentionally uses OKLCH as its source of truth; strict Stitch export may warn because it expects hexadecimal sRGB.
+The palette is sun-readable and rooted in the approved physical references. `app/globals.css :root` is the sole source of truth for numeric color values; this document names roles only. Run `npm run check:colors` to reject raw colors elsewhere in application code.
 
 ### Primary
 
-- **Mineral Green:** `brand-primary` is the core brand color, primary public action, dashboard primary action, current selection, and major public color field.
-- **Deep Mineral:** `brand-primary-hover` and `brand-primary-active` provide interaction depth and dark structural fields.
-- **Screened Mineral:** `brand-primary-soft` and `background-brand-subtle` support selected rows, quiet navigation, and restrained section transitions.
-
-On the public site, mineral green may carry 30 to 45 percent of a major page when used as one decisive field. On the dashboard, keep brand color below approximately 10 percent of the viewport and reserve it for action, selection, focus, and state.
+- **Gold Sand:** `primary` is the primary public and dashboard action, important highlight, and selected control color.
+- `primary-hover`, `primary-active`, and `primary-soft` provide accessible interaction and selection states derived from the gold.
+- Gold is not body text on light surfaces. Use petrol text or the accessible turquoise link role.
 
 ### Secondary
 
-The secondary brand role is the limestone surface family: `background-canvas`, `background-muted`, `surface-base`, and `surface-raised`. These are active identity colors, not default white or generic gray. They create sun-readable calm and let authentic imagery carry visual detail.
+**Dark Petrol:** `brand-secondary` carries hero backgrounds, the footer, major dark sections, headings, and structural emphasis. Use `brand-secondary-foreground` and `brand-secondary-muted` for text on these fields. Warm sand-white surfaces derive from `palette-paper` and the brand colors.
 
 ### Tertiary
 
-**Fired Clay** uses `brand-accent`, `brand-accent-strong`, and `brand-accent-soft`. It identifies material annotations, selected project details, location context, and rare editorial emphasis. Keep fired clay below approximately 3 percent of a page's visual weight. It is never a competing CTA, error state, or broad page background.
+**Turquoise:** `brand-accent` identifies icons, small badges, links, focus, and decorative details. Use `brand-accent-strong` for readable text on light surfaces and `brand-accent-soft` for tinted surfaces. It is never a competing CTA or broad page background.
 
 ### Neutral
 
@@ -380,37 +368,22 @@ The secondary brand role is the limestone surface family: `background-canvas`, `
 
 ### Interaction Colors
 
-- Default filled action: `brand-primary` with `text-inverted`.
-- Hover: `brand-primary-hover`, only when hover is available.
-- Active: `brand-primary-active` with immediate press feedback.
-- Focus: 2px `brand-primary-focus` outline, 2px offset, separated from the element by an opaque local surface.
-- Selected: `brand-primary-soft` plus primary text or a full 1px primary boundary.
+- Default filled action: `primary` with `primary-foreground`.
+- Hover: `primary-hover`, only when hover is available.
+- Active: `primary-active` with immediate press feedback.
+- Focus: 2px `ring` outline, 2px offset, separated from the element by an opaque local surface.
+- Selected: `primary-soft` plus petrol text or a full 1px primary boundary.
 - Disabled: neutral surface and `state-disabled`; do not use opacity alone.
 
 ### Approved Contrast Pairings
 
-The following conservative pairings meet WCAG AA after sRGB conversion and gamut clipping. Recheck the rendered implementation, font weight, anti-aliasing, forced-colors mode, and image context before release.
-
-| Foreground | Background | Approximate contrast | Approved use |
-|---|---|---:|---|
-| `text-primary` | `background-canvas` | 16.0:1 | All text |
-| `text-primary` | `surface-base` | 16.8:1 | All text |
-| `text-secondary` | `background-canvas` | 7.8:1 | Body and metadata |
-| `text-muted` | `background-canvas` | 5.5:1 | Placeholder and tertiary text |
-| `text-inverted` | `brand-primary` | 9.8:1 | Filled actions and dark fields |
-| `brand-primary` | `background-brand-subtle` | 8.9:1 | Selected and branded soft surfaces |
-| `brand-accent-strong` | `brand-accent-soft` | 9.1:1 | Clay annotations |
-| `state-error` | `state-error-soft` | 6.4:1 | Error text and icons |
-| `state-warning` | `state-warning-soft` | 5.8:1 | Warning text and icons |
-| `state-info` | `state-info-soft` | 5.9:1 | Informational text and icons |
-| `border-strong` | `surface-base` | 3.2:1 | Input and component boundaries |
-| `brand-primary-focus` | `background-canvas` | 5.1:1 | Focus indicator |
+Use `foreground` or `text-secondary` on warm light surfaces, `brand-secondary-foreground` on petrol fields, `primary-foreground` on gold actions, and `brand-accent-strong` for turquoise links. Recheck WCAG AA whenever a raw palette value changes; derived tokens do not remove the need for contrast testing.
 
 **The Bright-Sun Rule.** Important public information uses `text-primary` or `text-secondary` on an opaque limestone surface. Never place thin text directly over photography. If text must overlap an image, use an opaque mineral panel with verified contrast.
 
 **The One Action Rule.** WhatsApp is the only filled primary contact action in a conversion group. Phone is outlined or text-supported.
 
-**The Clay Restraint Rule.** Fired clay marks material or place; it never competes with WhatsApp, Save Draft, Publish, or destructive actions.
+**The Accent Restraint Rule.** Turquoise marks links and small details; it never competes with WhatsApp, Save Draft, Publish, or destructive actions.
 
 **The No Pure Neutral Rule.** Pure white, pure black, and zero-chroma gray are prohibited. Use the named tinted surfaces and mineral text roles.
 
@@ -469,10 +442,10 @@ The system is flat by default. Depth comes from opaque tonal layers, full hairli
 
 ### Shadow Vocabulary
 
-- **Resting edge:** `0 1px 2px oklch(22% 0.018 155 / 0.08)`. Menus, a raised mobile contact bar, and working surfaces that need separation.
-- **Floating control:** `0 8px 24px oklch(22% 0.018 155 / 0.12)`. Dropdowns, popovers, and sticky controls.
-- **Drawer:** `0 16px 48px oklch(22% 0.018 155 / 0.16)`. Public and dashboard navigation drawers only.
-- **Dialog:** `0 24px 64px oklch(22% 0.018 155 / 0.20)`. Required modal confirmation only.
+- **Resting edge:** `--shadow-rest`. Menus, a raised mobile contact bar, and working surfaces that need separation.
+- **Floating control:** `--shadow-float`. Dropdowns, popovers, and sticky controls.
+- **Drawer:** `--shadow-drawer`. Public and dashboard navigation drawers only.
+- **Dialog:** `--shadow-dialog`. Required modal confirmation only.
 
 ### Border Vocabulary
 
@@ -511,7 +484,7 @@ The system is precise with slight softening, not sharp-industrial and not pill-h
 
 ### Buttons And Links
 
-Public primary means WhatsApp. It is filled mineral green, 48px high, content-width on wide screens, and may become full-width on narrow screens. Public secondary means phone or contextual navigation and uses an outlined or text-supported treatment. Tertiary actions are underlined text links with standalone labels.
+Public primary means WhatsApp. It is filled gold sand with dark ink, 48px high, content-width on wide screens, and may become full-width on narrow screens. Public secondary means phone or contextual navigation and uses an outlined or text-supported treatment. Tertiary actions are underlined turquoise text links with standalone labels.
 
 Dashboard primary means the single current workflow action, usually Save Draft. Preview is secondary. Publish is visually distinct and appears as an enabled action only when publication requirements are met; it does not compete as a second filled primary beside Save Draft. Archive and permanent media deletion use the error family and are separated from routine actions.
 
@@ -699,7 +672,7 @@ Related links come from real content relationships. Projects serve as evidence w
 ### Do:
 
 - **Do** show authentic project evidence before promotional claims.
-- **Do** use mineral green decisively on public pages and sparingly in the dashboard.
+- **Do** use dark petrol decisively on public pages, gold for primary actions, and turquoise sparingly for details.
 - **Do** keep WhatsApp as the single filled contact action and phone as the clear secondary action.
 - **Do** express roshan influence through proportion, screening, rhythm, and measured alignment.
 - **Do** use opaque limestone surfaces for bright outdoor readability.

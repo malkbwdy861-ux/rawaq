@@ -1,8 +1,9 @@
-import { ArrowLeft, Boxes, CalendarDays, MapPin, MessageCircle, Phone, Ruler, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Boxes, CalendarDays, MapPin, Phone, Ruler, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
 import { cmsContentPath } from "@/modules/cms/slugs";
 import { buildWhatsAppUrl, phoneHref, type WhatsAppMessageInput } from "@/modules/settings/contact";
 
@@ -131,7 +132,7 @@ export function DetailCta({ title, description, settings, secondaryHref = "/cont
     <div className="relative z-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
       <div><p className="text-sm font-semibold text-brand-secondary-muted">جاهزون للتنفيذ</p><h2 className="mt-2 max-w-2xl text-[clamp(1.75rem,3vw,3rem)] font-bold leading-[1.25] text-pretty">{title}</h2><p className="mt-3 max-w-[58ch] leading-[1.85] text-brand-secondary-muted/85">{description}</p></div>
       <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
-        <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-brand-secondary-foreground px-5 text-sm font-semibold text-brand-secondary transition-colors hover:bg-brand-secondary-muted focus-visible:outline-ring" href={whatsappHref}><MessageCircle aria-hidden="true" className="size-[18px]" />اطلب عرض سعر</a>
+        <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-brand-secondary-foreground px-5 text-sm font-semibold text-brand-secondary transition-colors hover:bg-brand-secondary-muted focus-visible:outline-ring" href={whatsappHref}><WhatsappIcon aria-hidden="true" className="size-[18px]" />اطلب عرض سعر</a>
         {settings?.primaryPhone ? <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] border border-brand-secondary-muted/45 px-5 text-sm font-semibold text-brand-secondary-foreground transition-colors hover:border-brand-secondary-muted hover:bg-brand-secondary-hover focus-visible:outline-ring" dir="ltr" href={phoneHref(settings.primaryPhone)}><Phone aria-hidden="true" className="size-[18px]" /><bdi>{settings.primaryPhone}</bdi></a> : <Link className="inline-flex min-h-12 items-center justify-center rounded-[9px] border border-brand-secondary-muted/45 px-5 text-sm font-semibold text-brand-secondary-foreground transition-colors hover:border-brand-secondary-muted hover:bg-brand-secondary-hover" href={secondaryHref}>تواصل معنا</Link>}
       </div>
     </div>

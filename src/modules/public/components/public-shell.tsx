@@ -1,8 +1,9 @@
-import { MapPin, MessageCircle, Phone } from "lucide-react";
+import { MapPin, Phone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
 import { buildWhatsAppUrl, phoneHref } from "@/modules/settings/contact";
 import { footerNavigationGroups } from "@/modules/public/navigation";
 import { PublicHeader } from "./public-header";
@@ -82,7 +83,7 @@ export function PublicShell({ children, settings }: { children: ReactNode; setti
               <p className="mt-2 max-w-[38ch] text-sm leading-7 text-brand-secondary-muted/80">شاركنا نوع التظليل والموقع، ونحدد لك الخطوة المناسبة للتنفيذ.</p>
 
               <div className="mt-5 grid gap-3 sm:max-w-[21rem]">
-                <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-brand-secondary-foreground px-5 text-sm font-semibold text-brand-secondary transition-colors duration-150 hover:bg-brand-secondary-muted focus-visible:outline-ring" href={whatsappHref}><MessageCircle aria-hidden="true" className="size-[18px]" strokeWidth={1.8} />تواصل عبر واتساب</a>
+                <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] bg-brand-secondary-foreground px-5 text-sm font-semibold text-brand-secondary transition-colors duration-150 hover:bg-brand-secondary-muted focus-visible:outline-ring" href={whatsappHref}><WhatsappIcon aria-hidden="true" className="size-[18px]" />تواصل عبر واتساب</a>
                 {settings?.primaryPhone ? <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[9px] border border-brand-secondary-muted/45 px-5 text-sm font-semibold text-brand-secondary-foreground transition-colors duration-150 hover:border-brand-secondary-muted hover:bg-brand-secondary-hover focus-visible:outline-ring" dir="ltr" href={phoneHref(settings.primaryPhone)}><Phone aria-hidden="true" className="size-[18px]" strokeWidth={1.8} /><bdi>{settings.primaryPhone}</bdi></a> : null}
               </div>
 

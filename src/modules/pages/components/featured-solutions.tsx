@@ -189,7 +189,7 @@ export function SolutionCard({ item, index, total = 1, active = true, variant = 
     </article>;
   }
 
-  return <article className="group relative isolate flex min-w-0 aspect-[4/3] min-h-[290px] overflow-hidden rounded-[12px] bg-brand-secondary text-brand-secondary-foreground shadow-[var(--shadow-project)] transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-[3px] hover:shadow-[var(--shadow-project-hover)]">
+  return <article className="group relative isolate flex aspect-[4/3] min-h-[290px] w-full max-w-full min-w-0 overflow-hidden rounded-[12px] bg-brand-secondary text-brand-secondary-foreground shadow-[var(--shadow-project)] transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-[3px] hover:shadow-[var(--shadow-project-hover)]">
     <SolutionMedia active image={item.image} title={item.title} sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw" />
     <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-brand-secondary via-brand-secondary/65 to-transparent" />
     <div className="relative z-10 mt-auto w-full p-5 sm:p-6"><SolutionCardText item={item} index={index} total={total} variant="archive" /></div>
@@ -198,9 +198,9 @@ export function SolutionCard({ item, index, total = 1, active = true, variant = 
 
 function SolutionCardText({ item, index, total, variant }: { item: FeaturedSolutionItem; index: number; total: number; variant: "mobile" | "desktop" | "archive" }) {
   const Heading = variant === "archive" ? "h2" : "h3";
-  return <div className={variant === "mobile" ? "max-w-[580px] text-right" : undefined}>
+  return <div className={variant === "mobile" ? "max-w-[580px] min-w-0 text-right" : "min-w-0"}>
     <p className={`${variant === "archive" ? "mb-2 text-xs" : "mb-4 text-sm"} text-start font-semibold tabular-nums text-brand-secondary-muted`}><bdi dir="ltr">{number(index + 1)} / {number(total)}</bdi></p>
-    <Heading className={`${variant === "desktop" ? "max-w-[760px] text-[clamp(2rem,3vw,3.5rem)] leading-[1.22]" : variant === "mobile" ? "line-clamp-2 text-[clamp(1.875rem,7vw,2.25rem)] leading-[1.25]" : "line-clamp-2 text-[clamp(1.35rem,2vw,1.75rem)] leading-[1.35]"} font-bold text-pretty`}>{item.title}</Heading>
+    <Heading className={`${variant === "desktop" ? "max-w-[760px] text-[clamp(2rem,3vw,3.5rem)] leading-[1.22]" : variant === "mobile" ? "line-clamp-2 text-[clamp(1.875rem,7vw,2.25rem)] leading-[1.25]" : "line-clamp-2 text-[clamp(1.35rem,2vw,1.75rem)] leading-[1.35]"} break-words font-bold text-pretty`}>{item.title}</Heading>
     <p className={`${variant === "desktop" ? "mt-5 max-w-[58ch] text-[1.0625rem] leading-[1.85] xl:text-lg" : variant === "mobile" ? "mt-4 line-clamp-3 max-w-[48ch] text-[1.0625rem] leading-[1.8]" : "mt-2 line-clamp-2 max-w-[48ch] text-sm leading-[1.75]"} text-brand-secondary-muted`}>{item.shortDescription}</p>
     <SolutionLink compact={variant === "archive"} href={item.href} />
   </div>;
@@ -212,7 +212,7 @@ function SolutionMedia({ active, image, title, sizes }: { active: boolean; image
 }
 
 function SolutionLink({ href, compact = false }: { href: string | null; compact?: boolean }) {
-  const className = `group ${compact ? "mt-4 min-h-11 px-4" : "mt-7 min-h-12 px-5"} inline-flex w-fit items-center gap-3 rounded-[9px] border border-brand-secondary-muted/55 text-sm font-semibold text-brand-secondary-foreground transition-colors duration-150 hover:border-brand-secondary-muted hover:bg-brand-secondary-hover focus-visible:outline-ring`;
+  const className = `group ${compact ? "mt-4 min-h-11 px-4" : "mt-7 min-h-12 px-5"} inline-flex max-w-full items-center gap-3 rounded-[9px] border border-brand-secondary-muted/55 text-sm font-semibold text-brand-secondary-foreground transition-colors duration-150 hover:border-brand-secondary-muted hover:bg-brand-secondary-hover focus-visible:outline-ring`;
   const content = <>استكشف الحل<ArrowLeft aria-hidden="true" className="size-[18px] transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:-translate-x-1" /></>;
   return href ? <Link className={className} href={href}>{content}</Link> : <span className={className}>{content}</span>;
 }
