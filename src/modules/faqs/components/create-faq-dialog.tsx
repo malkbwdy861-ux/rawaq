@@ -56,7 +56,7 @@ export function FaqDialog({ faq, compact = false }: { faq?: FaqDialogRecord; com
         {faq ? <Pencil /> : <><Plus />سؤال جديد</>}
       </Button>
 
-      <dialog aria-describedby={descriptionId} aria-labelledby={titleId} className="m-auto max-h-[calc(100dvh-2rem)] w-[min(calc(100%-2rem),680px)] overflow-y-auto rounded-xl border border-border bg-card p-0 text-foreground shadow-[var(--shadow-float)] backdrop:bg-foreground/30" onCancel={(event) => { if (pending) event.preventDefault(); }} onClick={(event) => { if (event.target === event.currentTarget) closeDialog(); }} onClose={() => triggerRef.current?.focus()} ref={dialogRef}>
+      <dialog aria-describedby={descriptionId} aria-labelledby={titleId} className="m-auto max-h-[calc(100dvh-2rem)] w-[min(calc(100%-2rem),680px)] overflow-y-auto rounded-xl border border-border bg-card p-0 text-foreground shadow-[var(--shadow-dialog)] backdrop:bg-foreground/30" onCancel={(event) => { if (pending) event.preventDefault(); }} onClick={(event) => { if (event.target === event.currentTarget) closeDialog(); }} onClose={() => triggerRef.current?.focus()} ref={dialogRef}>
         <form action={formAction} className="p-5 sm:p-6" noValidate ref={formRef}>
           {faq ? <input name="faqId" type="hidden" value={faq.id} /> : null}
           <div className="flex items-start justify-between gap-4">
@@ -95,7 +95,7 @@ export function DeleteFaqDialog({ faqId, question }: { faqId: string; question?:
       <Button aria-label={`حذف ${question ?? "السؤال"}`} className="size-9 min-h-9 text-destructive hover:bg-danger-soft hover:text-destructive" onClick={() => dialogRef.current?.showModal()} title="حذف السؤال" type="button" variant="ghost" size="icon">
         <Trash2 />
       </Button>
-      <dialog aria-describedby={descriptionId} aria-labelledby={titleId} className="m-auto w-[min(calc(100%-2rem),420px)] rounded-xl border border-border bg-card p-0 text-foreground shadow-[var(--shadow-float)] backdrop:bg-foreground/30" onClick={(event) => { if (event.target === event.currentTarget) closeDialog(); }} ref={dialogRef}>
+      <dialog aria-describedby={descriptionId} aria-labelledby={titleId} className="m-auto w-[min(calc(100%-2rem),420px)] rounded-xl border border-border bg-card p-0 text-foreground shadow-[var(--shadow-dialog)] backdrop:bg-foreground/30" onClick={(event) => { if (event.target === event.currentTarget) closeDialog(); }} ref={dialogRef}>
         <form action={deleteFaqAction} className="p-5">
           <input name="faqId" type="hidden" value={faqId} />
           <div className="grid gap-3">

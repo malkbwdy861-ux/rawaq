@@ -33,7 +33,7 @@ function applyMarks(text: string, marks: TipTapMark[], key: number | string): Re
   return marks.reduce<ReactNode>((value, mark, index) => {
     if (mark.type === "bold") return <strong key={`${key}-m${index}`}>{value}</strong>;
     if (mark.type === "italic") return <em key={`${key}-m${index}`}>{value}</em>;
-    if (mark.type === "link" && mark.attrs?.href && isSafeLink(mark.attrs.href)) return <a className="font-semibold text-primary underline decoration-primary/40 underline-offset-4 transition-colors hover:text-primary-hover" href={mark.attrs.href} key={`${key}-m${index}`} rel={mark.attrs.href.startsWith("http") ? "noopener noreferrer" : undefined}>{value}</a>;
+    if (mark.type === "link" && mark.attrs?.href && isSafeLink(mark.attrs.href)) return <a className="font-semibold text-brand-accent-strong underline decoration-brand-accent/40 underline-offset-4 transition-colors hover:text-brand-accent" href={mark.attrs.href} key={`${key}-m${index}`} rel={mark.attrs.href.startsWith("http") ? "noopener noreferrer" : undefined}>{value}</a>;
     return value;
   }, text);
 }

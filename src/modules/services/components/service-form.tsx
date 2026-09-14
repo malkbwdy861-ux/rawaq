@@ -41,7 +41,7 @@ export function ServiceForm({ service, media, relationOptions }: { service?: { i
     <form action={formAction} noValidate ref={formRef}>
       {service ? <input name="serviceId" type="hidden" value={service.id} /> : null}
       <header className="mb-6 border-b border-border pb-5">
-        <Link className="inline-flex min-h-8 items-center text-xs font-medium text-muted-foreground outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring" href="/dashboard/services">الخدمات <span aria-hidden="true" className="mx-1.5">/</span> <span className="text-foreground">{title}</span></Link>
+        <Link className="inline-flex min-h-8 items-center text-xs font-medium text-muted-foreground outline-none transition-colors hover:text-brand-accent-strong focus-visible:ring-2 focus-visible:ring-ring" href="/dashboard/services">الخدمات <span aria-hidden="true" className="mx-1.5">/</span> <span className="text-foreground">{title}</span></Link>
         <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex min-w-0 items-center gap-3"><h1 className="truncate text-2xl font-bold leading-10 sm:text-[1.75rem]">{title}</h1>{service ? <ServiceStatus published={published} /> : null}</div>
         </div>

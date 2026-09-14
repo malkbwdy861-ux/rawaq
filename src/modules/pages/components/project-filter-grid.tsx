@@ -11,7 +11,7 @@ export function ProjectFilterGrid({ categories, items, activeCategory = "ALL" }:
         <div className="flex w-max min-w-full gap-2" dir="rtl" role="group">
           {[{ id: "ALL", name: "الكل" }, ...categories].map((category) => {
             const active = category.id === activeCategory;
-            return <Link aria-current={active ? "page" : undefined} className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-ring ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted text-text-secondary hover:border-primary hover:text-primary"}`} href={category.id === "ALL" ? "/projects" : `/projects?category=${encodeURIComponent(category.id)}`} key={category.id}>{category.name}</Link>;
+            return <Link aria-current={active ? "page" : undefined} className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-ring ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted text-text-secondary hover:border-brand-accent-strong hover:text-brand-accent-strong"}`} href={category.id === "ALL" ? "/projects" : `/projects?category=${encodeURIComponent(category.id)}`} key={category.id}>{category.name}</Link>;
           })}
         </div>
       </div>

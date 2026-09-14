@@ -248,7 +248,7 @@ function HomeContent({
         )}
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-gradient-to-l from-brand-secondary via-brand-secondary/55 to-transparent"
+          className="absolute inset-0 -z-10 bg-linear-to-l from-brand-secondary via-brand-secondary/55 to-transparent"
         />
         <div className="mx-auto grid min-h-svh max-w-[1280px] grid-rows-[1fr_auto] px-4 pb-8 pt-32 sm:px-6 sm:pb-10 sm:pt-36 lg:px-10 lg:pb-14 lg:pt-48">
           <div className="grid items-center lg:grid-cols-12">
@@ -510,7 +510,7 @@ function TrustProofSection({
               )}
               <div
                 aria-hidden="true"
-                className="absolute inset-0 -z-10 bg-gradient-to-t from-brand-secondary to-brand-secondary/25"
+                className="absolute inset-0 -z-10 bg-linear-to-t from-brand-secondary to-brand-secondary/25"
               />
               <div className="mt-auto max-w-[560px]">
                 <ShieldCheck className="size-8 text-clay" strokeWidth={1.5} />
@@ -696,7 +696,7 @@ function HomeFinalCta({
         )}
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-gradient-to-r from-brand-secondary/25 to-brand-secondary/90"
+          className="absolute inset-0 -z-10 bg-linear-to-r from-brand-secondary/25 to-brand-secondary/90"
         />
         <div className="mx-auto max-w-3xl text-center">
           {data.eyebrow ? (
@@ -735,10 +735,10 @@ function HomeFinalCta({
           </div>
         </div>
         {trustItems.length ? (
-          <ul className="mx-auto mt-9 flex max-w-2xl flex-wrap justify-center gap-x-7 gap-y-3 border-t border-primary-soft/20 pt-5">
+          <ul className="mx-auto mt-9 flex max-w-2xl flex-wrap justify-center gap-x-7 gap-y-3 border-t border-brand-secondary-muted/20 pt-5">
             {trustItems.map((item) => (
               <li
-                className="flex items-center gap-2 text-xs font-semibold text-primary-soft"
+                className="flex items-center gap-2 text-xs font-semibold text-brand-secondary-muted"
                 key={item.id}
               >
                 <Check aria-hidden="true" className="size-4 text-clay" />
@@ -823,7 +823,7 @@ function ValuePropositionSection({
                 >
                   <span
                     aria-hidden="true"
-                    className="grid size-10 place-items-center rounded-[9px] bg-primary-soft text-primary sm:size-11"
+                    className="grid size-10 place-items-center rounded-[9px] bg-brand-accent-soft text-brand-accent-strong sm:size-11"
                   >
                     <Icon className="size-[18px]" strokeWidth={1.7} />
                   </span>
@@ -848,7 +848,7 @@ function ValuePropositionSection({
         {data.ctaLabel && data.ctaUrl ? (
           <div className="lg:col-span-6 lg:col-start-1 lg:row-start-3 lg:mt-7">
             <Link
-              className="group inline-flex min-h-12 items-center gap-3 rounded-[9px] border border-border-strong px-5 text-sm font-semibold text-primary transition-colors duration-150 hover:border-primary hover:bg-primary-soft focus-visible:outline-ring"
+              className="group inline-flex min-h-12 items-center gap-3 rounded-[9px] border border-border-strong px-5 text-sm font-semibold text-brand-accent-strong transition-colors duration-150 hover:border-brand-accent-strong hover:bg-brand-accent-soft focus-visible:outline-ring"
               href={data.ctaUrl}
             >
               {data.ctaLabel}
@@ -1347,12 +1347,12 @@ function HeroTrustStrip({
     design: PencilRuler,
   };
   return (
-    <dl className="grid border-t border-primary-soft/25 pt-3 sm:grid-cols-2 lg:grid-cols-3 lg:pt-3">
+    <dl className="grid border-t border-brand-secondary-muted/25 pt-3 sm:grid-cols-2 lg:grid-cols-3 lg:pt-3">
       {items.map((item, index) => {
         const Icon = icons[item.icon ?? "shield"];
         return (
           <div
-            className="flex min-w-0 gap-2.5 py-2 sm:px-4 sm:first:pe-0 lg:border-s lg:border-primary-soft/20 lg:px-5 lg:first:border-s-0 lg:first:pe-0"
+            className="flex min-w-0 gap-2.5 py-2 sm:px-4 sm:first:pe-0 lg:border-s lg:border-brand-secondary-muted/20 lg:px-5 lg:first:border-s-0 lg:first:pe-0"
             key={`${item.title}-${index}`}
           >
             <Icon
@@ -1360,11 +1360,11 @@ function HeroTrustStrip({
               className="mt-0.5 size-[18px] shrink-0 text-clay"
             />
             <div className="min-w-0">
-              <dt className="truncate text-[0.8125rem] font-semibold leading-5 text-primary-foreground">
+              <dt className="truncate text-[0.8125rem] font-semibold leading-5 text-brand-secondary-foreground">
                 {item.title}
               </dt>
               {item.description ? (
-                <dd className="mt-0.5 truncate text-[0.6875rem] leading-4 text-primary-soft">
+                <dd className="mt-0.5 truncate text-[0.6875rem] leading-4 text-brand-secondary-muted">
                   {item.description}
                 </dd>
               ) : null}

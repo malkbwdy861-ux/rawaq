@@ -27,7 +27,7 @@ export function ServiceCard({ item, index, featured = false, className = "" }: {
       ) : (
         <div aria-hidden="true" className="absolute inset-0 bg-brand-secondary [background-image:linear-gradient(125deg,transparent,var(--brand-accent-strong))]" />
       )}
-      <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-brand-secondary via-brand-secondary/60 to-transparent transition-opacity duration-300 group-hover:opacity-90" />
+      <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-brand-secondary via-brand-secondary/60 to-transparent transition-opacity duration-300 group-hover:opacity-90" />
       <div className="relative z-10 flex h-full flex-col justify-end p-5 text-brand-secondary-foreground md:p-6">
         <div className={`flex gap-4 ${featured && index === 4 ? "items-end md:flex-col md:items-start" : "items-end justify-between"}`}>
           <div className="min-w-0">

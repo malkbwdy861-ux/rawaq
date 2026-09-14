@@ -133,7 +133,7 @@ export function DashboardShell({ children, userLabel, logoutAction }: { children
           <div className="flex items-center gap-1">
             <Link className="inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-medium text-text-secondary transition-colors hover:bg-dashboard-hover hover:text-foreground" href="/" target="_blank"><span className="hidden sm:inline">عرض الموقع</span><ExternalLink className="size-4" /></Link>
             <div className="relative" ref={profileRef}>
-              <button aria-expanded={profileOpen} aria-haspopup="menu" className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-md px-2 transition-colors hover:bg-dashboard-hover" onClick={() => setProfileOpen((current) => !current)} type="button"><span className="grid size-8 place-items-center rounded-full bg-primary-soft text-primary"><UserRound className="size-4" /></span><span className="hidden max-w-36 truncate text-sm font-medium md:block">{userLabel}</span><ChevronDown className={`size-4 text-muted-foreground transition-transform ${profileOpen ? "rotate-180" : ""}`} /></button>
+              <button aria-expanded={profileOpen} aria-haspopup="menu" className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-md px-2 transition-colors hover:bg-dashboard-hover" onClick={() => setProfileOpen((current) => !current)} type="button"><span className="grid size-8 place-items-center rounded-full bg-brand-accent-soft text-brand-accent-strong"><UserRound className="size-4" /></span><span className="hidden max-w-36 truncate text-sm font-medium md:block">{userLabel}</span><ChevronDown className={`size-4 text-muted-foreground transition-transform ${profileOpen ? "rotate-180" : ""}`} /></button>
               {profileOpen ? <div className="absolute end-0 top-[calc(100%+8px)] z-200 w-56 rounded-xl border border-border bg-popover p-1.5 shadow-[var(--shadow-float)]" role="menu">
                 <div className="border-b border-border px-2 py-2"><p className="text-xs text-muted-foreground">الحساب الحالي</p><p className="mt-0.5 truncate text-sm font-medium">{userLabel}</p></div>
                 <form action={logoutAction} className="mt-1"><button className="flex min-h-10 w-full items-center gap-2 rounded-md px-2 text-sm font-medium hover:bg-dashboard-hover" role="menuitem" type="submit"><LogOut className="size-4" />تسجيل الخروج</button></form>
@@ -147,7 +147,7 @@ export function DashboardShell({ children, userLabel, logoutAction }: { children
       {open ? (
         <div className="fixed inset-0 z-300 h-screen min-h-screen xl:hidden" style={{ height: "100dvh", minHeight: "100dvh" }}>
           <button aria-label="إغلاق قائمة لوحة التحكم" className="fixed inset-0 bg-foreground/35" onClick={() => { setOpen(false); menuButtonRef.current?.focus(); }} style={{ height: "100dvh" }} type="button" />
-          <aside aria-label="قائمة لوحة التحكم" aria-modal="true" className="fixed inset-block-start-0 inset-inline-start-0 flex h-screen min-h-screen w-[min(88vw,320px)] flex-col overflow-y-auto overscroll-contain border-e border-border bg-dashboard-sidebar shadow-[var(--shadow-float)]" ref={drawerRef} role="dialog" style={{ height: "100dvh", minHeight: "100dvh", maxHeight: "100dvh" }}>
+          <aside aria-label="قائمة لوحة التحكم" aria-modal="true" className="fixed inset-block-start-0 inset-inline-start-0 flex h-screen min-h-screen w-[min(88vw,320px)] flex-col overflow-y-auto overscroll-contain border-e border-border bg-dashboard-sidebar shadow-[var(--shadow-drawer)]" ref={drawerRef} role="dialog" style={{ height: "100dvh", minHeight: "100dvh", maxHeight: "100dvh" }}>
             <Button aria-label="إغلاق القائمة" className="absolute end-3 top-2.5" onClick={() => { setOpen(false); menuButtonRef.current?.focus(); }} size="icon" variant="ghost"><X /></Button>
             <DashboardNav onNavigate={() => setOpen(false)} pathname={pathname} />
           </aside>
@@ -168,7 +168,7 @@ function DashboardNav({ pathname, onNavigate }: { pathname: string; onNavigate?:
             {group.items.map((item) => {
               const active = item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href);
               const Icon = item.icon;
-              return <Link aria-current={active ? "page" : undefined} className={`flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-[13px] transition-colors ${active ? "bg-primary-soft/60 font-semibold text-primary shadow-[inset_0_0_0_1px_var(--border)]" : "font-medium text-text-secondary hover:bg-dashboard-hover hover:text-foreground"}`} href={item.href} key={item.href} onClick={onNavigate}><Icon aria-hidden="true" className="size-[17px]" strokeWidth={1.8} />{item.label}</Link>;
+              return <Link aria-current={active ? "page" : undefined} className={`flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-[13px] transition-colors ${active ? "bg-brand-accent-soft font-semibold text-brand-accent-strong ring-1 ring-inset ring-border" : "font-medium text-text-secondary hover:bg-dashboard-hover hover:text-foreground"}`} href={item.href} key={item.href} onClick={onNavigate}><Icon aria-hidden="true" className="size-[17px]" strokeWidth={1.8} />{item.label}</Link>;
             })}
           </div>
         ))}

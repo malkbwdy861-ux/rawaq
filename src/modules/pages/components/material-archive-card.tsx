@@ -24,11 +24,11 @@ export function MaterialArchiveCard({ item, index }: { item: MaterialArchiveCard
       ) : null}
       <div className="min-w-0 self-center">
         <p className="flex items-center gap-3 text-xs font-semibold text-clay-strong"><span aria-hidden="true" className="h-px w-7 bg-clay" /><bdi dir="ltr">{String(index + 1).padStart(2, "0")}</bdi><span>خيار مادة</span></p>
-        <h2 className="mt-2 text-[clamp(1.35rem,2.4vw,1.8rem)] font-bold leading-[1.4] text-pretty transition-colors group-hover:text-primary">{item.name}</h2>
+        <h2 className="mt-2 text-[clamp(1.35rem,2.4vw,1.8rem)] font-bold leading-[1.4] text-pretty transition-colors group-hover:text-brand-accent-strong">{item.name}</h2>
         <p className="mt-2 max-w-[62ch] text-[0.9375rem] leading-[1.85] text-text-secondary md:text-base">{item.description}</p>
-        <span className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary sm:hidden">عرض خصائص المادة<ArrowLeft aria-hidden="true" className="size-4" /></span>
+        <span className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-accent-strong sm:hidden">عرض خصائص المادة<ArrowLeft aria-hidden="true" className="size-4" /></span>
       </div>
-      <span aria-hidden="true" className="hidden size-11 place-items-center rounded-full border border-border-strong bg-card text-primary transition-[background-color,border-color,transform] duration-300 group-hover:-translate-x-1 group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground sm:grid"><ArrowLeft className="size-[18px]" /></span>
+      <span aria-hidden="true" className="hidden size-11 place-items-center rounded-full border border-border-strong bg-card text-brand-accent-strong transition-[background-color,border-color,transform] duration-300 group-hover:-translate-x-1 group-hover:border-brand-accent-strong group-hover:bg-brand-accent-strong group-hover:text-inverted sm:grid"><ArrowLeft className="size-[18px]" /></span>
     </Link>
   );
 }

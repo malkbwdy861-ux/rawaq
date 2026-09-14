@@ -90,12 +90,12 @@ export function MaterialsGrid({ items }: { items: MaterialCardItem[] }) {
 export function MaterialCard({ item }: { item: MaterialCardItem }) {
   return <Link className="group grid min-h-[156px] grid-cols-[5.5rem_minmax(0,1fr)] overflow-hidden rounded-[14px] border border-border bg-card shadow-[var(--shadow-rest)] transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[var(--shadow-project)] focus-visible:ring-2 focus-visible:ring-ring" href={item.href}>
     <div className="relative bg-accent">
-      {item.image ? <Image alt={item.image.altText || item.name} className="object-cover transition-transform duration-300 group-hover:scale-[1.035]" fill sizes="96px" src={item.image.url} /> : <div className="grid h-full place-items-center text-primary"><Boxes aria-hidden="true" className="size-7" /></div>}
+      {item.image ? <Image alt={item.image.altText || item.name} className="object-cover transition-transform duration-300 group-hover:scale-[1.035]" fill sizes="96px" src={item.image.url} /> : <div className="grid h-full place-items-center text-brand-accent-strong"><Boxes aria-hidden="true" className="size-7" /></div>}
     </div>
     <div className="flex min-w-0 flex-col justify-between p-4">
-      <div><p className="text-xs font-semibold text-clay-strong">مادة مستخدمة</p><h3 className="mt-1 line-clamp-2 text-base font-bold leading-[1.55] group-hover:text-primary">{item.name}</h3></div>
+      <div><p className="text-xs font-semibold text-clay-strong">مادة مستخدمة</p><h3 className="mt-1 line-clamp-2 text-base font-bold leading-[1.55] group-hover:text-brand-accent-strong">{item.name}</h3></div>
       {item.shortDescription ? <p className="mt-2 line-clamp-2 text-sm leading-[1.75] text-text-secondary">{item.shortDescription}</p> : null}
-      <span className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-primary">التفاصيل<ArrowLeft aria-hidden="true" className="size-4 transition-transform group-hover:-translate-x-1" /></span>
+      <span className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-brand-accent-strong">التفاصيل<ArrowLeft aria-hidden="true" className="size-4 transition-transform group-hover:-translate-x-1" /></span>
     </div>
   </Link>;
 }
@@ -116,9 +116,9 @@ export function ArticleCard({ item }: { item: ArticleCardItem }) {
     </div>
     <div className="p-5">
       <p className="text-xs font-semibold text-clay-strong">{label}</p>
-      <h3 className="mt-2 line-clamp-2 text-lg font-bold leading-[1.5] group-hover:text-primary">{item.title}</h3>
+      <h3 className="mt-2 line-clamp-2 text-lg font-bold leading-[1.5] group-hover:text-brand-accent-strong">{item.title}</h3>
       {item.excerpt ? <p className="mt-2 line-clamp-3 text-sm leading-[1.8] text-text-secondary">{item.excerpt}</p> : null}
-      <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary">قراءة الدليل<ArrowLeft aria-hidden="true" className="size-4 transition-transform group-hover:-translate-x-1" /></span>
+      <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-accent-strong">قراءة الدليل<ArrowLeft aria-hidden="true" className="size-4 transition-transform group-hover:-translate-x-1" /></span>
     </div>
   </Link>;
 }

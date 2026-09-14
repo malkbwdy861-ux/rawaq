@@ -38,7 +38,7 @@ export function ServiceMediaField({ items, name, defaultValue, label, error }: {
         {selected ? (
           <button className="group block w-full min-w-0 max-w-full overflow-hidden text-start outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" onClick={openPicker} type="button">
             <span className="relative block aspect-[4/3] w-full min-w-0 max-w-full overflow-hidden bg-secondary"><Image alt={selected.altText ?? ""} className="object-cover transition-transform duration-200 group-hover:scale-[1.015] motion-reduce:transition-none" fill sizes="(min-width:1280px) 268px, calc(100vw - 64px)" src={selected.url} /></span>
-            <span className="flex items-center gap-2 border-t border-border p-2.5"><span className="min-w-0 flex-1"><bdi className="block truncate text-xs font-medium" dir="ltr">{selected.originalFilename}</bdi>{selected.width && selected.height ? <bdi className="mt-0.5 block text-[11px] text-muted-foreground" dir="ltr">{selected.width} × {selected.height}</bdi> : null}</span><span className="text-xs font-semibold text-primary">تغيير</span></span>
+            <span className="flex items-center gap-2 border-t border-border p-2.5"><span className="min-w-0 flex-1"><bdi className="block truncate text-xs font-medium" dir="ltr">{selected.originalFilename}</bdi>{selected.width && selected.height ? <bdi className="mt-0.5 block text-[11px] text-muted-foreground" dir="ltr">{selected.width} × {selected.height}</bdi> : null}</span><span className="text-xs font-semibold text-brand-accent-strong">تغيير</span></span>
           </button>
         ) : (
           <button className="grid min-h-32 w-full place-items-center border border-dashed border-border-strong/70 bg-dashboard-canvas/40 px-4 py-5 text-center outline-none transition-colors hover:border-primary hover:bg-primary-soft/40 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" onClick={openPicker} type="button">
@@ -49,7 +49,7 @@ export function ServiceMediaField({ items, name, defaultValue, label, error }: {
       </div>
       {error ? <p className="mt-2 text-xs font-medium leading-5 text-destructive">{error}</p> : null}
 
-      <dialog aria-describedby={descriptionId} aria-labelledby={titleId} className="fixed inset-0 m-auto h-[min(760px,calc(100dvh-2rem))] w-[920px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card p-0 text-foreground shadow-[var(--shadow-float)] backdrop:bg-foreground/30" ref={dialogRef}>
+      <dialog aria-describedby={descriptionId} aria-labelledby={titleId} className="fixed inset-0 m-auto h-[min(760px,calc(100dvh-2rem))] w-[920px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card p-0 text-foreground shadow-[var(--shadow-dialog)] backdrop:bg-foreground/30" ref={dialogRef}>
         <div className="flex h-full flex-col">
           <header className="flex items-start justify-between gap-4 border-b border-border px-4 py-4 sm:px-5">
             <div><h2 className="text-lg font-semibold" id={titleId}>اختيار {label}</h2><p className="mt-1 text-xs text-muted-foreground" id={descriptionId}>اختر صورة واحدة ثم أكّد الاختيار.</p></div>

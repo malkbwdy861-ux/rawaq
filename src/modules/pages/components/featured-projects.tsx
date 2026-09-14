@@ -65,7 +65,7 @@ export function ProjectCard({ item, featured = false, balanced = false, archive 
   const content = (
     <>
       {item.image ? <Image alt={item.image.altText} className="object-cover object-center transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.025]" fill quality={featured ? 86 : 80} sizes={archive ? "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" : featured ? "(min-width: 1440px) 570px, (min-width: 1024px) 40vw, 100vw" : "(min-width: 1440px) 420px, (min-width: 640px) 50vw, 100vw"} src={item.image.url} /> : <div aria-hidden="true" className="absolute inset-0 bg-brand-secondary [background-image:linear-gradient(125deg,transparent,var(--brand-accent-strong))]" />}
-      <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-brand-secondary via-brand-secondary/55 to-transparent transition-opacity duration-300 group-hover:opacity-95" />
+      <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-brand-secondary via-brand-secondary/55 to-transparent transition-opacity duration-300 group-hover:opacity-95" />
       {item.category ? <ProjectBadge category={item.category} featured={featured} /> : null}
       <div className={`relative z-10 mt-auto flex items-end gap-4 text-brand-secondary-foreground ${featured ? "p-6 sm:p-8" : "p-5 sm:p-6"}`}>
         <div className="min-w-0 flex-1 text-start">

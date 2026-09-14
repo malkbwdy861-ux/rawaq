@@ -28,7 +28,7 @@ export function ArchivePageHero({ eyebrow, title, description, currentLabel, cur
         ) : (
           <div aria-hidden="true" className="absolute inset-0 -z-20 bg-[linear-gradient(130deg,var(--brand-secondary),var(--brand-accent-strong))]" />
         )}
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-l from-brand-secondary via-brand-secondary/70 to-transparent" />
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-linear-to-l from-brand-secondary via-brand-secondary/70 to-transparent" />
 
         <div className="mx-auto flex w-full max-w-[1440px] flex-col px-6 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10">
           <Breadcrumbs

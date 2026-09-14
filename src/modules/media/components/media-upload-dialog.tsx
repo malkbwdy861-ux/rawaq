@@ -132,7 +132,7 @@ export function MediaUploadDialog() {
       <dialog
         aria-describedby={descriptionId}
         aria-labelledby={titleId}
-        className="fixed inset-0 m-auto max-h-[calc(100vh-2rem)] w-[680px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card p-0 text-foreground shadow-[var(--shadow-float)] backdrop:bg-foreground/30"
+        className="fixed inset-0 m-auto max-h-[calc(100vh-2rem)] w-[680px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card p-0 text-foreground shadow-[var(--shadow-dialog)] backdrop:bg-foreground/30"
         onClick={(event) => {
           if (event.target === event.currentTarget) closeDialog();
         }}
@@ -206,7 +206,7 @@ export function MediaUploadDialog() {
                         : `${selectedCount.toLocaleString("ar-SA")} صور محددة`}
                     </bdi>
                     <label
-                      className="mt-2 inline-flex cursor-pointer text-xs font-semibold text-primary transition-colors hover:text-primary/80"
+                      className="mt-2 inline-flex cursor-pointer text-xs font-semibold text-brand-accent-strong transition-colors hover:text-brand-accent"
                       htmlFor={inputId}
                     >
                       اختيار صور أخرى
@@ -220,7 +220,7 @@ export function MediaUploadDialog() {
                 htmlFor={inputId}
               >
                 <span className="px-6">
-                  <span className="mx-auto grid size-12 place-items-center rounded-xl bg-primary-soft text-primary">
+                  <span className="mx-auto grid size-12 place-items-center rounded-xl bg-brand-accent-soft text-brand-accent-strong">
                     <ImageIcon className="size-6" />
                   </span>
                   <strong className="mt-4 block text-sm">

@@ -33,7 +33,7 @@ export function PublicHeader({ settings }: { settings: PublicSettings | null }) 
 
   return (
     <header className={`${isHome ? "fixed" : "sticky"} inset-x-0 top-0 z-100 px-3 pt-3 sm:px-5 sm:pt-5 lg:px-8`}>
-      <div className="mx-auto flex h-[64px] w-full max-w-[1100px] items-center justify-between gap-3 rounded-full border border-border/80 bg-card/95 px-3 shadow-[var(--shadow-float)] sm:px-4 lg:h-[72px] lg:max-w-[1280px] lg:px-5">
+      <div className="mx-auto flex h-[64px] w-full max-w-[1100px] items-center justify-between gap-3 rounded-[16px] border border-border/80 bg-card/95 px-3 shadow-[var(--shadow-float)] sm:px-4 lg:h-[72px] lg:max-w-[1280px] lg:px-5">
         <Link aria-label={`${name}، الرئيسية`} className="flex min-w-0 shrink-0 items-center gap-2.5" href="/">
           {settings?.logoMedia ? <Image alt={settings.logoMedia.altText || name} className="h-9 w-auto max-w-28 object-contain lg:h-10 lg:max-w-36" height={40} src={settings.logoMedia.url} width={144} /> : null}
           <span className="min-w-0"><strong className="block truncate text-sm text-foreground lg:text-[0.9375rem]">{name}</strong><span className="hidden text-[0.6875rem] text-muted-foreground lg:block">تظليل وتنفيذ خارجي</span></span>
@@ -48,13 +48,13 @@ export function PublicHeader({ settings }: { settings: PublicSettings | null }) 
 
         <div className="flex shrink-0 items-center gap-1.5">
           <a className="hidden min-h-10 items-center gap-1.5 rounded-[9px] bg-primary px-3.5 text-[0.8125rem] font-semibold text-primary-foreground transition-colors duration-150 hover:bg-primary-hover active:bg-primary-active sm:inline-flex" href={whatsappHref}><MessageCircle aria-hidden="true" className="size-4" />اطلب عرض سعر</a>
-          <button aria-controls="public-menu" aria-expanded={menuOpen} aria-label={menuOpen ? "إغلاق القائمة" : "فتح القائمة"} className="grid size-10 place-items-center rounded-full text-foreground transition-colors duration-150 hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring lg:hidden" onClick={() => setMenuOpen((open) => !open)} type="button">{menuOpen ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}</button>
+          <button aria-controls="public-menu" aria-expanded={menuOpen} aria-label={menuOpen ? "إغلاق القائمة" : "فتح القائمة"} className="grid size-10 place-items-center rounded-[9px] text-foreground transition-colors duration-150 hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring lg:hidden" onClick={() => setMenuOpen((open) => !open)} type="button">{menuOpen ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}</button>
         </div>
       </div>
 
       {menuOpen ? <div className="fixed inset-0 z-300 bg-foreground/45" onClick={() => setMenuOpen(false)}>
         <aside aria-label="قائمة التنقل" className="absolute inset-y-0 end-0 flex w-[min(88vw,360px)] flex-col bg-card px-5 pb-6 pt-5 shadow-[var(--shadow-drawer)]" id="public-menu" onClick={(event) => event.stopPropagation()}>
-          <div className="flex items-center justify-between border-b border-border pb-5"><strong className="text-base">{name}</strong><button aria-label="إغلاق القائمة" className="grid size-11 place-items-center rounded-full text-foreground hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setMenuOpen(false)} type="button"><X aria-hidden="true" className="size-5" /></button></div>
+          <div className="flex items-center justify-between border-b border-border pb-5"><strong className="text-base">{name}</strong><button aria-label="إغلاق القائمة" className="grid size-11 place-items-center rounded-[9px] text-foreground hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setMenuOpen(false)} type="button"><X aria-hidden="true" className="size-5" /></button></div>
           <nav aria-label="التنقل الرئيسي" className="mt-5 grid">
             {publicNavigationLinks.map(([label, href]) => {
               const active = href === "/" ? isHome : pathname === href;

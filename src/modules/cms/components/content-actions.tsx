@@ -24,7 +24,7 @@ export function CmsContentActions({ id, idName, editHref, publicHref, deleteActi
           <button className="flex min-h-9 w-full items-center gap-2 rounded-md px-2 text-sm font-medium text-destructive outline-none hover:bg-danger-soft focus-visible:bg-danger-soft" onClick={() => { dialogRef.current?.showModal(); menuRef.current?.removeAttribute("open"); }} type="button"><Trash2 className="size-4" />حذف {entityLabel}</button>
         </div>
       </details>
-      <dialog aria-describedby={descriptionId} aria-labelledby={titleId} className="m-auto w-[min(calc(100%-2rem),420px)] rounded-xl border border-border bg-card p-0 text-foreground shadow-[var(--shadow-float)] backdrop:bg-foreground/30" onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close(); }} ref={dialogRef}>
+      <dialog aria-describedby={descriptionId} aria-labelledby={titleId} className="m-auto w-[min(calc(100%-2rem),420px)] rounded-xl border border-border bg-card p-0 text-foreground shadow-[var(--shadow-dialog)] backdrop:bg-foreground/30" onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close(); }} ref={dialogRef}>
         <form action={deleteAction} className="p-5 sm:p-6">
           <input name={idName} type="hidden" value={id} />
           <div className="flex items-start justify-between gap-4">

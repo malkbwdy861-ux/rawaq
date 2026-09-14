@@ -67,7 +67,7 @@ export function CmsRelationSelector({
             اختر العناصر من القائمة أدناه، ثم رتّبها حسب أولوية ظهورها.
           </p>
         </div>
-        <span className="w-fit rounded-md bg-primary-soft px-2.5 py-1.5 text-xs font-semibold text-primary" aria-live="polite">
+        <span className="w-fit rounded-md bg-brand-accent-soft px-2.5 py-1.5 text-xs font-semibold text-brand-accent-strong" aria-live="polite">
           تم اختيار {selected.length}{maxSelections ? ` من ${maxSelections}` : ""}
         </span>
       </div>
@@ -133,7 +133,7 @@ export function CmsRelationSelector({
             >
               <div className="relative size-12 shrink-0 overflow-hidden rounded-md border border-border bg-secondary">
                 <OptionThumbnail option={option} />
-                <span aria-hidden="true" className={`absolute bottom-0.5 end-0.5 grid size-5 place-items-center rounded-sm border border-card ${isSelected ? "bg-primary text-primary-foreground" : "bg-card text-primary"}`}>{isSelected ? <Check className="size-3" /> : <Plus className="size-3" />}</span>
+                <span aria-hidden="true" className={`absolute bottom-0.5 end-0.5 grid size-5 place-items-center rounded-sm border border-card ${isSelected ? "bg-primary text-primary-foreground" : "bg-card text-brand-accent-strong"}`}>{isSelected ? <Check className="size-3" /> : <Plus className="size-3" />}</span>
               </div>
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-semibold">{option.label}</span>

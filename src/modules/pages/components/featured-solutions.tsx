@@ -176,7 +176,7 @@ export function SolutionCard({ item, index, total = 1, active = true, variant = 
   if (variant === "mobile") {
     return <article aria-hidden={!active} aria-label={`${index + 1} من ${total}: ${item.title}`} aria-roledescription="شريحة" className="relative isolate h-full w-full shrink-0 overflow-hidden" dir="rtl" inert={!active}>
       <SolutionMedia active={active} image={item.image} title={item.title} sizes="100vw" />
-      <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-brand-secondary via-brand-secondary/65 to-transparent" />
+      <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-brand-secondary via-brand-secondary/65 to-transparent" />
       <div className="relative z-10 flex h-full flex-col justify-between px-5 pb-24 pt-7 sm:px-8 sm:pb-28"><p className="flex items-center gap-3 text-sm font-semibold text-brand-secondary-muted before:h-px before:w-8 before:bg-clay">الحلول المميزة</p><SolutionCardText item={item} index={index} total={total} variant="mobile" /></div>
     </article>;
   }
@@ -184,14 +184,14 @@ export function SolutionCard({ item, index, total = 1, active = true, variant = 
   if (variant === "desktop") {
     return <article className="relative isolate mb-8 min-h-[clamp(680px,78svh,900px)] overflow-hidden rounded-[2px] last:mb-0" ref={panelRef}>
       <SolutionMedia active={active} image={item.image} title={item.title} sizes="(min-width: 1440px) 950px, 66vw" />
-      <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-brand-secondary via-brand-secondary/60 to-transparent" />
+      <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-brand-secondary via-brand-secondary/60 to-transparent" />
       <div className="relative z-10 flex min-h-[clamp(680px,78svh,900px)] flex-col justify-end p-8 text-right xl:p-12"><SolutionCardText item={item} index={index} total={total} variant="desktop" /></div>
     </article>;
   }
 
   return <article className="group relative isolate flex min-w-0 aspect-[4/3] min-h-[290px] overflow-hidden rounded-[12px] bg-brand-secondary text-brand-secondary-foreground shadow-[var(--shadow-project)] transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-[3px] hover:shadow-[var(--shadow-project-hover)]">
     <SolutionMedia active image={item.image} title={item.title} sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw" />
-    <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-brand-secondary via-brand-secondary/65 to-transparent" />
+    <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-brand-secondary via-brand-secondary/65 to-transparent" />
     <div className="relative z-10 mt-auto w-full p-5 sm:p-6"><SolutionCardText item={item} index={index} total={total} variant="archive" /></div>
   </article>;
 }
