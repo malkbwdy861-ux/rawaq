@@ -1,72 +1,14 @@
 "use server";
 
-import { MediaType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/server/db/prisma";
 import { requireAdmin } from "@/server/auth";
 
-import { mediaConfig } from "./config";
-import { extractImageMetadata } from "./image-metadata";
-import { buildMediaStorageTarget, removeMediaFile, writeMediaFile } from "./storage";
-import { mediaMetadataSchema, validateOriginalFilename, validateUploadSize } from "./validation";
-
-export async function uploadMediaAction(formData: FormData) {
-  await requireAdmin();
-
-  const files = formData.getAll("files").filter((file): file is File => file instanceof File && file.size > 0);
-
-  if (files.length === 0) {
-    redirectWithMessage("error", "اختر صورة واحدة على الأقل قبل الرفع.");
-  }
-
-  const preparedFiles = await Promise.all(files.map(async (file) => {
-    if (!validateOriginalFilename(file.name)) {
-      redirectWithMessage("error", `اسم الملف الأصلي غير صالح: ${file.name || "بدون اسم"}.`);
-    }
-
-    if (!validateUploadSize(file.size)) {
-      redirectWithMessage("error", `حجم الصورة يجب ألا يتجاوز ${mediaConfig.maxUploadBytes / 1024 / 1024} ميجابايت: ${file.name}.`);
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const metadata = extractImageMetadata(buffer);
-
-    if (!metadata || !mediaConfig.allowedMimeTypes.includes(metadata.mimeType)) {
-      redirectWithMessage("error", `نوع الصورة غير مدعوم أو الملف غير قابل للقراءة: ${file.name}.`);
-    }
-
-    if (file.type && file.type !== metadata.mimeType) {
-      redirectWithMessage("error", `نوع الملف لا يطابق محتوى الصورة: ${file.name}.`);
-    }
-
-    return { file, buffer, metadata };
-  }));
-
-  for (const { file, buffer, metadata } of preparedFiles) {
-    const target = buildMediaStorageTarget(metadata.mimeType);
-
-    await writeMediaFile(target.storagePath, buffer);
-
-    await prisma.media.create({
-      data: {
-        type: MediaType.IMAGE,
-        url: target.url,
-        storagePath: target.storagePath,
-        originalFilename: file.name,
-        storedFilename: target.storedFilename,
-        mimeType: metadata.mimeType,
-        sizeBytes: file.size,
-        width: metadata.width,
-        height: metadata.height,
-      },
-    });
-  }
-
-  revalidatePath("/dashboard/media");
-  redirectWithMessage("success", preparedFiles.length === 1 ? "تم رفع الصورة وحفظ بياناتها." : `تم رفع ${preparedFiles.length.toLocaleString("ar-SA")} صور وحفظ بياناتها.`);
-}
+import { removeMediaFile } from "./storage";
+import { mediaMetadataSchema } from "./validation";
 
 export async function updateMediaMetadataAction(formData: FormData) {
   await requireAdmin();
@@ -114,7 +56,15 @@ export async function deleteMediaAction(formData: FormData) {
     redirectWithMessage("error", "لا يمكن حذف صورة مستخدمة في المحتوى أو الإعدادات.");
   }
 
-  await prisma.media.delete({ where: { id } });
+  try {
+    await prisma.media.delete({ where: { id } });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+      redirectWithMessage("error", "لا يمكن حذف صورة مستخدمة في المحتوى أو الإعدادات.");
+    }
+    throw error;
+  }
+
   await removeMediaFile(media.storagePath).catch(async () => {
     await prisma.media.create({ data: media });
     redirectWithMessage("error", "تعذر حذف الملف من التخزين. لم يتم حذف سجل الوسيط.");
@@ -125,7 +75,7 @@ export async function deleteMediaAction(formData: FormData) {
 }
 
 async function countMediaReferences(id: string) {
-  const [counts, pageVersions] = await Promise.all([Promise.all([
+  const [counts, pageDataReferences] = await Promise.all([Promise.all([
     prisma.serviceVersion.count({ where: { OR: [{ heroMediaId: id }, { openGraphImageId: id }] } }),
     prisma.solutionVersion.count({ where: { OR: [{ heroMediaId: id }, { openGraphImageId: id }] } }),
     prisma.materialVersion.count({ where: { OR: [{ heroMediaId: id }, { openGraphImageId: id }] } }),
@@ -134,16 +84,19 @@ async function countMediaReferences(id: string) {
     prisma.pageVersion.count({ where: { openGraphImageId: id } }),
     prisma.siteSettings.count({ where: { OR: [{ logoMediaId: id }, { defaultOpenGraphImageId: id }] } }),
     prisma.projectVersionGallery.count({ where: { mediaId: id } }),
-  ]), prisma.pageVersion.findMany({ select: { data: true } })]);
+  ]), countPageDataMediaReferences(id)]);
 
-  return counts.reduce((total, count) => total + count, 0) + pageVersions.filter(({ data }) => jsonContainsId(data, id)).length;
+  return counts.reduce((total, count) => total + count, 0) + pageDataReferences;
 }
 
-function jsonContainsId(value: unknown, id: string): boolean {
-  if (value === id) return true;
-  if (Array.isArray(value)) return value.some((item) => jsonContainsId(item, id));
-  if (value && typeof value === "object") return Object.values(value).some((item) => jsonContainsId(item, id));
-  return false;
+async function countPageDataMediaReferences(id: string) {
+  const rows = await prisma.$queryRaw<{ count: bigint }[]>`
+    SELECT COUNT(*)::bigint AS count
+    FROM "PageVersion"
+    WHERE jsonb_path_exists("data", '$.** ? (@ == $mediaId)', jsonb_build_object('mediaId', to_jsonb(${id}::text)))
+  `;
+
+  return Number(rows[0]?.count ?? 0);
 }
 
 function redirectWithMessage(type: "success" | "error", message: string): never {

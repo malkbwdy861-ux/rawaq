@@ -2,13 +2,13 @@
 
 import { ImageIcon, Upload, X } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useId, useRef, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
+import { type FormEvent, useEffect, useId, useRef, useState } from "react";
+import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { uploadMediaAction } from "../actions";
 import { mediaConfig } from "../config";
 
 type SelectedFilePreview = { file: File; name: string; url: string };
@@ -17,8 +17,11 @@ export function MediaUploadDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const previewsRef = useRef<SelectedFilePreview[]>([]);
+  const uploadControllerRef = useRef<AbortController>(null);
   const [previews, setPreviews] = useState<SelectedFilePreview[]>([]);
   const [error, setError] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const router = useRouter();
   const titleId = useId();
   const descriptionId = useId();
   const inputId = useId();
@@ -28,6 +31,7 @@ export function MediaUploadDialog() {
   }, [previews]);
   useEffect(
     () => () => {
+      uploadControllerRef.current?.abort();
       previewsRef.current.forEach((preview) =>
         URL.revokeObjectURL(preview.url),
       );
@@ -113,8 +117,56 @@ export function MediaUploadDialog() {
   }
 
   function closeDialog() {
+    uploadControllerRef.current?.abort();
+    uploadControllerRef.current = null;
+    setIsUploading(false);
     dialogRef.current?.close();
     clearFiles();
+  }
+
+  async function submitUpload(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (error || !inputRef.current?.files?.length || isUploading) return;
+
+    const controller = new AbortController();
+    uploadControllerRef.current = controller;
+    setIsUploading(true);
+
+    try {
+      const response = await fetch("/api/dashboard/media", {
+        method: "POST",
+        body: new FormData(event.currentTarget),
+        signal: controller.signal,
+      });
+      const result = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+
+      if (!response.ok) {
+        throw new Error(result?.message || "تعذر رفع الصور. حاول مرة أخرى.");
+      }
+
+      uploadControllerRef.current = null;
+      setIsUploading(false);
+      dialogRef.current?.close();
+      clearFiles();
+      toast.success(result?.message || "تم رفع الصور وحفظ بياناتها.");
+      router.refresh();
+    } catch (uploadError) {
+      if (controller.signal.aborted) return;
+
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "تعذر رفع الصور. حاول مرة أخرى.",
+      );
+    } finally {
+      if (uploadControllerRef.current === controller) {
+        uploadControllerRef.current = null;
+        setIsUploading(false);
+      }
+    }
   }
 
   const selectedCount = previews.length;
@@ -136,15 +188,15 @@ export function MediaUploadDialog() {
         onClick={(event) => {
           if (event.target === event.currentTarget) closeDialog();
         }}
+        onCancel={(event) => {
+          event.preventDefault();
+          closeDialog();
+        }}
         ref={dialogRef}
       >
         <form
-          action={uploadMediaAction}
           className="flex max-h-[calc(100vh-2rem)] flex-col"
-          onSubmit={(event) => {
-            if (error || !inputRef.current?.files?.length)
-              event.preventDefault();
-          }}
+          onSubmit={submitUpload}
         >
           <header className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
             <div>
@@ -188,6 +240,7 @@ export function MediaUploadDialog() {
                         <button
                           aria-label={`إزالة ${preview.name}`}
                           className="absolute end-1.5 top-1.5 grid size-7 place-items-center rounded-full bg-destructive text-inverted shadow-sm outline-none transition-all duration-200 ease-out hover:scale-105 hover:bg-destructive/90 hover:text-inverted focus-visible:ring-2 focus-visible:ring-ring"
+                          disabled={isUploading}
                           onClick={() => removeFile(index)}
                           type="button"
                         >
@@ -242,6 +295,7 @@ export function MediaUploadDialog() {
               onChange={(event) => selectFiles(event.target.files)}
               ref={inputRef}
               required
+              disabled={isUploading}
               type="file"
             />
             {error ? (
@@ -264,6 +318,7 @@ export function MediaUploadDialog() {
             <UploadSubmit
               count={selectedCount}
               disabled={!selectedCount || Boolean(error)}
+              pending={isUploading}
             />
           </footer>
         </form>
@@ -275,11 +330,12 @@ export function MediaUploadDialog() {
 function UploadSubmit({
   count,
   disabled,
+  pending,
 }: {
   count: number;
   disabled: boolean;
+  pending: boolean;
 }) {
-  const { pending } = useFormStatus();
   return (
     <Button disabled={disabled || pending} type="submit">
       <Upload />
