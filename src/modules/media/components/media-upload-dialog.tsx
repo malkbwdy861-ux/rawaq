@@ -12,15 +12,18 @@ import { Input } from "@/components/ui/input";
 import { mediaConfig } from "../config";
 
 type SelectedFilePreview = { file: File; name: string; url: string };
+type UploadStage = "uploading" | "processing" | null;
 
 export function MediaUploadDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const previewsRef = useRef<SelectedFilePreview[]>([]);
-  const uploadControllerRef = useRef<AbortController>(null);
+  const uploadRequestRef = useRef<XMLHttpRequest>(null);
   const [previews, setPreviews] = useState<SelectedFilePreview[]>([]);
   const [error, setError] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStage, setUploadStage] = useState<UploadStage>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const isUploading = uploadStage !== null;
   const router = useRouter();
   const titleId = useId();
   const descriptionId = useId();
@@ -31,7 +34,7 @@ export function MediaUploadDialog() {
   }, [previews]);
   useEffect(
     () => () => {
-      uploadControllerRef.current?.abort();
+      uploadRequestRef.current?.abort();
       previewsRef.current.forEach((preview) =>
         URL.revokeObjectURL(preview.url),
       );
@@ -117,9 +120,10 @@ export function MediaUploadDialog() {
   }
 
   function closeDialog() {
-    uploadControllerRef.current?.abort();
-    uploadControllerRef.current = null;
-    setIsUploading(false);
+    uploadRequestRef.current?.abort();
+    uploadRequestRef.current = null;
+    setUploadStage(null);
+    setUploadProgress(0);
     dialogRef.current?.close();
     clearFiles();
   }
@@ -129,32 +133,33 @@ export function MediaUploadDialog() {
 
     if (error || !inputRef.current?.files?.length || isUploading) return;
 
-    const controller = new AbortController();
-    uploadControllerRef.current = controller;
-    setIsUploading(true);
+    const request = new XMLHttpRequest();
+    uploadRequestRef.current = request;
+    setUploadStage("uploading");
+    setUploadProgress(0);
 
     try {
-      const response = await fetch("/api/dashboard/media", {
-        method: "POST",
-        body: new FormData(event.currentTarget),
-        signal: controller.signal,
+      const result = await sendUploadRequest({
+        formData: new FormData(event.currentTarget),
+        request,
+        onProgress(progress) {
+          setUploadProgress(progress);
+        },
+        onUploadComplete() {
+          setUploadProgress(100);
+          setUploadStage("processing");
+        },
       });
-      const result = (await response.json().catch(() => null)) as {
-        message?: string;
-      } | null;
 
-      if (!response.ok) {
-        throw new Error(result?.message || "تعذر رفع الصور. حاول مرة أخرى.");
-      }
-
-      uploadControllerRef.current = null;
-      setIsUploading(false);
+      uploadRequestRef.current = null;
+      setUploadStage(null);
+      setUploadProgress(0);
       dialogRef.current?.close();
       clearFiles();
-      toast.success(result?.message || "تم رفع الصور وحفظ بياناتها.");
+      toast.success(result.message || "تم رفع الصور وحفظ بياناتها.");
       router.refresh();
     } catch (uploadError) {
-      if (controller.signal.aborted) return;
+      if (uploadRequestRef.current !== request) return;
 
       setError(
         uploadError instanceof Error
@@ -162,9 +167,10 @@ export function MediaUploadDialog() {
           : "تعذر رفع الصور. حاول مرة أخرى.",
       );
     } finally {
-      if (uploadControllerRef.current === controller) {
-        uploadControllerRef.current = null;
-        setIsUploading(false);
+      if (uploadRequestRef.current === request) {
+        uploadRequestRef.current = null;
+        setUploadStage(null);
+        setUploadProgress(0);
       }
     }
   }
@@ -306,6 +312,34 @@ export function MediaUploadDialog() {
                 {error}
               </p>
             ) : null}
+            {isUploading ? (
+              <div className="mt-3" aria-live="polite">
+                <div className="mb-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                  <span>
+                    {uploadStage === "processing"
+                      ? "اكتمل الإرسال، جارٍ فحص الصورة وحفظها..."
+                      : "جارٍ إرسال الصورة إلى الخادم..."}
+                  </span>
+                  <bdi dir="ltr">{uploadProgress}%</bdi>
+                </div>
+                <div
+                  aria-label="تقدم رفع الصور"
+                  aria-valuemax={100}
+                  aria-valuemin={0}
+                  aria-valuenow={uploadProgress}
+                  className="h-2 overflow-hidden rounded-full bg-secondary"
+                  role="progressbar"
+                >
+                  <span
+                    className="block h-full rounded-full bg-primary transition-transform duration-200 ease-out"
+                    style={{
+                      transform: `scaleX(${uploadProgress / 100})`,
+                      transformOrigin: "right",
+                    }}
+                  />
+                </div>
+              </div>
+            ) : null}
             <p className="mt-3 text-xs leading-5 text-muted-foreground">
               يتحقق الخادم من محتوى الصورة الحقيقي، نوعها، حجمها، وأبعادها قبل
               إنشاء رابطها الدائم.
@@ -319,6 +353,8 @@ export function MediaUploadDialog() {
               count={selectedCount}
               disabled={!selectedCount || Boolean(error)}
               pending={isUploading}
+              progress={uploadProgress}
+              stage={uploadStage}
             />
           </footer>
         </form>
@@ -331,19 +367,92 @@ function UploadSubmit({
   count,
   disabled,
   pending,
+  progress,
+  stage,
 }: {
   count: number;
   disabled: boolean;
   pending: boolean;
+  progress: number;
+  stage: UploadStage;
 }) {
   return (
     <Button disabled={disabled || pending} type="submit">
       <Upload />
       {pending
-        ? "جارٍ رفع الصور..."
+        ? stage === "processing"
+          ? "جارٍ فحص الصور وحفظها..."
+          : `جارٍ رفع الصور... ${progress}%`
         : count > 1
           ? `تأكيد ورفع ${count.toLocaleString("ar-SA")} صور`
           : "تأكيد ورفع الصورة"}
     </Button>
   );
+}
+
+function sendUploadRequest({
+  formData,
+  request,
+  onProgress,
+  onUploadComplete,
+}: {
+  formData: FormData;
+  request: XMLHttpRequest;
+  onProgress: (progress: number) => void;
+  onUploadComplete: () => void;
+}) {
+  return new Promise<{ message?: string }>((resolve, reject) => {
+    let processingTimer: ReturnType<typeof setTimeout> | undefined;
+    const finish = (callback: () => void) => {
+      if (processingTimer) clearTimeout(processingTimer);
+      callback();
+    };
+
+    request.open("POST", "/api/dashboard/media");
+    request.responseType = "json";
+
+    request.upload.addEventListener("progress", (event) => {
+      if (!event.lengthComputable) return;
+      onProgress(Math.min(99, Math.round((event.loaded / event.total) * 100)));
+    });
+    request.upload.addEventListener("load", () => {
+      onUploadComplete();
+      processingTimer = setTimeout(() => {
+        reject(
+          new Error(
+            "اكتمل إرسال الصور لكن الخادم لم ينتهِ من حفظها. حاول مرة أخرى.",
+          ),
+        );
+        request.abort();
+      }, 60_000);
+    });
+    request.addEventListener("load", () => {
+      const response = request.response as { message?: string } | null;
+
+      if (request.status >= 200 && request.status < 300) {
+        finish(() => resolve(response ?? {}));
+        return;
+      }
+
+      finish(() =>
+        reject(
+          new Error(response?.message || "تعذر رفع الصور. حاول مرة أخرى."),
+        ),
+      );
+    });
+    request.addEventListener("error", () => {
+      finish(() =>
+        reject(
+          new Error(
+            "انقطع الاتصال أثناء رفع الصور. تحقق من الشبكة وحاول مرة أخرى.",
+          ),
+        ),
+      );
+    });
+    request.addEventListener("abort", () => {
+      finish(() => reject(new DOMException("Upload aborted", "AbortError")));
+    });
+
+    request.send(formData);
+  });
 }
