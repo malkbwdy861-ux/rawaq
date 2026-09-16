@@ -6,6 +6,8 @@ import { getSiteUrl } from "@/modules/seo/site-url";
 import { getSiteSettings } from "@/modules/settings/queries";
 import "./globals.css";
 
+export const dynamic = "force-dynamic";
+
 const tajawal = localFont({
   variable: "--font-tajawal",
   src: [
