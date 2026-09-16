@@ -9,12 +9,12 @@ export const mediaPickerSelect = {
   height: true,
 } as const;
 
-export function getRecentImageMedia(take = 80) {
+export function getRecentImageMedia(take?: number) {
   return prisma.media.findMany({
     where: { type: "IMAGE" },
     select: mediaPickerSelect,
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take,
+    ...(take ? { take } : {}),
   });
 }
 
