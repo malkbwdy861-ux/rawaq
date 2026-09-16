@@ -6,7 +6,7 @@ import { pageDefinitions } from "@/modules/pages/queries";
 import { absoluteUrl } from "@/modules/seo/site-url";
 import { prisma } from "@/server/db/prisma";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const published = { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } } as const;
