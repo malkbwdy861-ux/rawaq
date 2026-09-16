@@ -5,6 +5,8 @@ import path from "node:path";
 loadEnv();
 
 const prisma = new PrismaClient();
+const seedKey = "initial-faqs-v1";
+const forceSeed = process.env.FORCE_FAQ_SEED === "true";
 
 const initialFaqs = [
   {
@@ -50,6 +52,12 @@ const initialFaqs = [
 ];
 
 async function main() {
+  await ensureSeedTable();
+  if (!forceSeed && await hasSeedRun(seedKey)) {
+    console.log("Initial FAQs seed already ran. Set FORCE_FAQ_SEED=true to run it again.");
+    return;
+  }
+
   const seededFaqs = await prisma.$transaction(async (tx) => {
     const result = [];
 
@@ -100,7 +108,27 @@ async function main() {
     return result;
   });
 
+  await recordSeedRun(seedKey);
+
   console.log(`Seeded ${seededFaqs.length} initial FAQs.`);
+}
+
+async function ensureSeedTable() {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "_AppSeed" (
+      "key" TEXT PRIMARY KEY,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+}
+
+async function hasSeedRun(key) {
+  const rows = await prisma.$queryRawUnsafe(`SELECT "key" FROM "_AppSeed" WHERE "key" = $1 LIMIT 1`, key);
+  return rows.length > 0;
+}
+
+async function recordSeedRun(key) {
+  await prisma.$executeRawUnsafe(`INSERT INTO "_AppSeed" ("key") VALUES ($1) ON CONFLICT ("key") DO NOTHING`, key);
 }
 
 async function attachFaqsToHomePage(tx, faqIds) {

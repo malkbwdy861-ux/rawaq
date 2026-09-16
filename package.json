@@ -6,13 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "check:colors": "node scripts/check-color-tokens.mjs",
-    "start": "prisma migrate deploy && next start",
+    "start": "npm run db:setup && next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "prisma:generate": "prisma generate",
     "admin:create": "node prisma/create-admin.mjs",
     "db:deploy": "prisma migrate deploy",
+    "db:setup": "prisma migrate deploy && npm run db:seed && npm run db:seed:pages",
     "db:migrate": "prisma migrate dev",
+    "db:seed:pages": "node prisma/seed-static-pages.mjs",
     "db:seed": "node prisma/seed-initial-faqs.mjs"
   },
   "dependencies": {
