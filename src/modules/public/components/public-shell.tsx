@@ -91,8 +91,11 @@ export function PublicShell({ children, settings }: { children: ReactNode; setti
             </section>
           </div>
 
-          <div className="mt-9 border-t border-brand-secondary-muted/15 pt-5 text-sm text-brand-secondary-muted/75 lg:mt-10">
-            © 2026 {name} — جميع الحقوق محفوظة
+          <div className="mt-9 flex flex-col gap-2 border-t border-brand-secondary-muted/15 pt-5 text-sm text-brand-secondary-muted/75 sm:flex-row sm:items-center sm:justify-between lg:mt-10">
+            <span>© 2026 {name} — جميع الحقوق محفوظة</span>
+            <span>
+              تطوير م/ عبدالله أنور - <a className="font-medium text-brand-secondary-foreground transition-colors hover:text-brand-secondary-muted" dir="ltr" href={phoneHref("+967778120888")}><bdi>+967778120888</bdi></a>
+            </span>
           </div>
         </div>
       </footer>
