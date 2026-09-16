@@ -10,6 +10,7 @@
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "prisma:generate": "prisma generate",
+    "admin:create": "node prisma/create-admin.mjs",
     "db:deploy": "prisma migrate deploy",
     "db:migrate": "prisma migrate dev",
     "db:seed": "node prisma/seed-initial-faqs.mjs"
