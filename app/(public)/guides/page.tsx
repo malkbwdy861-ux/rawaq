@@ -7,35 +7,33 @@ import { getPublishedArticles } from "@/modules/articles/queries";
 import { CmsPaginationControls } from "@/modules/cms/components/pagination";
 import { cmsContentPath } from "@/modules/cms/slugs";
 import { parsePublicPage } from "@/modules/cms/validation";
-import { Breadcrumbs } from "@/modules/seo/components/breadcrumbs";
-import { listingMetadata } from "@/modules/seo/metadata";
+import { ArchivePageHero } from "@/modules/pages/components/archive-page-hero";
+import { ArchivePageIntro } from "@/modules/pages/components/archive-page-intro";
+import { selectArchiveHeroImage } from "@/modules/pages/components/archive-page-media";
+import { staticPageMetadata } from "@/modules/pages/metadata";
+import { getPublishedPage } from "@/modules/pages/queries";
+import type { ListingPageData } from "@/modules/pages/validation";
+import { getSiteSettings } from "@/modules/settings/queries";
 
-export const metadata: Metadata = listingMetadata("الأدلة", "أدلة عملية منشورة حول التظليل والمواد والأسعار والصيانة.", "/guides");
 export const revalidate = 300;
+export async function generateMetadata(): Promise<Metadata> { const result = await getPublishedPage("GUIDES"); return staticPageMetadata(result.version, result.data, "/guides", result.resolved.heroMedia?.url); }
 
 const typeLabels = { GUIDE: "دليل", PRICING: "دليل أسعار", COMPARISON: "مقارنة", MAINTENANCE: "صيانة", GENERAL: "مقال" } as const;
 
 export default async function GuidesIndexPage({ searchParams }: { searchParams: Promise<{ page?: string | string[] }> }) {
-  const result = await getPublishedArticles(parsePublicPage((await searchParams).page));
+  const page = parsePublicPage((await searchParams).page);
+  const [pageContent, result, settings] = await Promise.all([getPublishedPage("GUIDES"), getPublishedArticles(page), getSiteSettings()]);
+  const pageData = pageContent.data as ListingPageData;
   const [featured, ...articles] = result.items;
+  const articleMedia = result.items.map((article) => article.publishedVersion?.heroMedia).filter(Boolean);
+  const heroImage = selectArchiveHeroImage({ configured: pageContent.resolved.heroMedia, configuredAlt: pageData.hero.imageAlt, title: pageData.hero.pageTitle || "", fallbacks: [...articleMedia, settings?.defaultOpenGraphImage] });
 
   return (
     <main className="min-h-screen bg-background">
-      <section className="relative isolate overflow-hidden bg-brand-secondary px-4 pb-20 pt-10 text-brand-secondary-foreground md:px-8 md:pb-28 md:pt-12 lg:pb-32">
-        <div aria-hidden="true" className="absolute inset-0 -z-10 opacity-35 [background-image:linear-gradient(90deg,color-mix(in_oklab,var(--brand-secondary-muted)_10%,transparent)_1px,transparent_1px),linear-gradient(color-mix(in_oklab,var(--brand-secondary-muted)_10%,transparent)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(90deg,transparent,black_25%,black_75%,transparent)]" />
-        <div className="mx-auto max-w-7xl">
-          <Breadcrumbs className="text-brand-secondary-muted" items={[{ label: "الرئيسية", href: "/" }, { label: "الأدلة", href: "/guides" }]} />
-          <header className="mt-14 grid gap-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(260px,0.28fr)] lg:items-end">
-            <div>
-              <p className="text-sm font-semibold text-brand-secondary-muted">معرفة عملية، قبل قرار التنفيذ</p>
-              <h1 className="mt-4 max-w-[14ch] text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.16]">أدلة واضحة لاختيار ما يناسب موقعك</h1>
-            </div>
-            <p className="max-w-[42ch] border-t border-brand-secondary-muted/25 pt-5 text-lg leading-[1.85] text-brand-secondary-muted">معلومات عملية عن المواد والأسعار والصيانة والمقارنات، مرتبة لتصل إلى القرار بثقة.</p>
-          </header>
-        </div>
-      </section>
+      <ArchivePageHero currentHref="/guides" currentLabel={pageData.hero.eyebrow || "الأدلة"} description={pageData.hero.shortDescription || ""} eyebrow={pageData.hero.eyebrow || ""} image={heroImage} title={pageData.hero.pageTitle || ""} />
+      <ArchivePageIntro description={pageData.intro.description || ""} />
 
-      <div className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-20 lg:py-24">
+      <div className="mx-auto max-w-7xl px-4 pb-16 md:px-8 md:pb-20 lg:pb-24">
         {!featured ? (
           <section className="border-y border-border py-14 text-center">
             <BookOpenText className="mx-auto size-8 text-primary" aria-hidden="true" />

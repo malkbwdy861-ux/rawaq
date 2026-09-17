@@ -184,7 +184,7 @@ function readPageData(formData: FormData, key: PageKey): StaticPageData {
     hero: { title: value("heroTitle"), description: value("heroDescription") },
     faqSection: { selectedFaqIds: readStringArray(formData, "selectedFaqIds") },
   };
-  if (key === "PROJECTS" || key === "SERVICES" || key === "SOLUTIONS") return {
+  if (key === "PROJECTS" || key === "SERVICES" || key === "SOLUTIONS" || key === "GUIDES" || key === "MATERIALS") return {
     hero: { pageTitle: value("pageTitle"), eyebrow: value("heroEyebrow"), shortDescription: value("shortDescription"), mediaId: value("heroMediaId"), imageAlt: value("heroImageAlt") },
     intro: { title: "", description: value("description") },
   };
@@ -200,7 +200,7 @@ function readPageData(formData: FormData, key: PageKey): StaticPageData {
 
 function initialPageData(key: PageKey) {
   if (key === "FAQS") return faqPageDefaults;
-  return key === "PROJECTS" || key === "SERVICES" || key === "SOLUTIONS" ? listingPageDefaults[key] : null;
+  return key === "PROJECTS" || key === "SERVICES" || key === "SOLUTIONS" || key === "GUIDES" || key === "MATERIALS" ? listingPageDefaults[key] : null;
 }
 
 function readSeo(formData: FormData) { return { seoTitle: formData.get("seoTitle") ?? "", seoDescription: formData.get("seoDescription") ?? "", canonicalUrl: formData.get("canonicalUrl") ?? "", noIndex: formData.get("noIndex") === "on", openGraphTitle: formData.get("openGraphTitle") ?? "", openGraphDescription: formData.get("openGraphDescription") ?? "", openGraphImageId: formData.get("openGraphImageId") ?? "" }; }

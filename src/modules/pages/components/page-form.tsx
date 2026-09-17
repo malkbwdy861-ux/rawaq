@@ -34,7 +34,7 @@ export function PageForm({ page, draftData, media, path, relationOptions }: Page
         {page.key === "CONTACT" ? <ContactFields data={draftData as ContactPageData | null} /> : null}
         {page.key === "PRICES" ? <PricesFields data={draftData as PricesPageData | null} options={relationOptions} /> : null}
         {page.key === "FAQS" ? <FaqFields data={draftData as FaqPageData | null} options={relationOptions} /> : null}
-        {page.key === "PROJECTS" || page.key === "SERVICES" || page.key === "SOLUTIONS" ? <ListingFields data={draftData as ListingPageData | null} media={media} pageKey={page.key} /> : null}
+        {page.key === "PROJECTS" || page.key === "SERVICES" || page.key === "SOLUTIONS" || page.key === "GUIDES" || page.key === "MATERIALS" ? <ListingFields data={draftData as ListingPageData | null} media={media} pageKey={page.key} /> : null}
         <SeoFields version={page.draftVersion} media={media} />
       </div>
 
@@ -70,7 +70,7 @@ function FaqFields({ data, options }: { data: FaqPageData | null; options: PageF
   );
 }
 
-function ListingFields({ data, media, pageKey }: { data: ListingPageData | null; media: MediaPickerItem[]; pageKey: "PROJECTS" | "SERVICES" | "SOLUTIONS" }) {
+function ListingFields({ data, media, pageKey }: { data: ListingPageData | null; media: MediaPickerItem[]; pageKey: "PROJECTS" | "SERVICES" | "SOLUTIONS" | "GUIDES" | "MATERIALS" }) {
   return (
     <>
       <PageSection title="القسم الرئيسي" description="محتوى الشريط العلوي في الصفحة. استخدم عنواناً مباشراً ووصفاً مختصراً." defaultOpen>

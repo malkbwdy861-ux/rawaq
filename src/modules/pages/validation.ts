@@ -184,6 +184,14 @@ export const listingPageDefaults = {
     hero: { pageTitle: "حلول تظليل مصممة حسب احتياج الموقع", eyebrow: "حلولنا", shortDescription: "نساعدك في اختيار الحل المناسب حسب استخدام المساحة وطبيعة المشروع.", mediaId: "", imageAlt: "" },
     intro: { title: "الحل المناسب يبدأ من فهم الموقع", description: "نقسم حلولنا حسب طبيعة الاستخدام والموقع لمساعدة العميل على الوصول إلى الخيار الأنسب، سواء للمواقف أو المدارس أو المساحات الخارجية أو المنازل أو المنشآت التجارية." },
   },
+  GUIDES: {
+    hero: { pageTitle: "أدلة واضحة لاختيار ما يناسب موقعك", eyebrow: "معرفة عملية، قبل قرار التنفيذ", shortDescription: "معلومات عملية عن المواد والأسعار والصيانة والمقارنات، مرتبة لتصل إلى القرار بثقة.", mediaId: "", imageAlt: "" },
+    intro: { title: "محتوى يساعدك على اتخاذ قرار أوضح", description: "استكشف أدلة عملية تشرح خيارات التظليل والمواد وعوامل الأسعار ومتطلبات الصيانة، لتفهم البدائل قبل بدء التنفيذ." },
+  },
+  MATERIALS: {
+    hero: { pageTitle: "مواد واضحة لاختيارات تدوم", eyebrow: "دليل المواد", shortDescription: "قارن خصائص المواد واستخداماتها وحدودها قبل اختيار ما يلائم الموقع وظروفه.", mediaId: "", imageAlt: "" },
+    intro: { title: "اختيار المادة يبدأ من ظروف الموقع", description: "اختيار المادة لا يعتمد على الشكل وحده. الحرارة، التعرض للشمس، الاستخدام، والصيانة المطلوبة كلها عوامل تساعد على تحديد الخيار الأنسب للموقع." },
+  },
 } as const;
 
 export const pageKeySchema = z.nativeEnum(PageKey);
@@ -232,8 +240,8 @@ export const projectsListingPagePublishSchema = listingPageDraftSchema.extend({
   }),
 });
 
-export const pageDraftSchemas = { HOME: homePageDraftSchema, ABOUT: aboutPageDraftSchema, CONTACT: contactPageDraftSchema, PRICES: pricesPageDraftSchema, FAQS: faqPageDraftSchema, PROJECTS: listingPageDraftSchema, SERVICES: listingPageDraftSchema, SOLUTIONS: listingPageDraftSchema } as const;
-export const pagePublishSchemas = { HOME: homePagePublishSchema, ABOUT: aboutPagePublishSchema, CONTACT: contactPagePublishSchema, PRICES: pricesPagePublishSchema, FAQS: faqPagePublishSchema, PROJECTS: projectsListingPagePublishSchema, SERVICES: listingPagePublishSchema, SOLUTIONS: listingPagePublishSchema } as const;
+export const pageDraftSchemas = { HOME: homePageDraftSchema, ABOUT: aboutPageDraftSchema, CONTACT: contactPageDraftSchema, PRICES: pricesPageDraftSchema, FAQS: faqPageDraftSchema, PROJECTS: listingPageDraftSchema, SERVICES: listingPageDraftSchema, SOLUTIONS: listingPageDraftSchema, GUIDES: listingPageDraftSchema, MATERIALS: listingPageDraftSchema } as const;
+export const pagePublishSchemas = { HOME: homePagePublishSchema, ABOUT: aboutPagePublishSchema, CONTACT: contactPagePublishSchema, PRICES: pricesPagePublishSchema, FAQS: faqPagePublishSchema, PROJECTS: projectsListingPagePublishSchema, SERVICES: listingPagePublishSchema, SOLUTIONS: listingPagePublishSchema, GUIDES: listingPagePublishSchema, MATERIALS: listingPagePublishSchema } as const;
 
 export type HomePageData = z.infer<typeof homePageDraftSchema>;
 export type AboutPageData = z.infer<typeof aboutPageDraftSchema>;

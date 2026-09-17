@@ -19,6 +19,8 @@ export const pageDefinitions = [
   { key: "PROJECTS", label: "المشاريع", path: "/projects" },
   { key: "SERVICES", label: "الخدمات", path: "/services" },
   { key: "SOLUTIONS", label: "الحلول", path: "/solutions" },
+  { key: "GUIDES", label: "الأدلة", path: "/guides" },
+  { key: "MATERIALS", label: "المواد", path: "/materials" },
 ] as const satisfies { key: PageKey; label: string; path: string }[];
 
 export async function getPageList() {

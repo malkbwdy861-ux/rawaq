@@ -18,7 +18,7 @@ export default async function PagesPage({ searchParams }: PagesPageProps) {
         <div>
           <h1 className="text-[1.75rem] font-bold leading-10">الصفحات الثابتة</h1>
           <p className="mt-1 max-w-[62ch] text-sm leading-6 text-text-secondary">
-            إدارة صفحات الموقع الأساسية ومحتواها المعتمد، بما فيها صفحات الخدمات والحلول والمشاريع.
+            إدارة صفحات الموقع الأساسية ومحتواها المعتمد، بما فيها صفحات الخدمات والحلول والمشاريع والأدلة والمواد.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs font-semibold text-text-secondary">

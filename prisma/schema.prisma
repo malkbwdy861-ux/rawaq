@@ -35,6 +35,8 @@ enum PageKey {
   PROJECTS
   SERVICES
   SOLUTIONS
+  GUIDES
+  MATERIALS
 }
 
 model AdminUser {

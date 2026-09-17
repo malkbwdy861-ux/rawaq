@@ -28,7 +28,7 @@ import { ArchivePageIntro } from "./archive-page-intro";
 import { HomeFaqAccordion } from "./home-faq-accordion";
 import type { ResolvedPageData } from "./public-page";
 
-type StaticPageKey = "ABOUT" | "CONTACT" | "PRICES" | "FAQS" | "PROJECTS" | "SERVICES" | "SOLUTIONS";
+type StaticPageKey = "ABOUT" | "CONTACT" | "PRICES" | "FAQS" | "PROJECTS" | "SERVICES" | "SOLUTIONS" | "GUIDES" | "MATERIALS";
 type StaticData = AboutPageData | ContactPageData | PricesPageData | FaqPageData | ListingPageData;
 type Entity = ResolvedPageData["articles"][number];
 
@@ -47,7 +47,7 @@ export function StaticPublicPage({ pageKey, data, resolved, preview }: { pageKey
     {pageKey === "CONTACT" ? <ContactPageContent data={data as ContactPageData} resolved={resolved} /> : null}
     {pageKey === "PRICES" ? <PricesPageContent data={data as PricesPageData} preview={preview} resolved={resolved} /> : null}
     {pageKey === "FAQS" ? <FaqPageContent data={data as FaqPageData} preview={preview} resolved={resolved} /> : null}
-    {pageKey === "PROJECTS" || pageKey === "SERVICES" || pageKey === "SOLUTIONS" ? <ListingPagePreview data={data as ListingPageData} pageKey={pageKey} resolved={resolved} /> : null}
+    {pageKey === "PROJECTS" || pageKey === "SERVICES" || pageKey === "SOLUTIONS" || pageKey === "GUIDES" || pageKey === "MATERIALS" ? <ListingPagePreview data={data as ListingPageData} pageKey={pageKey} resolved={resolved} /> : null}
   </>;
 }
 
@@ -69,8 +69,8 @@ function FaqPageContent({ data, resolved, preview }: { data: FaqPageData; resolv
   </>;
 }
 
-function ListingPagePreview({ data, pageKey, resolved }: { data: ListingPageData; pageKey: "PROJECTS" | "SERVICES" | "SOLUTIONS"; resolved: ResolvedPageData }) {
-  const paths = { PROJECTS: "/projects", SERVICES: "/services", SOLUTIONS: "/solutions" } as const;
+function ListingPagePreview({ data, pageKey, resolved }: { data: ListingPageData; pageKey: "PROJECTS" | "SERVICES" | "SOLUTIONS" | "GUIDES" | "MATERIALS"; resolved: ResolvedPageData }) {
+  const paths = { PROJECTS: "/projects", SERVICES: "/services", SOLUTIONS: "/solutions", GUIDES: "/guides", MATERIALS: "/materials" } as const;
   return <><ArchivePageHero currentHref={paths[pageKey]} currentLabel={data.hero.eyebrow || "صفحة القائمة"} description={data.hero.shortDescription || ""} eyebrow={data.hero.eyebrow || ""} image={resolved.heroMedia ? { url: resolved.heroMedia.url, altText: data.hero.imageAlt || resolved.heroMedia.altText || data.hero.pageTitle || "" } : null} title={data.hero.pageTitle || ""} />{pageKey !== "PROJECTS" ? <ArchivePageIntro description={data.intro.description || ""} /> : null}</>;
 }
 

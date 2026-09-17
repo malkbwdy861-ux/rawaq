@@ -104,7 +104,7 @@ export function PublicPage({
   resolved,
   preview = false,
 }: {
-  pageKey: "HOME" | "ABOUT" | "CONTACT" | "PRICES" | "FAQS" | "PROJECTS" | "SERVICES" | "SOLUTIONS";
+  pageKey: "HOME" | "ABOUT" | "CONTACT" | "PRICES" | "FAQS" | "PROJECTS" | "SERVICES" | "SOLUTIONS" | "GUIDES" | "MATERIALS";
   data: StaticPageData;
   resolved: ResolvedPageData;
   preview?: boolean;
