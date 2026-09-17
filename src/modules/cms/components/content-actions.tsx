@@ -28,7 +28,7 @@ export function CmsContentActions({ id, idName, editHref, publicHref, deleteActi
         <form action={deleteAction} className="p-5 sm:p-6">
           <input name={idName} type="hidden" value={id} />
           <div className="flex items-start justify-between gap-4">
-            <div><h2 className="text-lg font-semibold" id={titleId}>حذف {entityLabel}؟</h2><p className="mt-2 text-sm leading-6 text-text-secondary" id={descriptionId}>سيتم حذف {entityLabel} وجميع نسخه نهائياً. لا يمكن التراجع عن هذا الإجراء.</p></div>
+            <div><h2 className="text-lg font-semibold" id={titleId}>حذف {entityLabel}؟</h2><p className="mt-2 text-sm leading-6 text-text-secondary" id={descriptionId}>قد يكون هذا العنصر مستخدماً في أجزاء أخرى من الموقع. سيتم حذف {entityLabel} وإزالة ارتباطاته تلقائياً. لا يمكن التراجع عن هذا الإجراء.</p></div>
             <button aria-label="إغلاق" className="grid size-9 shrink-0 place-items-center rounded-md text-muted-foreground outline-none hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring" onClick={() => dialogRef.current?.close()} type="button"><X className="size-4" /></button>
           </div>
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

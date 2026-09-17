@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import type { MediaPickerItem } from "@/modules/media/components/media-picker";
 
 export function ServiceMediaField({ items, name, defaultValue, label, error }: { items: MediaPickerItem[]; name: string; defaultValue?: string | null; label: string; error?: string }) {
-  const [selectedId, setSelectedId] = useState(defaultValue ?? "");
-  const [pendingId, setPendingId] = useState(defaultValue ?? "");
+  const initialId = items.some((item) => item.id === defaultValue) ? defaultValue ?? "" : "";
+  const [selectedId, setSelectedId] = useState(initialId);
+  const [pendingId, setPendingId] = useState(initialId);
   const [query, setQuery] = useState("");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();

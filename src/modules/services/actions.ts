@@ -5,6 +5,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { cmsContentPath, generateUniqueCmsSlug } from "@/modules/cms/slugs";
+import { assertCmsEntityIdsExist, cleanupCmsEntityReferences } from "@/modules/cms/references";
+import { revalidateCmsReferenceConsumers } from "@/modules/cms/reference-cache";
+import { runSerializableCmsTransaction } from "@/modules/cms/transactions";
 import { readStringArray } from "@/modules/cms/validation";
 import { lockPublishingNamespace } from "@/modules/cms/publishing";
 import { prisma } from "@/server/db/prisma";
@@ -91,11 +94,8 @@ export async function deleteServiceAction(formData: FormData) {
   if (!service) redirect("/dashboard/services?error=الخدمة غير موجودة أو حُذفت مسبقاً.");
 
   try {
-    await prisma.$transaction(async (tx) => {
-      await tx.solutionVersionService.deleteMany({ where: { serviceId: parsed.data.serviceId } });
-      await tx.materialVersionService.deleteMany({ where: { serviceId: parsed.data.serviceId } });
-      await tx.projectVersionService.deleteMany({ where: { serviceId: parsed.data.serviceId } });
-      await tx.articleVersionService.deleteMany({ where: { serviceId: parsed.data.serviceId } });
+    await runSerializableCmsTransaction(async (tx) => {
+      await cleanupCmsEntityReferences(tx, "service", parsed.data.serviceId);
       await tx.service.delete({ where: { id: parsed.data.serviceId } });
     });
   } catch {
@@ -105,6 +105,8 @@ export async function deleteServiceAction(formData: FormData) {
   revalidatePath("/dashboard/services");
   revalidatePath("/dashboard");
   revalidatePath("/services");
+  revalidatePath("/");
+  revalidateCmsReferenceConsumers();
   if (service.publishedVersion?.slug) revalidatePath(cmsContentPath("/services", service.publishedVersion.slug));
   revalidatePath("/sitemap.xml");
   redirect(`/dashboard/services?success=${encodeURIComponent("تم حذف الخدمة نهائياً.")}`);
@@ -252,6 +254,7 @@ function toVersionData(input: ServiceDraftInput) {
 }
 
 async function replaceRelations(tx: Prisma.TransactionClient, serviceVersionId: string, input: ServiceDraftInput) {
+  await assertCmsEntityIdsExist(tx, { solution: input.relatedSolutionIds, material: input.relatedMaterialIds, project: input.relatedProjectIds, article: input.relatedArticleIds, faq: input.relatedFaqIds });
   await Promise.all([
     tx.serviceVersionSolution.deleteMany({ where: { serviceVersionId } }),
     tx.serviceVersionMaterial.deleteMany({ where: { serviceVersionId } }),

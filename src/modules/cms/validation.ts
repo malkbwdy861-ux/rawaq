@@ -33,7 +33,7 @@ export const cmsSearchParamsSchema = z.object({
   sort: z.string().trim().max(80).optional().catch(undefined),
 });
 
-export const cmsRelationIdsSchema = z.array(z.string().cuid()).default([]);
+export const cmsRelationIdsSchema = z.array(z.string().cuid()).transform((ids) => [...new Set(ids)]).default([]);
 
 export const cmsSeoFieldsSchema = z.object({
   seoTitle: z.string().trim().max(70, "يجب ألا يتجاوز عنوان محركات البحث 70 حرفاً.").optional().or(z.literal("")),
@@ -79,10 +79,10 @@ export function parsePublicPage(value: string | string[] | undefined) {
 }
 
 export function readStringArray(formData: FormData, fieldName: string) {
-  return formData
+  return [...new Set(formData
     .getAll(fieldName)
     .map((value) => String(value).trim())
-    .filter(Boolean);
+    .filter(Boolean))];
 }
 
 function firstParam(value: string | string[] | undefined) {

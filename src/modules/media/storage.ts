@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { mediaConfig, mimeExtension, type AllowedImageMimeType } from "./config";
@@ -46,4 +46,17 @@ export async function removeMediaFile(storagePath: string) {
   }
 
   await unlink(resolved);
+}
+
+export async function stageMediaFileDeletion(storagePath: string) {
+  const resolved = path.resolve(storagePath);
+  const relative = path.relative(mediaConfig.uploadDir, resolved);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("Unsafe media path");
+
+  const stagedPath = `${resolved}.deleting-${randomUUID()}`;
+  await rename(resolved, stagedPath);
+  return {
+    commit: () => unlink(stagedPath),
+    rollback: () => rename(stagedPath, resolved),
+  };
 }

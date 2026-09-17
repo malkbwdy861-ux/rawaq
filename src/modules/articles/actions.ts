@@ -5,6 +5,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { lockPublishingNamespace } from "@/modules/cms/publishing";
+import { assertCmsEntityIdsExist, cleanupCmsEntityReferences } from "@/modules/cms/references";
+import { revalidateCmsReferenceConsumers } from "@/modules/cms/reference-cache";
+import { runSerializableCmsTransaction } from "@/modules/cms/transactions";
 import { cmsContentPath, generateUniqueCmsSlug } from "@/modules/cms/slugs";
 import { readStringArray } from "@/modules/cms/validation";
 import { requireAdmin } from "@/server/auth";
@@ -85,38 +88,26 @@ export async function deleteArticleAction(formData: FormData) {
   const parsed = articleIdSchema.safeParse({ articleId: formData.get("articleId") });
   if (!parsed.success) redirect("/dashboard/articles?error=تعذر تحديد المقال المطلوب حذفه.");
 
-  let result: { blocked: boolean; deleted: boolean; slug?: string | null };
+  let result: { deleted: boolean; slug?: string | null };
   try {
-    result = await prisma.$transaction(async (tx) => {
+    result = await runSerializableCmsTransaction(async (tx) => {
       const article = await tx.article.findUnique({ where: { id: parsed.data.articleId }, select: { publishedVersion: { select: { slug: true } } } });
-      if (!article) return { blocked: false, deleted: false, slug: null };
-
-      const pricesVersions = await tx.pageVersion.findMany({ where: { page: { key: "PRICES" } }, select: { data: true } });
-      if (pricesVersions.some(({ data }) => pricesPageReferencesArticle(data, parsed.data.articleId))) {
-        return { blocked: true, deleted: false, slug: article.publishedVersion?.slug };
-      }
-
-      await Promise.all([
-        tx.serviceVersionArticle.deleteMany({ where: { articleId: parsed.data.articleId } }),
-        tx.solutionVersionArticle.deleteMany({ where: { articleId: parsed.data.articleId } }),
-        tx.materialVersionArticle.deleteMany({ where: { articleId: parsed.data.articleId } }),
-        tx.projectVersionArticle.deleteMany({ where: { articleId: parsed.data.articleId } }),
-      ]);
+      if (!article) return { deleted: false, slug: null };
+      await cleanupCmsEntityReferences(tx, "article", parsed.data.articleId);
       await tx.article.delete({ where: { id: parsed.data.articleId } });
-      return { blocked: false, deleted: true, slug: article.publishedVersion?.slug };
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+      return { deleted: true, slug: article.publishedVersion?.slug };
+    });
   } catch (error) {
     console.error("Article delete failed", error);
     redirect("/dashboard/articles?error=تعذر حذف المقال. حاول مرة أخرى.");
   }
 
-  if (result.blocked) {
-    redirect(`/dashboard/articles?error=${encodeURIComponent("لا يمكن حذف المقال لأنه مستخدم في بيانات صفحة الأسعار. أزله من صفحة الأسعار أولاً ثم أعد المحاولة.")}`);
-  }
   if (!result.deleted) redirect("/dashboard/articles?error=المقال غير موجود أو حُذف مسبقاً.");
 
   revalidatePath("/dashboard/articles");
   revalidatePath("/guides");
+  revalidatePath("/prices");
+  revalidateCmsReferenceConsumers();
   if (result.slug) revalidatePath(cmsContentPath("/guides", result.slug));
   revalidatePath("/sitemap.xml");
   redirect(`/dashboard/articles?success=${encodeURIComponent("تم حذف المقال نهائياً.")}`);
@@ -253,6 +244,7 @@ function toVersionData(input: ArticleDraftInput) {
 }
 
 async function replaceVersionRelations(tx: Prisma.TransactionClient, articleVersionId: string, input: ArticleDraftInput) {
+  await assertCmsEntityIdsExist(tx, { service: input.relatedServiceIds, solution: input.relatedSolutionIds, material: input.relatedMaterialIds, project: input.relatedProjectIds, faq: input.relatedFaqIds });
   await Promise.all([
     tx.articleVersionService.deleteMany({ where: { articleVersionId } }),
     tx.articleVersionSolution.deleteMany({ where: { articleVersionId } }),
@@ -267,12 +259,6 @@ async function replaceVersionRelations(tx: Prisma.TransactionClient, articleVers
     input.relatedProjectIds.length ? tx.articleVersionProject.createMany({ data: input.relatedProjectIds.map((projectId) => ({ articleVersionId, projectId })), skipDuplicates: true }) : null,
     input.relatedFaqIds.length ? tx.articleVersionFAQ.createMany({ data: input.relatedFaqIds.map((faqId) => ({ articleVersionId, faqId })), skipDuplicates: true }) : null,
   ]);
-}
-
-function pricesPageReferencesArticle(data: Prisma.JsonValue, articleId: string) {
-  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
-  const ids = (data as Record<string, Prisma.JsonValue>).selectedPricingArticleIds;
-  return Array.isArray(ids) && ids.some((id) => id === articleId);
 }
 
 function revalidateArticleDraftPaths(articleId: string) {

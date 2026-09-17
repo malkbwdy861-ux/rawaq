@@ -4,10 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 
+import { cleanupCmsEntityReferences } from "@/modules/cms/references";
+import { revalidateCmsReferenceConsumers } from "@/modules/cms/reference-cache";
+import { runSerializableCmsTransaction } from "@/modules/cms/transactions";
 import { prisma } from "@/server/db/prisma";
 import { requireAdmin } from "@/server/auth";
 
-import { removeMediaFile } from "./storage";
+import { stageMediaFileDeletion } from "./storage";
 import { mediaMetadataSchema } from "./validation";
 
 export async function updateMediaMetadataAction(formData: FormData) {
@@ -50,53 +53,32 @@ export async function deleteMediaAction(formData: FormData) {
     redirectWithMessage("error", "الصورة غير موجودة.");
   }
 
-  const referenceCount = await countMediaReferences(id);
-
-  if (referenceCount > 0) {
-    redirectWithMessage("error", "لا يمكن حذف صورة مستخدمة في المحتوى أو الإعدادات.");
+  let stagedFile: Awaited<ReturnType<typeof stageMediaFileDeletion>>;
+  try {
+    stagedFile = await stageMediaFileDeletion(media.storagePath);
+  } catch (error) {
+    console.error("Media file staging failed", error);
+    redirectWithMessage("error", "تعذر الوصول إلى ملف الصورة. لم يتم حذف أي بيانات.");
   }
 
   try {
-    await prisma.media.delete({ where: { id } });
+    await runSerializableCmsTransaction(async (tx) => {
+      await cleanupCmsEntityReferences(tx, "media", id);
+      await tx.media.delete({ where: { id } });
+    });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
-      redirectWithMessage("error", "لا يمكن حذف صورة مستخدمة في المحتوى أو الإعدادات.");
-    }
+    await stagedFile.rollback().catch((rollbackError) => console.error("Media file rollback failed", rollbackError));
+    console.error("Media delete failed", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") redirectWithMessage("error", "الصورة غير موجودة.");
     throw error;
   }
 
-  await removeMediaFile(media.storagePath).catch(async () => {
-    await prisma.media.create({ data: media });
-    redirectWithMessage("error", "تعذر حذف الملف من التخزين. لم يتم حذف سجل الوسيط.");
-  });
+  await stagedFile.commit().catch((error) => console.error("Deleted media file cleanup failed", error));
 
   revalidatePath("/dashboard/media");
-  redirectWithMessage("success", "تم حذف الصورة والملف المرتبط بها.");
-}
-
-async function countMediaReferences(id: string) {
-  const [counts, pageDataReferences] = await Promise.all([Promise.all([
-    prisma.serviceVersion.count({ where: { OR: [{ heroMediaId: id }, { openGraphImageId: id }] } }),
-    prisma.solutionVersion.count({ where: { OR: [{ heroMediaId: id }, { openGraphImageId: id }] } }),
-    prisma.materialVersion.count({ where: { OR: [{ heroMediaId: id }, { openGraphImageId: id }] } }),
-    prisma.projectVersion.count({ where: { OR: [{ coverMediaId: id }, { openGraphImageId: id }] } }),
-    prisma.articleVersion.count({ where: { OR: [{ heroMediaId: id }, { openGraphImageId: id }] } }),
-    prisma.pageVersion.count({ where: { openGraphImageId: id } }),
-    prisma.siteSettings.count({ where: { OR: [{ logoMediaId: id }, { defaultOpenGraphImageId: id }] } }),
-    prisma.projectVersionGallery.count({ where: { mediaId: id } }),
-  ]), countPageDataMediaReferences(id)]);
-
-  return counts.reduce((total, count) => total + count, 0) + pageDataReferences;
-}
-
-async function countPageDataMediaReferences(id: string) {
-  const rows = await prisma.$queryRaw<{ count: bigint }[]>`
-    SELECT COUNT(*)::bigint AS count
-    FROM "PageVersion"
-    WHERE jsonb_path_exists("data", '$.** ? (@ == $mediaId)', jsonb_build_object('mediaId', to_jsonb(${id}::text)))
-  `;
-
-  return Number(rows[0]?.count ?? 0);
+  revalidatePath("/", "layout");
+  revalidateCmsReferenceConsumers();
+  redirectWithMessage("success", "تم حذف الصورة وإزالة ارتباطاتها من المحتوى والإعدادات.");
 }
 
 function redirectWithMessage(type: "success" | "error", message: string): never {

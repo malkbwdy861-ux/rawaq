@@ -5,6 +5,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { lockPublishingNamespace } from "@/modules/cms/publishing";
+import { assertCmsEntityIdsExist, cleanupCmsEntityReferences } from "@/modules/cms/references";
+import { revalidateCmsReferenceConsumers } from "@/modules/cms/reference-cache";
+import { runSerializableCmsTransaction } from "@/modules/cms/transactions";
 import { cmsContentPath, generateUniqueCmsSlug } from "@/modules/cms/slugs";
 import { readStringArray } from "@/modules/cms/validation";
 import { requireAdmin } from "@/server/auth";
@@ -100,11 +103,8 @@ export async function deleteProjectAction(formData: FormData) {
   if (!project) redirect("/dashboard/projects?error=المشروع غير موجود أو حُذف مسبقاً.");
 
   try {
-    await prisma.$transaction(async (tx) => {
-      await tx.serviceVersionProject.deleteMany({ where: { projectId: parsed.data.projectId } });
-      await tx.solutionVersionProject.deleteMany({ where: { projectId: parsed.data.projectId } });
-      await tx.materialVersionProject.deleteMany({ where: { projectId: parsed.data.projectId } });
-      await tx.articleVersionProject.deleteMany({ where: { projectId: parsed.data.projectId } });
+    await runSerializableCmsTransaction(async (tx) => {
+      await cleanupCmsEntityReferences(tx, "project", parsed.data.projectId);
       await tx.project.delete({ where: { id: parsed.data.projectId } });
     });
   } catch {
@@ -114,6 +114,8 @@ export async function deleteProjectAction(formData: FormData) {
   revalidatePath("/dashboard/projects");
   revalidatePath("/dashboard");
   revalidatePath("/projects");
+  revalidatePath("/");
+  revalidateCmsReferenceConsumers();
   if (project.publishedVersion?.slug) revalidatePath(cmsContentPath("/projects", project.publishedVersion.slug));
   revalidatePath("/sitemap.xml");
   redirect(`/dashboard/projects?success=${encodeURIComponent("تم حذف المشروع نهائياً.")}`);
@@ -271,6 +273,7 @@ async function validateProjectCategory(tx: Prisma.TransactionClient, categoryId?
 }
 
 async function replaceVersionCollections(tx: Prisma.TransactionClient, projectVersionId: string, input: ProjectDraftInput) {
+  await assertCmsEntityIdsExist(tx, { service: input.relatedServiceIds, solution: input.relatedSolutionIds, material: input.relatedMaterialIds, article: input.relatedArticleIds });
   await Promise.all([
     tx.projectVersionGallery.deleteMany({ where: { projectVersionId } }),
     tx.projectVersionService.deleteMany({ where: { projectVersionId } }),

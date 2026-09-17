@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { readStringArray } from "@/modules/cms/validation";
+import { getPageMediaReferenceIds } from "@/modules/cms/references";
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
 
@@ -59,7 +60,7 @@ export async function publishPageAction(formData: FormData) {
     await prisma.$transaction(async (tx) => {
       const page = await tx.page.findFirst({ where: { id: identity.data.pageId, key: identity.data.key }, select: { draftVersionId: true } });
       if (!page) throw new Error("الصفحة غير موجودة.");
-      await validatePublishedSelections(tx, identity.data.key, parsed.data.data);
+      await validatePageSelections(tx, identity.data.key, parsed.data.data, true);
       const versionData = { data: parsed.data.data as Prisma.InputJsonValue, ...toSeoData(parsed.data.seo) };
       if (page.draftVersionId) await tx.pageVersion.update({ where: { id: page.draftVersionId }, data: versionData });
       else {
@@ -88,6 +89,7 @@ async function saveDraft(pageId: string, key: PageKey, data: StaticPageData, seo
   await prisma.$transaction(async (tx) => {
     const page = await tx.page.findFirst({ where: { id: pageId, key }, select: { draftVersionId: true } });
     if (!page) throw new Error("الصفحة غير موجودة.");
+    await validatePageSelections(tx, key, data, false);
     const versionData = { data: data as Prisma.InputJsonValue, ...toSeoData(seo) };
     if (page.draftVersionId) await tx.pageVersion.update({ where: { id: page.draftVersionId }, data: versionData });
     else {
@@ -97,34 +99,38 @@ async function saveDraft(pageId: string, key: PageKey, data: StaticPageData, seo
   });
 }
 
-async function validatePublishedSelections(tx: Prisma.TransactionClient, key: PageKey, data: StaticPageData) {
+async function validatePageSelections(tx: Prisma.TransactionClient, key: PageKey, data: StaticPageData, published: boolean) {
   const validCount = (ids: string[], found: { id: string }[]) => found.length === new Set(ids).size;
+  const publishedWhere = published ? { status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } } as const : {};
+  const mediaIds = getPageMediaReferenceIds(data as Prisma.JsonValue);
+  const media = mediaIds.length ? await tx.media.findMany({ where: { id: { in: mediaIds }, type: "IMAGE" }, select: { id: true } }) : [];
+  if (!validCount(mediaIds, media)) throw new Error("توجد صور مختارة لم تعد موجودة في مكتبة الصور.");
   if (key === "HOME") {
     const homeData = data as Extract<StaticPageData, { featuredServices: unknown }>;
     const [services, solutions, projects, faqs] = await Promise.all([
-      tx.service.findMany({ where: { id: { in: homeData.featuredServices.selectedServiceIds }, status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, select: { id: true } }),
-      tx.solution.findMany({ where: { id: { in: homeData.featuredSolutions.selectedSolutionIds }, status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, select: { id: true } }),
-      tx.project.findMany({ where: { id: { in: homeData.featuredProjects.selectedProjectIds }, status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, select: { id: true } }),
-      tx.fAQ.findMany({ where: { id: { in: homeData.faqSection.selectedFaqIds }, status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, select: { id: true } }),
+      tx.service.findMany({ where: { id: { in: homeData.featuredServices.selectedServiceIds }, ...publishedWhere }, select: { id: true } }),
+      tx.solution.findMany({ where: { id: { in: homeData.featuredSolutions.selectedSolutionIds }, ...publishedWhere }, select: { id: true } }),
+      tx.project.findMany({ where: { id: { in: homeData.featuredProjects.selectedProjectIds }, ...publishedWhere }, select: { id: true } }),
+      tx.fAQ.findMany({ where: { id: { in: homeData.faqSection.selectedFaqIds }, ...publishedWhere }, select: { id: true } }),
     ]);
-    if (!validCount(homeData.featuredServices.selectedServiceIds, services)) throw new Error("توجد خدمات مختارة غير منشورة.");
-    if (!validCount(homeData.featuredSolutions.selectedSolutionIds, solutions)) throw new Error("توجد حلول مختارة غير منشورة.");
-    if (!validCount(homeData.featuredProjects.selectedProjectIds, projects)) throw new Error("توجد مشاريع مختارة غير منشورة.");
-    if (!validCount(homeData.faqSection.selectedFaqIds, faqs)) throw new Error("توجد أسئلة مختارة غير منشورة.");
+    if (!validCount(homeData.featuredServices.selectedServiceIds, services)) throw new Error(published ? "توجد خدمات مختارة غير منشورة." : "توجد خدمات مختارة لم تعد موجودة.");
+    if (!validCount(homeData.featuredSolutions.selectedSolutionIds, solutions)) throw new Error(published ? "توجد حلول مختارة غير منشورة." : "توجد حلول مختارة لم تعد موجودة.");
+    if (!validCount(homeData.featuredProjects.selectedProjectIds, projects)) throw new Error(published ? "توجد مشاريع مختارة غير منشورة." : "توجد مشاريع مختارة لم تعد موجودة.");
+    if (!validCount(homeData.faqSection.selectedFaqIds, faqs)) throw new Error(published ? "توجد أسئلة مختارة غير منشورة." : "توجد أسئلة مختارة لم تعد موجودة.");
   }
   if (key === "PRICES") {
     const pricesData = data as Extract<StaticPageData, { selectedPricingArticleIds: unknown }>;
     const [articles, faqs] = await Promise.all([
-      tx.article.findMany({ where: { id: { in: pricesData.selectedPricingArticleIds }, status: ContentStatus.PUBLISHED, publishedVersionId: { not: null }, publishedVersion: { articleType: "PRICING" } }, select: { id: true } }),
-      tx.fAQ.findMany({ where: { id: { in: pricesData.faqSection.selectedFaqIds }, status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, select: { id: true } }),
+      tx.article.findMany({ where: { id: { in: pricesData.selectedPricingArticleIds }, ...publishedWhere, ...(published ? { publishedVersion: { articleType: "PRICING" as const } } : {}) }, select: { id: true } }),
+      tx.fAQ.findMany({ where: { id: { in: pricesData.faqSection.selectedFaqIds }, ...publishedWhere }, select: { id: true } }),
     ]);
-    if (!validCount(pricesData.selectedPricingArticleIds, articles)) throw new Error("توجد مقالات أسعار مختارة غير منشورة.");
-    if (!validCount(pricesData.faqSection.selectedFaqIds, faqs)) throw new Error("توجد أسئلة مختارة غير منشورة.");
+    if (!validCount(pricesData.selectedPricingArticleIds, articles)) throw new Error(published ? "توجد مقالات أسعار مختارة غير منشورة." : "توجد مقالات مختارة لم تعد موجودة.");
+    if (!validCount(pricesData.faqSection.selectedFaqIds, faqs)) throw new Error(published ? "توجد أسئلة مختارة غير منشورة." : "توجد أسئلة مختارة لم تعد موجودة.");
   }
   if (key === "FAQS") {
     const faqData = data as Extract<StaticPageData, { faqSection: unknown }>;
-    const faqs = await tx.fAQ.findMany({ where: { id: { in: faqData.faqSection.selectedFaqIds }, status: ContentStatus.PUBLISHED, publishedVersionId: { not: null } }, select: { id: true } });
-    if (!validCount(faqData.faqSection.selectedFaqIds, faqs)) throw new Error("توجد أسئلة مختارة غير منشورة.");
+    const faqs = await tx.fAQ.findMany({ where: { id: { in: faqData.faqSection.selectedFaqIds }, ...publishedWhere }, select: { id: true } });
+    if (!validCount(faqData.faqSection.selectedFaqIds, faqs)) throw new Error(published ? "توجد أسئلة مختارة غير منشورة." : "توجد أسئلة مختارة لم تعد موجودة.");
   }
 }
 

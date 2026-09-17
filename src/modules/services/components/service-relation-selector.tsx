@@ -5,11 +5,12 @@ import { useId, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import type { CmsRelationOption } from "@/modules/cms/types";
+import { retainExistingSelectedIds } from "@/modules/cms/reference-values";
 
 export function ServiceRelationSelector({ name, label, options, selectedIds = [] }: { name: string; label: string; options: CmsRelationOption[]; selectedIds?: string[] }) {
   const searchId = useId();
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState(() => new Set(selectedIds));
+  const [selected, setSelected] = useState(() => new Set(retainExistingSelectedIds(selectedIds, options.map((option) => option.id))));
   const normalizedQuery = query.trim().toLowerCase();
   const visible = options.filter((option) => !normalizedQuery || `${option.label} ${option.description ?? ""}`.toLowerCase().includes(normalizedQuery));
 

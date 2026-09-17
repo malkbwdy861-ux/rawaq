@@ -1,11 +1,14 @@
 "use server";
 
-import { ContentStatus, Prisma } from "@prisma/client";
+import { ContentStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireAdmin } from "@/server/auth";
 import { prisma } from "@/server/db/prisma";
+import { cleanupCmsEntityReferences } from "@/modules/cms/references";
+import { revalidateCmsReferenceConsumers } from "@/modules/cms/reference-cache";
+import { runSerializableCmsTransaction } from "@/modules/cms/transactions";
 
 import { faqCreateSchema, faqDraftSchema, faqIdSchema, faqPublishSchema, type FaqDraftInput } from "./validation";
 
@@ -74,20 +77,12 @@ export async function deleteFaqAction(formData: FormData) {
   const parsed = faqIdSchema.safeParse({ faqId: formData.get("faqId") });
   if (!parsed.success) redirect("/dashboard/faqs?error=تعذر تحديد السؤال المطلوب حذفه.");
 
-  let result: "missing" | "referenced" | "deleted";
+  let result: "missing" | "deleted";
   try {
-    result = await prisma.$transaction(async (tx) => {
+    result = await runSerializableCmsTransaction(async (tx) => {
       const faq = await tx.fAQ.findUnique({ where: { id: parsed.data.faqId }, select: { id: true } });
       if (!faq) return "missing" as const;
-      const pageVersions = await tx.pageVersion.findMany({ select: { data: true } });
-      if (pageVersions.some(({ data }) => pageReferencesFaq(data, faq.id))) return "referenced" as const;
-
-      await Promise.all([
-        tx.serviceVersionFAQ.deleteMany({ where: { faqId: faq.id } }),
-        tx.solutionVersionFAQ.deleteMany({ where: { faqId: faq.id } }),
-        tx.materialVersionFAQ.deleteMany({ where: { faqId: faq.id } }),
-        tx.articleVersionFAQ.deleteMany({ where: { faqId: faq.id } }),
-      ]);
+      await cleanupCmsEntityReferences(tx, "faq", faq.id);
       await tx.fAQ.delete({ where: { id: faq.id } });
       return "deleted" as const;
     });
@@ -97,9 +92,9 @@ export async function deleteFaqAction(formData: FormData) {
     redirect(`/dashboard/faqs?error=${encodeURIComponent("تعذر حذف السؤال. حاول مرة أخرى.")}`);
   }
 
-  if (result === "referenced") redirect(`/dashboard/faqs?error=${encodeURIComponent("لا يمكن حذف السؤال لأنه مختار في صفحة ثابتة. أزله من الصفحة أولاً ثم أعد المحاولة.")}`);
   if (result === "missing") redirect(`/dashboard/faqs?error=${encodeURIComponent("السؤال غير موجود أو تم حذفه مسبقاً.")}`);
   revalidateFaqPaths(parsed.data.faqId);
+  revalidateCmsReferenceConsumers();
   redirect(`/dashboard/faqs?success=${encodeURIComponent("تم حذف السؤال وإزالة روابطه من المحتوى.")}`);
 }
 
@@ -112,14 +107,6 @@ function readCreateFaqFormData(formData: FormData): FaqDialogValues {
 
 function toVersionData(input: FaqDraftInput) {
   return { question: input.question || null, answer: input.answer || null };
-}
-
-function pageReferencesFaq(data: Prisma.JsonValue, faqId: string) {
-  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
-  const faqSection = (data as Record<string, Prisma.JsonValue>).faqSection;
-  if (!faqSection || typeof faqSection !== "object" || Array.isArray(faqSection)) return false;
-  const selectedIds = (faqSection as Record<string, Prisma.JsonValue>).selectedFaqIds;
-  return Array.isArray(selectedIds) && selectedIds.includes(faqId);
 }
 
 function revalidateFaqPaths(faqId: string) {

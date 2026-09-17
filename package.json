@@ -9,6 +9,8 @@
     "start": "npm run db:setup && next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.mts",
+    "cms:repair-references": "node --experimental-strip-types scripts/repair-cms-references.mts",
     "prisma:generate": "prisma generate",
     "admin:create": "node prisma/create-admin.mjs",
     "db:deploy": "prisma migrate deploy",

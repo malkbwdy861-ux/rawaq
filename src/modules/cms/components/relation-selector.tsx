@@ -8,6 +8,7 @@ import { useId, useState } from "react";
 import { Input } from "@/components/ui/input";
 
 import type { CmsRelationOption } from "../types";
+import { retainExistingSelectedIds } from "../reference-values";
 import { CmsStatusBadge } from "./status-badge";
 
 export function CmsRelationSelector({
@@ -29,7 +30,7 @@ export function CmsRelationSelector({
 }) {
   const searchId = useId();
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState(selectedIds);
+  const [selected, setSelected] = useState(() => retainExistingSelectedIds(selectedIds, options.map((option) => option.id)));
   const normalizedQuery = query.trim().toLowerCase();
   const visibleOptions = options.filter((option) => {
     if (!normalizedQuery) return true;
