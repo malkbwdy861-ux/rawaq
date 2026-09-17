@@ -2,7 +2,9 @@ export const publicNavigationLinks = [
   ["الرئيسية", "/"],
   ["خدماتنا", "/services"],
   ["حلولنا", "/solutions"],
+  ["المواد", "/materials"],
   ["مشاريعنا", "/projects"],
+  ["الأدلة", "/guides"],
   ["من نحن", "/about"],
   ["الأسئلة الشائعة", "/faqs"],
   ["اتصل بنا", "/contact"],
@@ -22,7 +24,7 @@ export const footerNavigationGroups = [
     links: [
       ["المشاريع", "/projects"],
       ["الأسعار", "/prices"],
-      ["المدونة", "/guides"],
+      ["الأدلة", "/guides"],
     ],
   },
   {
