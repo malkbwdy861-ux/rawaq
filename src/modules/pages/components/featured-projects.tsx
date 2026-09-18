@@ -73,7 +73,12 @@ export function ProjectCard({ item, featured = false, balanced = false, archive 
         <div className="min-w-0 flex-1 text-start">
           {item.location ? <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-brand-secondary-foreground/75"><MapPin aria-hidden="true" className="size-3.5" />{item.location}</p> : null}
           <Heading className={`${featured ? "text-[clamp(1.625rem,2.4vw,2.25rem)]" : "text-xl sm:text-[1.375rem]"} line-clamp-2 font-bold leading-[1.4]`}>{item.title}</Heading>
-          <p className={`${featured ? "line-clamp-3 max-h-[5.1em] max-w-[48ch]" : "line-clamp-2 max-h-[3.4em]"} mt-2 overflow-hidden text-[0.9375rem] font-normal leading-[1.7] text-brand-secondary-foreground/80`}>{item.shortDescription}</p>
+          <p
+            className={`${featured ? "max-w-[48ch]" : ""} mt-2 overflow-hidden text-[0.9375rem] font-normal leading-[1.7] text-brand-secondary-foreground/80`}
+            style={{ display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: featured ? 3 : 2 }}
+          >
+            {item.shortDescription}
+          </p>
         </div>
         <span aria-hidden="true" className={`${featured ? "size-11" : "size-10"} grid shrink-0 place-items-center rounded-full border border-primary-foreground/25 bg-brand-secondary/90 transition-[background-color,transform] duration-300 group-hover:-translate-x-1 group-hover:bg-brand-secondary`}><ArrowLeft className="size-4" /></span>
       </div>
